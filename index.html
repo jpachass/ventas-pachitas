@@ -109,6 +109,7 @@ button{
     color:white;
     display:none;
     padding:20px;
+    overflow:auto;
 }
 </style>
 </head>
@@ -175,6 +176,13 @@ button{
 </div>
 </div>
 
+<!-- ADMIN -->
+<div id="adminPanel">
+<h2>📊 PANEL ADMIN</h2>
+<button onclick="cerrarAdmin()">Cerrar</button>
+<div id="contenidoAdmin"></div>
+</div>
+
 <script type="module">
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
@@ -189,18 +197,27 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-// 🔥 ADMIN
+// 🔥 ADMIN (3 TOQUES)
 let clicks=0;
 titulo.onclick=()=>{
     clicks++;
     if(clicks===3){
-        alert("🔐 ADMIN ACTIVADO");
+        abrirAdmin();
         clicks=0;
     }
     setTimeout(()=>clicks=0,1000);
 };
 
-// 🔥 CARGAR CLIENTES FIREBASE
+function abrirAdmin(){
+    adminPanel.style.display="block";
+    cargarAdmin();
+}
+
+function cerrarAdmin(){
+    adminPanel.style.display="none";
+}
+
+// 🔥 CLIENTES
 let clientes=[];
 
 async function cargarClientes(){
@@ -216,13 +233,10 @@ async function cargarClientes(){
             direccion:(c.direccion||"").toUpperCase().trim()
         });
     });
-
-    console.log("Clientes cargados:", clientes);
 }
-
 await cargarClientes();
 
-// 🔍 BUSCADOR PRO
+// 🔍 BUSCADOR
 buscarCliente.oninput=function(){
 
     let texto=this.value.toUpperCase().replace(/[^A-Z0-9\s]/g,'').trim();
@@ -307,8 +321,6 @@ window.guardarCliente=async ()=>{
     lista.innerHTML="";
 
     cerrarModal();
-
-    alert("✅ CLIENTE GUARDADO");
 };
 
 // GUARDAR VENTA
@@ -324,13 +336,31 @@ window.guardarVenta=async ()=>{
         fecha:new Date()
     });
 
-    alert("✅ VENTA GUARDADA");
+    alert("VENTA GUARDADA");
 
     document.querySelectorAll("input").forEach(i=>i.value="");
     document.querySelectorAll("select").forEach(s=>s.value="");
 
     total.innerText="S/. 0.00";
 };
+
+// 📊 PANEL ADMIN
+function cargarAdmin(){
+
+    let html="<h3>CLIENTES</h3>";
+
+    clientes.forEach(c=>{
+        html+=`
+            <div style="margin-bottom:10px;">
+                <b>${c.nombre}</b><br>
+                📱 ${c.celular}<br>
+                📍 ${c.direccion}
+            </div>
+        `;
+    });
+
+    contenidoAdmin.innerHTML=html;
+}
 
 </script>
 
