@@ -175,45 +175,77 @@ button{
 </div>
 </div>
 
-<script>
+<script type="module">
+
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+import { getFirestore, collection, addDoc, getDocs } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyA8MGBeJEo-eDyu0iHayj9WIQPZHx7UhMA",
+  authDomain: "ventas-pachitas.firebaseapp.com",
+  projectId: "ventas-pachitas"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
 
 // 🔥 ADMIN
 let clicks=0;
 titulo.onclick=()=>{
     clicks++;
     if(clicks===3){
-        alert("PANEL ADMIN ACTIVADO");
+        alert("🔐 ADMIN ACTIVADO");
         clicks=0;
     }
     setTimeout(()=>clicks=0,1000);
 };
 
-// 🔥 DATOS DE PRUEBA (IMPORTANTE)
-let clientes=[
-    {nombre:"JUAN PEREZ", celular:"987654321", direccion:"LIMA"},
-    {nombre:"CARLOS LOPEZ", celular:"912345678", direccion:"CALLAO"},
-    {nombre:"MARIA TORRES", celular:"999888777", direccion:"SURCO"}
-];
+// 🔥 CARGAR CLIENTES FIREBASE
+let clientes=[];
 
-// 🔍 BUSCADOR FUNCIONAL
+async function cargarClientes(){
+    const snap = await getDocs(collection(db,"clientes"));
+    clientes=[];
+
+    snap.forEach(doc=>{
+        let c=doc.data();
+
+        clientes.push({
+            nombre:(c.nombre||"").toUpperCase().trim(),
+            celular:String(c.celular||"").trim(),
+            direccion:(c.direccion||"").toUpperCase().trim()
+        });
+    });
+
+    console.log("Clientes cargados:", clientes);
+}
+
+await cargarClientes();
+
+// 🔍 BUSCADOR PRO
 buscarCliente.oninput=function(){
 
-    // VALIDACIÓN
-    this.value=this.value.toUpperCase().replace(/[^A-Z0-9\s]/g,'');
+    let texto=this.value.toUpperCase().replace(/[^A-Z0-9\s]/g,'').trim();
+    this.value=texto;
 
-    let texto=this.value.trim();
     lista.innerHTML="";
 
-    if(texto==="") return;
+    if(!texto) return;
 
     let filtrados=clientes.filter(c =>
         c.nombre.includes(texto) ||
         c.celular.includes(texto)
     );
 
-    filtrados.forEach(c=>{
+    if(filtrados.length===0){
+        lista.innerHTML="<div class='item'>❌ SIN RESULTADOS</div>";
+        return;
+    }
+
+    filtrados.slice(0,5).forEach(c=>{
         let div=document.createElement("div");
         div.className="item";
+
         div.innerHTML=`<b>${c.nombre}</b><br>📱 ${c.celular}`;
 
         div.onclick=()=>{
@@ -241,11 +273,11 @@ nCelular.oninput=()=>nCelular.value=nCelular.value.replace(/[^0-9]/g,'').slice(0
 nDireccion.oninput=()=>nDireccion.value=nDireccion.value.toUpperCase();
 
 // MODAL
-function abrirModal(){modal.style.display="flex";}
-function cerrarModal(){modal.style.display="none";}
+window.abrirModal=()=>modal.style.display="flex";
+window.cerrarModal=()=>modal.style.display="none";
 
 // GUARDAR CLIENTE
-function guardarCliente(){
+window.guardarCliente=async ()=>{
 
     let nom=nNombre.value;
     let cel=nCelular.value;
@@ -255,7 +287,13 @@ function guardarCliente(){
     if(cel.length!==9) return alert("CELULAR INVÁLIDO");
     if(!dir) return alert("INGRESE DIRECCIÓN");
 
-    clientes.push({nombre:nom,celular:cel,direccion:dir});
+    await addDoc(collection(db,"clientes"),{
+        nombre:nom,
+        celular:cel,
+        direccion:dir
+    });
+
+    await cargarClientes();
 
     nombre.value=nom;
     celular.value=cel;
@@ -269,19 +307,30 @@ function guardarCliente(){
     lista.innerHTML="";
 
     cerrarModal();
-}
+
+    alert("✅ CLIENTE GUARDADO");
+};
 
 // GUARDAR VENTA
-function guardarVenta(){
+window.guardarVenta=async ()=>{
+
     if(!nombre.value) return alert("SELECCIONE CLIENTE");
 
-    alert("VENTA GUARDADA");
+    await addDoc(collection(db,"ventas"),{
+        nombre:nombre.value,
+        celular:celular.value,
+        direccion:direccion.value,
+        total:total.innerText,
+        fecha:new Date()
+    });
+
+    alert("✅ VENTA GUARDADA");
 
     document.querySelectorAll("input").forEach(i=>i.value="");
     document.querySelectorAll("select").forEach(s=>s.value="");
 
     total.innerText="S/. 0.00";
-}
+};
 
 </script>
 
