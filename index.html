@@ -8,11 +8,10 @@
 <style>
 body{
     margin:0;
-    font-family: 'Segoe UI', sans-serif;
+    font-family:'Segoe UI',sans-serif;
     background: linear-gradient(135deg,#ff6600,#ffcc00);
 }
 
-/* HEADER */
 .header{
     background:white;
     padding:15px;
@@ -21,47 +20,40 @@ body{
     border-radius:0 0 20px 20px;
 }
 
-/* CARD */
 .card{
     background:white;
     margin:15px;
     padding:15px;
     border-radius:20px;
+    box-shadow:0 5px 10px rgba(0,0,0,0.2);
 }
 
-/* INPUTS */
 input, select{
     width:100%;
     padding:14px;
     margin:6px 0;
     border-radius:12px;
     border:2px solid #ddd;
-    box-sizing:border-box;
     height:50px;
+    box-sizing:border-box;
 }
 
-/* BUTTON */
 button{
     width:100%;
     padding:14px;
     border:none;
     border-radius:12px;
-    background:#27ae60;
-    color:white;
     font-size:16px;
     margin-top:10px;
 }
 
-/* BOTON SECUNDARIO */
-.btn-sec{
-    background:#3498db;
-}
+.btn-main{background:#27ae60;color:white;}
+.btn-sec{background:#3498db;color:white;margin-bottom:10px;}
 
-/* MODAL */
 .modal{
     position:fixed;
-    top:0; left:0;
-    width:100%; height:100%;
+    top:0;left:0;
+    width:100%;height:100%;
     background:rgba(0,0,0,0.6);
     display:none;
     justify-content:center;
@@ -86,11 +78,11 @@ button{
 
 <input id="buscarCliente" placeholder="🔍 BUSCAR CLIENTE">
 
+<button class="btn-sec" onclick="abrirModal()">➕ NUEVO CLIENTE</button>
+
 <input id="nombre" placeholder="NOMBRE">
 <input id="celular" placeholder="CELULAR">
 <input id="direccion" placeholder="DIRECCIÓN">
-
-<button class="btn-sec" onclick="abrirModal()">➕ NUEVO CLIENTE</button>
 
 <select id="marca">
 <option value="">MARCA</option>
@@ -123,11 +115,11 @@ button{
 
 <div id="total">S/. 0.00</div>
 
-<button onclick="guardarVenta()">GUARDAR VENTA</button>
+<button class="btn-main" onclick="guardarVenta()">GUARDAR VENTA</button>
 
 </div>
 
-<!-- MODAL CLIENTE -->
+<!-- MODAL -->
 <div class="modal" id="modal">
 <div class="modal-content">
 
@@ -137,8 +129,8 @@ button{
 <input id="nCelular" placeholder="CELULAR">
 <input id="nDireccion" placeholder="DIRECCIÓN">
 
-<button onclick="guardarCliente()">GUARDAR CLIENTE</button>
-<button onclick="cerrarModal()" style="background:red;">CERRAR</button>
+<button class="btn-main" onclick="guardarCliente()">GUARDAR CLIENTE</button>
+<button onclick="cerrarModal()" style="background:red;color:white;">CERRAR</button>
 
 </div>
 </div>
@@ -158,7 +150,7 @@ const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
 // VARIABLES
-let clientes = [];
+let clientes=[];
 
 // CARGAR CLIENTES
 async function cargarClientes(){
@@ -169,17 +161,15 @@ async function cargarClientes(){
 cargarClientes();
 
 // BUSCAR CLIENTE
-document.getElementById("buscarCliente").addEventListener("input", function(){
-
-    let texto = this.value.toUpperCase();
-    let c = clientes.find(x => x.nombre.includes(texto));
-
+buscarCliente.oninput = function(){
+    let t=this.value.toUpperCase();
+    let c=clientes.find(x=>x.nombre.includes(t));
     if(c){
-        nombre.value = c.nombre;
-        celular.value = c.celular;
-        direccion.value = c.direccion;
+        nombre.value=c.nombre;
+        celular.value=c.celular;
+        direccion.value=c.direccion;
     }
-});
+}
 
 // VALIDACIONES
 nombre.oninput = ()=> nombre.value = nombre.value.toUpperCase().replace(/[^A-Z\s]/g,'');
@@ -190,10 +180,48 @@ cantidad.oninput = precio.oninput = ()=>{
     cantidad.value=cantidad.value.replace(/[^0-9]/g,'');
     precio.value=precio.value.replace(/[^0-9.]/g,'');
     total.innerText="S/. "+((cantidad.value*precio.value)||0).toFixed(2);
-};
+}
+
+// GUARDAR CLIENTE (CON AUTOCOMPLETADO)
+window.guardarCliente = async ()=>{
+
+    let nom = nNombre.value.toUpperCase();
+    let cel = nCelular.value;
+    let dir = nDireccion.value.toUpperCase();
+
+    if(nom=="" || cel.length!==9){
+        return alert("❌ DATOS INCORRECTOS");
+    }
+
+    await addDoc(collection(db,"clientes"),{
+        nombre: nom,
+        celular: cel,
+        direccion: dir
+    });
+
+    // AUTOCOMPLETAR
+    nombre.value = nom;
+    celular.value = cel;
+    direccion.value = dir;
+
+    // LIMPIAR
+    nNombre.value="";
+    nCelular.value="";
+    nDireccion.value="";
+
+    cerrarModal();
+    cargarClientes();
+
+    alert("✅ CLIENTE GUARDADO Y LISTO 🚀");
+}
 
 // GUARDAR VENTA
 window.guardarVenta = async ()=>{
+
+    if(nombre.value=="" || celular.value.length!==9 || marca.value=="" || valvula.value==""){
+        return alert("❌ COMPLETE LOS CAMPOS");
+    }
+
     await addDoc(collection(db,"ventas"),{
         nombre:nombre.value,
         celular:celular.value,
@@ -208,27 +236,17 @@ window.guardarVenta = async ()=>{
         fecha:new Date()
     });
 
-    alert("✅ VENTA GUARDADA");
+    alert("✅ VENTA GUARDADA EXITOSAMENTE");
+
+    document.querySelectorAll("input").forEach(i=>i.value="");
+    document.querySelectorAll("select").forEach(s=>s.value="");
+
+    total.innerText="S/. 0.00";
 }
 
 // MODAL
 window.abrirModal = ()=> modal.style.display="flex";
 window.cerrarModal = ()=> modal.style.display="none";
-
-// GUARDAR CLIENTE
-window.guardarCliente = async ()=>{
-
-    await addDoc(collection(db,"clientes"),{
-        nombre:nNombre.value.toUpperCase(),
-        celular:nCelular.value,
-        direccion:nDireccion.value.toUpperCase()
-    });
-
-    alert("✅ CLIENTE GUARDADO");
-
-    cerrarModal();
-    cargarClientes();
-}
 
 </script>
 
