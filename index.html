@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Pachitas App</title>
+<title>Pachitas App PRO</title>
 
 <style>
 body{
@@ -26,6 +26,7 @@ body{
     padding:15px;
     border-radius:20px;
     box-shadow:0 5px 10px rgba(0,0,0,0.2);
+    position:relative;
 }
 
 input, select{
@@ -49,6 +50,27 @@ button{
 
 .btn-main{background:#27ae60;color:white;}
 .btn-sec{background:#3498db;color:white;margin-bottom:10px;}
+
+.sugerencias{
+    position:absolute;
+    width:100%;
+    background:white;
+    border-radius:10px;
+    box-shadow:0 5px 10px rgba(0,0,0,0.2);
+    max-height:150px;
+    overflow:auto;
+    z-index:10;
+}
+
+.item{
+    padding:10px;
+    border-bottom:1px solid #eee;
+    cursor:pointer;
+}
+
+.item:hover{
+    background:#f1f1f1;
+}
 
 .modal{
     position:fixed;
@@ -77,6 +99,7 @@ button{
 <div class="card">
 
 <input id="buscarCliente" placeholder="🔍 BUSCAR CLIENTE">
+<div id="lista" class="sugerencias"></div>
 
 <button class="btn-sec" onclick="abrirModal()">➕ NUEVO CLIENTE</button>
 
@@ -149,7 +172,6 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-// VARIABLES
 let clientes=[];
 
 // CARGAR CLIENTES
@@ -160,18 +182,35 @@ async function cargarClientes(){
 }
 cargarClientes();
 
-// BUSCAR CLIENTE
+// BUSCADOR CON SUGERENCIAS
 buscarCliente.oninput = function(){
-    let t=this.value.toUpperCase();
-    let c=clientes.find(x=>x.nombre.includes(t));
-    if(c){
-        nombre.value=c.nombre;
-        celular.value=c.celular;
-        direccion.value=c.direccion;
-    }
-}
 
-// VALIDACIONES
+    this.value = this.value.toUpperCase().replace(/[^A-Z\s]/g,'');
+
+    let texto = this.value;
+    lista.innerHTML="";
+
+    if(texto.length < 1) return;
+
+    let filtrados = clientes.filter(c => c.nombre.includes(texto));
+
+    filtrados.forEach(c=>{
+        let div = document.createElement("div");
+        div.className="item";
+        div.innerText = c.nombre + " - " + c.celular;
+
+        div.onclick = ()=>{
+            nombre.value = c.nombre;
+            celular.value = c.celular;
+            direccion.value = c.direccion;
+            lista.innerHTML="";
+        };
+
+        lista.appendChild(div);
+    });
+};
+
+// VALIDACIONES CAMPOS
 nombre.oninput = ()=> nombre.value = nombre.value.toUpperCase().replace(/[^A-Z\s]/g,'');
 direccion.oninput = ()=> direccion.value = direccion.value.toUpperCase();
 celular.oninput = ()=> celular.value = celular.value.replace(/[^0-9]/g,'').slice(0,9);
@@ -180,13 +219,13 @@ cantidad.oninput = precio.oninput = ()=>{
     cantidad.value=cantidad.value.replace(/[^0-9]/g,'');
     precio.value=precio.value.replace(/[^0-9.]/g,'');
     total.innerText="S/. "+((cantidad.value*precio.value)||0).toFixed(2);
-}
+};
 
-// GUARDAR CLIENTE (CON AUTOCOMPLETADO)
+// GUARDAR CLIENTE
 window.guardarCliente = async ()=>{
 
     let nom = nNombre.value.toUpperCase();
-    let cel = nCelular.value;
+    let cel = nCelular.value.replace(/[^0-9]/g,'').slice(0,9);
     let dir = nDireccion.value.toUpperCase();
 
     if(nom=="" || cel.length!==9){
@@ -194,17 +233,15 @@ window.guardarCliente = async ()=>{
     }
 
     await addDoc(collection(db,"clientes"),{
-        nombre: nom,
-        celular: cel,
-        direccion: dir
+        nombre:nom,
+        celular:cel,
+        direccion:dir
     });
 
-    // AUTOCOMPLETAR
-    nombre.value = nom;
-    celular.value = cel;
-    direccion.value = dir;
+    nombre.value=nom;
+    celular.value=cel;
+    direccion.value=dir;
 
-    // LIMPIAR
     nNombre.value="";
     nCelular.value="";
     nDireccion.value="";
@@ -212,8 +249,8 @@ window.guardarCliente = async ()=>{
     cerrarModal();
     cargarClientes();
 
-    alert("✅ CLIENTE GUARDADO Y LISTO 🚀");
-}
+    alert("✅ CLIENTE GUARDADO");
+};
 
 // GUARDAR VENTA
 window.guardarVenta = async ()=>{
@@ -236,13 +273,13 @@ window.guardarVenta = async ()=>{
         fecha:new Date()
     });
 
-    alert("✅ VENTA GUARDADA EXITOSAMENTE");
+    alert("✅ VENTA GUARDADA");
 
     document.querySelectorAll("input").forEach(i=>i.value="");
     document.querySelectorAll("select").forEach(s=>s.value="");
 
     total.innerText="S/. 0.00";
-}
+};
 
 // MODAL
 window.abrirModal = ()=> modal.style.display="flex";
