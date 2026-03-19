@@ -212,19 +212,26 @@ let clientes=[];
 async function cargarClientes(){
     const snap = await getDocs(collection(db,"clientes"));
     clientes=[];
-    snap.forEach(doc=>clientes.push(doc.data()));
+    snap.forEach(doc=>{
+        let c=doc.data();
+        clientes.push({
+            nombre:(c.nombre||"").toUpperCase(),
+            celular:String(c.celular||""),
+            direccion:(c.direccion||"").toUpperCase()
+        });
+    });
 }
 await cargarClientes();
 
-// BUSCADOR
+// BUSCADOR VALIDADO
 buscarCliente.oninput=function(){
-    let texto=this.value.toUpperCase().trim();
+    this.value=this.value.toUpperCase().replace(/[^A-Z0-9\s]/g,'');
+    let texto=this.value.trim();
     lista.innerHTML="";
     if(!texto) return;
 
     let filtrados=clientes.filter(c =>
-        (c.nombre||"").toUpperCase().includes(texto) ||
-        String(c.celular||"").includes(texto)
+        c.nombre.includes(texto) || c.celular.includes(texto)
     );
 
     filtrados.forEach(c=>{
@@ -242,31 +249,51 @@ buscarCliente.oninput=function(){
     });
 };
 
-// VALIDACIONES
+// VALIDACIONES NUEVO CLIENTE
+nNombre.oninput=()=>nNombre.value=nNombre.value.toUpperCase();
+nCelular.oninput=()=>nCelular.value=nCelular.value.replace(/[^0-9]/g,'').slice(0,9);
+nDireccion.oninput=()=>nDireccion.value=nDireccion.value.toUpperCase();
+
+// VALIDACIONES VENTA
 cantidad.oninput=precio.oninput=()=>{
     cantidad.value=cantidad.value.replace(/[^0-9]/g,'');
     precio.value=precio.value.replace(/[^0-9.]/g,'');
     total.innerText="S/. "+((cantidad.value*precio.value)||0).toFixed(2);
 };
 
-// GUARDAR CLIENTE
+// MODAL
 window.abrirModal=()=>modal.style.display="flex";
 window.cerrarModal=()=>modal.style.display="none";
 
+// GUARDAR CLIENTE
 window.guardarCliente=async ()=>{
+    if(!nNombre.value) return alert("Ingrese nombre");
     if(nCelular.value.length!==9) return alert("Celular inválido");
+    if(!nDireccion.value) return alert("Ingrese dirección");
 
     await addDoc(collection(db,"clientes"),{
-        nombre:nNombre.value.toUpperCase(),
+        nombre:nNombre.value,
         celular:nCelular.value,
-        direccion:nDireccion.value.toUpperCase()
+        direccion:nDireccion.value
     });
 
     await cargarClientes();
+
+    nombre.value=nNombre.value;
+    celular.value=nCelular.value;
+    direccion.value=nDireccion.value;
+
+    nNombre.value="";
+    nCelular.value="";
+    nDireccion.value="";
+
+    buscarCliente.value="";
+    lista.innerHTML="";
+
     cerrarModal();
 };
 
-// GUARDAR VENTA
+// GUARDAR VENTA + LIMPIAR
 window.guardarVenta=async ()=>{
 
     if(!nombre.value) return alert("Seleccione cliente");
@@ -286,9 +313,14 @@ window.guardarVenta=async ()=>{
     });
 
     alert("VENTA GUARDADA");
+
+    document.querySelectorAll("input").forEach(i=>i.value="");
+    document.querySelectorAll("select").forEach(s=>s.value="");
+
+    total.innerText="S/. 0.00";
 };
 
-// ADMIN - VENTAS
+// ADMIN CON VENTAS
 async function abrirAdmin(){
     adminPanel.style.display="block";
 
