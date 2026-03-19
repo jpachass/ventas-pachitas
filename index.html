@@ -126,13 +126,51 @@ button{
 <input id="celular" readonly placeholder="CELULAR">
 <input id="direccion" readonly placeholder="DIRECCIÓN">
 
+<select id="marca">
+<option value="">MARCA</option>
+<option>SOL GAS</option>
+<option>Z GAS</option>
+<option>MAS GAS</option>
+<option>AZUL GAS</option>
+</select>
+
+<select id="valvula">
+<option value="">VÁLVULA</option>
+<option>NORMAL</option>
+<option>PREMIUM</option>
+</select>
+
 <input id="cantidad" placeholder="CANTIDAD">
 <input id="precio" placeholder="PRECIO">
+
+<select id="pago">
+<option value="">MÉTODO DE PAGO</option>
+<option>YAPE</option>
+<option>EFECTIVO</option>
+</select>
+
+<select id="delivery">
+<option value="">DELIVERY</option>
+<option>SI</option>
+<option>NO</option>
+</select>
 
 <div id="total">S/. 0.00</div>
 
 <button class="btn-main" onclick="guardarVenta()">GUARDAR VENTA</button>
 
+</div>
+
+<!-- MODAL -->
+<div class="modal" id="modal">
+<div class="modal-content">
+<h3>➕ NUEVO CLIENTE</h3>
+<input id="nNombre" placeholder="NOMBRE">
+<input id="nCelular" placeholder="CELULAR">
+<input id="nDireccion" placeholder="DIRECCIÓN">
+<button class="btn-main" onclick="guardarCliente()">GUARDAR</button>
+<button onclick="cerrarModal()" style="background:red;color:white;">CERRAR</button>
+</div>
 </div>
 
 <!-- ADMIN -->
@@ -156,7 +194,7 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-// 🔥 ADMIN
+// ADMIN
 let clicks=0;
 titulo.onclick=()=>{
     clicks++;
@@ -167,7 +205,9 @@ titulo.onclick=()=>{
     setTimeout(()=>clicks=0,1000);
 };
 
-// 🔥 CLIENTES
+window.cerrarAdmin=()=>adminPanel.style.display="none";
+
+// CLIENTES
 let clientes=[];
 async function cargarClientes(){
     const snap = await getDocs(collection(db,"clientes"));
@@ -176,11 +216,10 @@ async function cargarClientes(){
 }
 await cargarClientes();
 
-// 🔥 BUSCADOR
+// BUSCADOR
 buscarCliente.oninput=function(){
     let texto=this.value.toUpperCase().trim();
     lista.innerHTML="";
-
     if(!texto) return;
 
     let filtrados=clientes.filter(c =>
@@ -203,60 +242,77 @@ buscarCliente.oninput=function(){
     });
 };
 
-// 🔥 VALIDACIONES
+// VALIDACIONES
 cantidad.oninput=precio.oninput=()=>{
     cantidad.value=cantidad.value.replace(/[^0-9]/g,'');
     precio.value=precio.value.replace(/[^0-9.]/g,'');
     total.innerText="S/. "+((cantidad.value*precio.value)||0).toFixed(2);
 };
 
-// 🔥 GUARDAR VENTA
+// GUARDAR CLIENTE
+window.abrirModal=()=>modal.style.display="flex";
+window.cerrarModal=()=>modal.style.display="none";
+
+window.guardarCliente=async ()=>{
+    if(nCelular.value.length!==9) return alert("Celular inválido");
+
+    await addDoc(collection(db,"clientes"),{
+        nombre:nNombre.value.toUpperCase(),
+        celular:nCelular.value,
+        direccion:nDireccion.value.toUpperCase()
+    });
+
+    await cargarClientes();
+    cerrarModal();
+};
+
+// GUARDAR VENTA
 window.guardarVenta=async ()=>{
+
     if(!nombre.value) return alert("Seleccione cliente");
 
     await addDoc(collection(db,"ventas"),{
         nombre:nombre.value,
         celular:celular.value,
-        total:total.innerText,
+        direccion:direccion.value,
+        marca:marca.value,
+        valvula:valvula.value,
+        cantidad:Number(cantidad.value),
+        precio:Number(precio.value),
+        total:Number(cantidad.value)*Number(precio.value),
+        pago:pago.value,
+        delivery:delivery.value,
         fecha:new Date()
     });
 
     alert("VENTA GUARDADA");
 };
 
-// 🔥 ADMIN PANEL
+// ADMIN - VENTAS
 async function abrirAdmin(){
-    document.getElementById("adminPanel").style.display="block";
-    await cargarVentas();
-}
-
-window.cerrarAdmin=function(){
-    document.getElementById("adminPanel").style.display="none";
-};
-
-// 🔥 CARGAR VENTAS
-async function cargarVentas(){
+    adminPanel.style.display="block";
 
     const snap = await getDocs(collection(db,"ventas"));
 
-    let total=0;
     let html="<h3>VENTAS</h3>";
+    let total=0;
 
     snap.forEach(doc=>{
         let v=doc.data();
+        total+=v.total||0;
 
-        let monto=parseFloat((v.total||"0").replace("S/. ","")) || 0;
-        total+=monto;
-
-        let fecha=new Date(v.fecha.seconds*1000).toLocaleString();
+        let fecha=v.fecha?.seconds
+            ? new Date(v.fecha.seconds*1000).toLocaleString()
+            : "";
 
         html+=`
-            <div style="margin-bottom:10px;">
-                <b>${v.nombre}</b><br>
-                💰 ${v.total}<br>
-                📅 ${fecha}
-            </div>
-        `;
+        <div style="margin-bottom:10px;">
+            <b>${v.nombre}</b><br>
+            💰 S/. ${v.total}<br>
+            🏷️ ${v.marca} - ${v.valvula}<br>
+            💳 ${v.pago} | 🚚 ${v.delivery}<br>
+            📅 ${fecha}
+        </div>`;
     });
 
     html+=`<h2>💰 TOTAL: S/. ${total.toFixed(2)}</h2>`;
