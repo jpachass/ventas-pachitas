@@ -17,8 +17,9 @@ body{
     padding:20px;
     text-align:center;
     font-weight:bold;
-    font-size:28px; /* 🔥 MÁS GRANDE */
+    font-size:28px;
     border-radius:0 0 20px 20px;
+    cursor:pointer; /* 🔥 indica que es interactivo */
 }
 
 .card{
@@ -40,11 +41,9 @@ input, select{
     box-sizing:border-box;
 }
 
-/* 🔒 CAMPOS BLOQUEADOS */
 input[readonly]{
     background:#f5f5f5;
     color:#555;
-    cursor:not-allowed;
 }
 
 button{
@@ -59,6 +58,13 @@ button{
 .btn-main{background:#27ae60;color:white;}
 .btn-sec{background:#3498db;color:white;margin-bottom:10px;}
 
+#total{
+    text-align:center;
+    font-size:32px;
+    font-weight:bold;
+    color:#27ae60;
+}
+
 .sugerencias{
     position:absolute;
     width:100%;
@@ -67,51 +73,36 @@ button{
     box-shadow:0 5px 10px rgba(0,0,0,0.2);
     max-height:150px;
     overflow:auto;
-    z-index:10;
 }
 
 .item{
     padding:10px;
-    border-bottom:1px solid #eee;
     cursor:pointer;
 }
 
 .item:hover{
-    background:#f1f1f1;
+    background:#eee;
 }
 
-/* 💰 TOTAL GRANDE Y CENTRADO */
-#total{
-    text-align:center;
-    font-size:32px;
-    font-weight:bold;
-    margin-top:10px;
-    color:#27ae60;
-}
-
-.modal{
+/* ADMIN */
+#adminPanel{
     position:fixed;
-    top:0;left:0;
-    width:100%;height:100%;
-    background:rgba(0,0,0,0.6);
+    top:0;
+    left:0;
+    width:100%;
+    height:100%;
+    background:black;
+    color:white;
     display:none;
-    justify-content:center;
-    align-items:center;
-}
-
-.modal-content{
-    background:white;
     padding:20px;
-    border-radius:15px;
-    width:90%;
-    max-width:400px;
+    overflow:auto;
 }
 </style>
 </head>
 
 <body>
 
-<div class="header">🔥 VENTAS PACHITAS 🔥</div>
+<div class="header" id="titulo">🔥 VENTAS PACHITAS 🔥</div>
 
 <div class="card">
 
@@ -120,7 +111,6 @@ button{
 
 <button class="btn-sec" onclick="abrirModal()">➕ NUEVO CLIENTE</button>
 
-<!-- 🔒 CAMPOS BLOQUEADOS -->
 <input id="nombre" placeholder="NOMBRE" readonly>
 <input id="celular" placeholder="CELULAR" readonly>
 <input id="direccion" placeholder="DIRECCIÓN" readonly>
@@ -143,13 +133,11 @@ button{
 <input id="precio" placeholder="PRECIO">
 
 <select id="pago">
-<option value="">MÉTODO DE PAGO</option>
 <option>YAPE</option>
 <option>EFECTIVO</option>
 </select>
 
 <select id="delivery">
-<option value="">DELIVERY</option>
 <option>SI</option>
 <option>NO</option>
 </select>
@@ -160,161 +148,47 @@ button{
 
 </div>
 
+<!-- ADMIN PANEL -->
+<div id="adminPanel">
+<h2>📊 PANEL ADMIN</h2>
+<button onclick="cerrarAdmin()">Cerrar</button>
+<div id="datos"></div>
+</div>
+
 <!-- MODAL -->
-<div class="modal" id="modal">
-<div class="modal-content">
-
-<h3>➕ NUEVO CLIENTE</h3>
-
-<input id="nNombre" placeholder="NOMBRE">
-<input id="nCelular" placeholder="CELULAR">
-<input id="nDireccion" placeholder="DIRECCIÓN">
-
-<button class="btn-main" onclick="guardarCliente()">GUARDAR CLIENTE</button>
-<button onclick="cerrarModal()" style="background:red;color:white;">CERRAR</button>
-
-</div>
-</div>
+<div class="modal" id="modal"></div>
 
 <script type="module">
 
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-import { getFirestore, collection, addDoc, getDocs } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+// 🔥 CONTADOR DE CLICS
+let clicks = 0;
 
-const firebaseConfig = {
-  apiKey: "AIzaSyA8MGBeJEo-eDyu0iHayj9WIQPZHx7UhMA",
-  authDomain: "ventas-pachitas.firebaseapp.com",
-  projectId: "ventas-pachitas"
-};
+titulo.addEventListener("click", ()=>{
+    clicks++;
 
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
-
-let clientes=[];
-
-async function cargarClientes(){
-    const snap = await getDocs(collection(db,"clientes"));
-    clientes=[];
-    snap.forEach(doc=>clientes.push(doc.data()));
-}
-cargarClientes();
-
-// 🔍 BUSCADOR PRO
-buscarCliente.oninput = function(){
-
-    this.value = this.value.toUpperCase().replace(/[^A-Z0-9\s]/g,'');
-
-    let texto = this.value.trim();
-    lista.innerHTML = "";
-
-    if(texto.length < 1) return;
-
-    let filtrados = clientes.filter(c => {
-        let nombre = (c.nombre || "").toUpperCase();
-        let celular = String(c.celular || "");
-        return nombre.includes(texto) || celular.includes(texto);
-    });
-
-    filtrados.slice(0,5).forEach(c=>{
-
-        let div = document.createElement("div");
-        div.className = "item";
-
-        div.innerHTML = `
-            <strong>${c.nombre}</strong><br>
-            📱 ${c.celular}
-        `;
-
-        div.onclick = ()=>{
-            nombre.value = c.nombre;
-            celular.value = c.celular;
-            direccion.value = c.direccion;
-
-            buscarCliente.value = "";
-            lista.innerHTML = "";
-        };
-
-        lista.appendChild(div);
-    });
-};
-
-// VALIDACIONES
-cantidad.oninput = precio.oninput = ()=>{
-    cantidad.value=cantidad.value.replace(/[^0-9]/g,'');
-    precio.value=precio.value.replace(/[^0-9.]/g,'');
-    total.innerText="S/. "+((cantidad.value*precio.value)||0).toFixed(2);
-};
-
-nNombre.oninput = ()=> nNombre.value = nNombre.value.toUpperCase().replace(/[^A-Z\s]/g,'');
-nCelular.oninput = ()=> nCelular.value = nCelular.value.replace(/[^0-9]/g,'').slice(0,9);
-nDireccion.oninput = ()=> nDireccion.value = nDireccion.value.toUpperCase();
-
-// GUARDAR CLIENTE
-window.guardarCliente = async ()=>{
-
-    let nom = nNombre.value.toUpperCase().replace(/[^A-Z\s]/g,'');
-    let cel = nCelular.value.replace(/[^0-9]/g,'').slice(0,9);
-    let dir = nDireccion.value.toUpperCase();
-
-    if(nom==="") return alert("❌ INGRESE NOMBRE");
-    if(cel.length!==9) return alert("❌ CELULAR INVÁLIDO");
-    if(dir==="") return alert("❌ INGRESE DIRECCIÓN");
-
-    await addDoc(collection(db,"clientes"),{
-        nombre:nom,
-        celular:cel,
-        direccion:dir
-    });
-
-    nombre.value=nom;
-    celular.value=cel;
-    direccion.value=dir;
-
-    nNombre.value="";
-    nCelular.value="";
-    nDireccion.value="";
-
-    buscarCliente.value="";
-    lista.innerHTML="";
-
-    cerrarModal();
-    cargarClientes();
-
-    alert("✅ CLIENTE GUARDADO 🚀");
-};
-
-// GUARDAR VENTA
-window.guardarVenta = async ()=>{
-
-    if(nombre.value=="" || celular.value=="" || marca.value=="" || valvula.value==""){
-        return alert("❌ SELECCIONE UN CLIENTE Y COMPLETE DATOS");
+    if(clicks === 3){
+        abrirAdmin();
+        clicks = 0;
     }
 
-    await addDoc(collection(db,"ventas"),{
-        nombre:nombre.value,
-        celular:celular.value,
-        direccion:direccion.value,
-        marca:marca.value,
-        valvula:valvula.value,
-        cantidad:Number(cantidad.value),
-        precio:Number(precio.value),
-        total:Number(cantidad.value)*Number(precio.value),
-        pago:pago.value,
-        delivery:delivery.value,
-        fecha:new Date()
-    });
+    setTimeout(()=>clicks=0,1000); // reset si tarda mucho
+});
 
-    alert("✅ VENTA GRABADO EXITOSAMENTE");
+// 🔥 ABRIR ADMIN
+function abrirAdmin(){
+    document.getElementById("adminPanel").style.display="block";
+    cargarAdmin();
+}
 
-    document.querySelectorAll("input").forEach(i=>i.value="");
-    document.querySelectorAll("select").forEach(s=>s.value="");
+// 🔥 CERRAR ADMIN
+function cerrarAdmin(){
+    document.getElementById("adminPanel").style.display="none";
+}
 
-    total.innerText="S/. 0.00";
-};
-
-// MODAL
-window.abrirModal = ()=> modal.style.display="flex";
-window.cerrarModal = ()=> modal.style.display="none";
+// 🔥 SIMULACIÓN DATOS ADMIN (puedes conectar Firebase luego)
+function cargarAdmin(){
+    document.getElementById("datos").innerHTML = "📊 Aquí verás tus ventas...";
+}
 
 </script>
 
