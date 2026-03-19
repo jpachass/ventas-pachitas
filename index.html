@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VENTAS PACHITAS</title>
+
+<style>
+body {
+    font-family: Arial;
+    background: linear-gradient(to bottom, #ffcc00, #ff6600);
+    text-align: center;
+    margin:0;
+}
+
+h1 { color:#b30000; }
+
+input, select {
+    width: 85%;
+    max-width: 350px;
+    padding: 12px;
+    margin: 6px;
+    font-size: 16px;
+    border-radius: 10px;
+    border: 2px solid #ccc;
+}
+
+button {
+    padding: 12px 25px;
+    font-size: 18px;
+    margin-top: 10px;
+    background: green;
+    color: white;
+    border-radius: 8px;
+    border: none;
+}
+
+#panel {
+    background:white;
+    padding:15px;
+    margin:15px;
+    border-radius:12px;
+}
+</style>
+</head>
+
+<body>
+
+<h1>🔥 VENTAS PACHITAS 🔥</h1>
+
+<div id="panel">
+<h3>📋 REGISTRO DE VENTA</h3>
+
+<input id="nombre" placeholder="NOMBRE">
+<input id="celular" placeholder="CELULAR">
+<input id="direccion" placeholder="DIRECCIÓN">
+
+<input id="cantidad" placeholder="CANTIDAD">
+<input id="precio" placeholder="PRECIO UNITARIO">
+
+<select id="pago">
+    <option value="">MÉTODO DE PAGO</option>
+    <option>YAPE</option>
+    <option>EFECTIVO</option>
+</select>
+
+<select id="delivery">
+    <option value="">DELIVERY</option>
+    <option>SÍ</option>
+    <option>NO</option>
+</select>
+
+<h2 id="total">TOTAL: S/. 0.00</h2>
+
+<button onclick="guardarVenta()">GUARDAR VENTA</button>
+</div>
+
+<div id="panel">
+<h3>📊 RESUMEN</h3>
+<p id="hoy">💰 HOY: S/. 0.00</p>
+<p id="mes">📅 MES: S/. 0.00</p>
+</div>
+
+<button onclick="exportarExcel()">📊 EXPORTAR EXCEL</button>
+
+<script>
+
+// 🔐 VALIDACIONES
+document.getElementById("nombre").addEventListener("input", function() {
+    this.value = this.value.toUpperCase().replace(/[^A-Z\s]/g, '');
+});
+
+document.getElementById("direccion").addEventListener("input", function() {
+    this.value = this.value.toUpperCase();
+});
+
+document.getElementById("celular").addEventListener("input", function() {
+    this.value = this.value.replace(/[^0-9]/g, '').slice(0,9);
+});
+
+document.getElementById("cantidad").addEventListener("input", function() {
+    this.value = this.value.replace(/[^0-9]/g, '');
+    calcularTotal();
+});
+
+document.getElementById("precio").addEventListener("input", function() {
+    this.value = this.value.replace(/[^0-9.]/g, '');
+    calcularTotal();
+});
+
+// 💰 FORMATO MONEDA
+function formatearMoneda(valor){
+    return "S/. " + valor.toFixed(2);
+}
+
+// 📅 FECHA PRO (VISIBLE)
+function obtenerFechaPro(){
+    let f = new Date();
+
+    let dia = String(f.getDate()).padStart(2,'0');
+    let mes = String(f.getMonth()+1).padStart(2,'0');
+    let año = f.getFullYear();
+
+    let hora = f.getHours();
+    let min = String(f.getMinutes()).padStart(2,'0');
+
+    let ampm = hora >= 12 ? "PM" : "AM";
+    hora = hora % 12 || 12;
+
+    return `${dia}/${mes}/${año} - ${hora}:${min} ${ampm}`;
+}
+
+// 📅 FECHA LOCAL (PARA CÁLCULO)
+function obtenerFechaLocal(){
+    let f = new Date();
+
+    let año = f.getFullYear();
+    let mes = String(f.getMonth()+1).padStart(2,'0');
+    let dia = String(f.getDate()).padStart(2,'0');
+
+    return `${año}-${mes}-${dia}`;
+}
+
+// 💰 CALCULAR TOTAL
+function calcularTotal(){
+    let c = Number(document.getElementById("cantidad").value) || 0;
+    let p = Number(document.getElementById("precio").value) || 0;
+    let total = c * p;
+
+    document.getElementById("total").innerText = "TOTAL: " + formatearMoneda(total);
+}
+
+// 💾 GUARDAR VENTA
+function guardarVenta(){
+
+    let nombre = document.getElementById("nombre").value.trim();
+    let celular = document.getElementById("celular").value.trim();
+    let direccion = document.getElementById("direccion").value.trim();
+    let cantidad = Number(document.getElementById("cantidad").value);
+    let precio = Number(document.getElementById("precio").value);
+    let pago = document.getElementById("pago").value;
+    let delivery = document.getElementById("delivery").value;
+
+    if(nombre=="" || celular.length!==9 || cantidad==0 || precio==0){
+        alert("❌ COMPLETE CORRECTAMENTE LOS CAMPOS");
+        return;
+    }
+
+    let total = cantidad * precio;
+
+    let venta = {
+        nombre,
+        celular,
+        direccion,
+        cantidad,
+        precio,
+        total,
+        pago,
+        delivery,
+        fecha: obtenerFechaPro(),
+        fechaISO: obtenerFechaLocal()
+    };
+
+    let ventas = JSON.parse(localStorage.getItem("ventasPachitas")) || [];
+    ventas.push(venta);
+
+    localStorage.setItem("ventasPachitas", JSON.stringify(ventas));
+
+    alert("✅ VENTA REGISTRADA");
+
+    limpiar();
+    resumen();
+}
+
+// 🧹 LIMPIAR
+function limpiar(){
+    document.querySelectorAll("input").forEach(i=>i.value="");
+    document.getElementById("total").innerText="TOTAL: S/. 0.00";
+}
+
+// 📊 RESUMEN FUNCIONANDO
+function resumen(){
+    let ventas = JSON.parse(localStorage.getItem("ventasPachitas")) || [];
+
+    let hoy = obtenerFechaLocal();
+    let mesActual = hoy.substring(0,7);
+
+    let totalHoy = 0;
+    let totalMes = 0;
+
+    ventas.forEach(v=>{
+        if(v.fechaISO === hoy){
+            totalHoy += v.total;
+        }
+
+        if(v.fechaISO.startsWith(mesActual)){
+            totalMes += v.total;
+        }
+    });
+
+    document.getElementById("hoy").innerText = "💰 HOY: " + formatearMoneda(totalHoy);
+    document.getElementById("mes").innerText = "📅 MES: " + formatearMoneda(totalMes);
+}
+
+// 📁 EXPORTAR EXCEL
+function exportarExcel(){
+
+    let v = JSON.parse(localStorage.getItem("ventasPachitas")) || [];
+
+    let html = "<table border='1'><tr><th>Nombre</th><th>Celular</th><th>Dirección</th><th>Cantidad</th><th>Precio</th><th>Total</th><th>Pago</th><th>Delivery</th><th>Fecha</th></tr>";
+
+    v.forEach(x=>{
+        html+=`<tr>
+        <td>${x.nombre}</td>
+        <td>${x.celular}</td>
+        <td>${x.direccion}</td>
+        <td>${x.cantidad}</td>
+        <td>S/. ${x.precio}</td>
+        <td>S/. ${x.total}</td>
+        <td>${x.pago}</td>
+        <td>${x.delivery}</td>
+        <td>${x.fecha}</td>
+        </tr>`;
+    });
+
+    html+="</table>";
+
+    let blob = new Blob([html],{type:"application/vnd.ms-excel"});
+    let a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = "ventas_pachitas.xls";
+    a.click();
+}
+
+// 🚀 INICIO
+window.onload = resumen;
+
+</script>
+
+</body>
+</html>
