@@ -96,7 +96,7 @@ button{
 </div>
 
 <div class="card">
-
+<input id="buscarCliente" placeholder="🔍 BUSCAR CLIENTE">
 <input id="nombre" placeholder="NOMBRE">
 <input id="celular" placeholder="CELULAR">
 <input id="direccion" placeholder="DIRECCIÓN">
@@ -142,6 +142,35 @@ button{
 </div>
 
 <script type="module">
+    import { getDocs } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+let listaClientes = [];
+
+// CARGAR CLIENTES
+async function cargarClientes(){
+    const querySnapshot = await getDocs(collection(db,"clientes"));
+    listaClientes = [];
+
+    querySnapshot.forEach(doc=>{
+        listaClientes.push(doc.data());
+    });
+}
+
+cargarClientes();
+
+// AUTOCOMPLETAR
+document.getElementById("buscarCliente").addEventListener("input", function(){
+
+    let texto = this.value.toUpperCase();
+
+    let cliente = listaClientes.find(c => c.nombre.includes(texto));
+
+    if(cliente){
+        document.getElementById("nombre").value = cliente.nombre;
+        document.getElementById("celular").value = cliente.celular;
+        document.getElementById("direccion").value = cliente.direccion;
+    }
+});
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
 import { getFirestore, collection, addDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
