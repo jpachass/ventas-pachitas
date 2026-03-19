@@ -43,9 +43,7 @@ input, select{
     font-size:16px;
 }
 
-input[readonly]{
-    background:#f5f5f5;
-}
+input[readonly]{background:#f5f5f5;}
 
 button{
     width:100%;
@@ -64,7 +62,6 @@ button{
     font-size:34px;
     font-weight:bold;
     color:#27ae60;
-    margin-top:10px;
 }
 
 .sugerencias{
@@ -178,47 +175,46 @@ button{
 </div>
 </div>
 
-<!-- ADMIN -->
-<div id="adminPanel">
-<h2>📊 PANEL ADMIN</h2>
-<button onclick="cerrarAdmin()">Cerrar</button>
-<p>Panel listo para reportes</p>
-</div>
-
 <script>
 
-// ADMIN
+// 🔥 ADMIN
 let clicks=0;
 titulo.onclick=()=>{
     clicks++;
     if(clicks===3){
-        adminPanel.style.display="block";
+        alert("PANEL ADMIN ACTIVADO");
         clicks=0;
     }
     setTimeout(()=>clicks=0,1000);
 };
-function cerrarAdmin(){adminPanel.style.display="none";}
 
-// BASE LOCAL
-let clientes=[];
+// 🔥 DATOS DE PRUEBA (IMPORTANTE)
+let clientes=[
+    {nombre:"JUAN PEREZ", celular:"987654321", direccion:"LIMA"},
+    {nombre:"CARLOS LOPEZ", celular:"912345678", direccion:"CALLAO"},
+    {nombre:"MARIA TORRES", celular:"999888777", direccion:"SURCO"}
+];
 
-// BUSCADOR (ARREGLADO)
+// 🔍 BUSCADOR FUNCIONAL
 buscarCliente.oninput=function(){
 
-    let texto=this.value.toUpperCase().trim();
+    // VALIDACIÓN
+    this.value=this.value.toUpperCase().replace(/[^A-Z0-9\s]/g,'');
+
+    let texto=this.value.trim();
     lista.innerHTML="";
 
     if(texto==="") return;
 
     let filtrados=clientes.filter(c =>
-        c.nombre.toUpperCase().includes(texto) ||
+        c.nombre.includes(texto) ||
         c.celular.includes(texto)
     );
 
     filtrados.forEach(c=>{
         let div=document.createElement("div");
         div.className="item";
-        div.innerHTML=`<b>${c.nombre}</b><br>${c.celular}`;
+        div.innerHTML=`<b>${c.nombre}</b><br>📱 ${c.celular}`;
 
         div.onclick=()=>{
             nombre.value=c.nombre;
@@ -277,10 +273,9 @@ function guardarCliente(){
 
 // GUARDAR VENTA
 function guardarVenta(){
-
     if(!nombre.value) return alert("SELECCIONE CLIENTE");
 
-    alert("VENTA GRABADO EXITOSAMENTE");
+    alert("VENTA GUARDADA");
 
     document.querySelectorAll("input").forEach(i=>i.value="");
     document.querySelectorAll("select").forEach(s=>s.value="");
