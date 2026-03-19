@@ -174,7 +174,6 @@ const db = getFirestore(app);
 
 let clientes=[];
 
-// CARGAR CLIENTES
 async function cargarClientes(){
     const snap = await getDocs(collection(db,"clientes"));
     clientes=[];
@@ -182,7 +181,7 @@ async function cargarClientes(){
 }
 cargarClientes();
 
-// 🔍 BUSCADOR PRO (NOMBRE + CELULAR)
+// 🔍 BUSCADOR PRO
 buscarCliente.oninput = function(){
 
     this.value = this.value.toUpperCase().replace(/[^A-Z0-9\s]/g,'');
@@ -193,10 +192,8 @@ buscarCliente.oninput = function(){
     if(texto.length < 1) return;
 
     let filtrados = clientes.filter(c => {
-
         let nombre = (c.nombre || "").toUpperCase();
         let celular = String(c.celular || "");
-
         return nombre.includes(texto) || celular.includes(texto);
     });
 
@@ -215,7 +212,8 @@ buscarCliente.oninput = function(){
             celular.value = c.celular;
             direccion.value = c.direccion;
 
-            buscarCliente.value = c.nombre;
+            // 🔥 LIMPIAR BUSCADOR
+            buscarCliente.value = "";
             lista.innerHTML = "";
         };
 
@@ -223,7 +221,7 @@ buscarCliente.oninput = function(){
     });
 };
 
-// VALIDACIONES VENTA
+// VALIDACIONES
 nombre.oninput = ()=> nombre.value = nombre.value.toUpperCase().replace(/[^A-Z\s]/g,'');
 direccion.oninput = ()=> direccion.value = direccion.value.toUpperCase();
 celular.oninput = ()=> celular.value = celular.value.replace(/[^0-9]/g,'').slice(0,9);
@@ -234,7 +232,6 @@ cantidad.oninput = precio.oninput = ()=>{
     total.innerText="S/. "+((cantidad.value*precio.value)||0).toFixed(2);
 };
 
-// VALIDACIONES MODAL
 nNombre.oninput = ()=> nNombre.value = nNombre.value.toUpperCase().replace(/[^A-Z\s]/g,'');
 nCelular.oninput = ()=> nCelular.value = nCelular.value.replace(/[^0-9]/g,'').slice(0,9);
 nDireccion.oninput = ()=> nDireccion.value = nDireccion.value.toUpperCase();
@@ -263,6 +260,10 @@ window.guardarCliente = async ()=>{
     nNombre.value="";
     nCelular.value="";
     nDireccion.value="";
+
+    // 🔥 LIMPIAR BUSCADOR
+    buscarCliente.value="";
+    lista.innerHTML="";
 
     cerrarModal();
     cargarClientes();
