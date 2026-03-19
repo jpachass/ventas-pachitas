@@ -6,41 +6,19 @@
 <title>VENTAS PACHITAS ONLINE</title>
 
 <style>
-body {
-    font-family: Arial;
-    background: linear-gradient(to bottom, #ffcc00, #ff6600);
-    text-align: center;
-}
-
+body {font-family: Arial; background: linear-gradient(to bottom,#ffcc00,#ff6600); text-align:center;}
 input, select {
-    width: 85%;
-    max-width: 350px;
-    padding: 12px;
-    margin: 6px;
-    font-size: 16px;
-    border-radius: 10px;
-    border: 2px solid #ccc;
+    width:85%; max-width:350px; padding:12px; margin:6px;
+    border-radius:10px; border:2px solid #ccc;
 }
-
-button {
-    padding: 12px;
-    background: green;
-    color: white;
-    border-radius: 8px;
-}
-
-#panel {
-    background:white;
-    margin:15px;
-    padding:15px;
-    border-radius:12px;
-}
+button {padding:12px; background:green; color:white; border-radius:8px;}
+#panel {background:white; margin:15px; padding:15px; border-radius:12px;}
 </style>
 </head>
 
 <body>
 
-<h1>🔥 VENTAS PACHITAS 🔥</h1>
+<h1>🔥 VENTAS PACHITAS ONLINE 🔥</h1>
 
 <div id="panel">
 <input id="nombre" placeholder="NOMBRE">
@@ -65,11 +43,16 @@ button {
 <button onclick="guardarVenta()">GUARDAR</button>
 </div>
 
-<!-- FIREBASE MODULAR -->
+<div id="panel">
+<h3>📊 RESUMEN</h3>
+<p id="hoy">💰 HOY: S/. 0.00</p>
+<p id="mes">📅 MES: S/. 0.00</p>
+</div>
+
 <script type="module">
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-import { getFirestore, collection, addDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import { getFirestore, collection, addDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 // CONFIG
 const firebaseConfig = {
@@ -81,7 +64,6 @@ const firebaseConfig = {
   appId: "1:444948394496:web:5d03b37093d9d0f8031ee5"
 };
 
-// INIT
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
@@ -92,65 +74,57 @@ const direccion = document.getElementById("direccion");
 const cantidad = document.getElementById("cantidad");
 const precio = document.getElementById("precio");
 
-nombre.addEventListener("input", () => {
-    nombre.value = nombre.value.toUpperCase().replace(/[^A-Z\s]/g,'');
-});
+nombre.oninput = ()=> nombre.value = nombre.value.toUpperCase().replace(/[^A-Z\s]/g,'');
+direccion.oninput = ()=> direccion.value = direccion.value.toUpperCase();
+celular.oninput = ()=> celular.value = celular.value.replace(/[^0-9]/g,'').slice(0,9);
+cantidad.oninput = ()=> {cantidad.value=cantidad.value.replace(/[^0-9]/g,''); calc();}
+precio.oninput = ()=> {precio.value=precio.value.replace(/[^0-9.]/g,''); calc();};
 
-direccion.addEventListener("input", () => {
-    direccion.value = direccion.value.toUpperCase();
-});
-
-celular.addEventListener("input", () => {
-    celular.value = celular.value.replace(/[^0-9]/g,'').slice(0,9);
-});
-
-cantidad.addEventListener("input", () => {
-    cantidad.value = cantidad.value.replace(/[^0-9]/g,'');
-    calcularTotal();
-});
-
-precio.addEventListener("input", () => {
-    precio.value = precio.value.replace(/[^0-9.]/g,'');
-    calcularTotal();
-});
-
-// TOTAL
-function calcularTotal(){
-    let c = Number(cantidad.value)||0;
-    let p = Number(precio.value)||0;
-    document.getElementById("total").innerText = "TOTAL: S/. " + (c*p).toFixed(2);
+function calc(){
+    let t = (Number(cantidad.value)||0)*(Number(precio.value)||0);
+    total.innerText = "TOTAL: S/. " + t.toFixed(2);
 }
 
 // GUARDAR
-window.guardarVenta = async function(){
+window.guardarVenta = async ()=>{
+    if(nombre.value=="" || celular.value.length!==9) return alert("❌ DATOS INCORRECTOS");
 
-    if(nombre.value=="" || celular.value.length!==9 || cantidad.value=="" || precio.value==""){
-        alert("❌ COMPLETE LOS CAMPOS");
-        return;
-    }
+    await addDoc(collection(db,"ventas"),{
+        nombre:nombre.value,
+        celular:celular.value,
+        direccion:direccion.value,
+        cantidad:Number(cantidad.value),
+        precio:Number(precio.value),
+        total:Number(cantidad.value)*Number(precio.value),
+        pago:pago.value,
+        delivery:delivery.value,
+        fecha:new Date()
+    });
 
-    try{
-        await addDoc(collection(db, "ventas"), {
-            nombre: nombre.value,
-            celular: celular.value,
-            direccion: direccion.value,
-            cantidad: Number(cantidad.value),
-            precio: Number(precio.value),
-            total: Number(cantidad.value)*Number(precio.value),
-            pago: document.getElementById("pago").value,
-            delivery: document.getElementById("delivery").value,
-            fecha: new Date()
-        });
+    alert("✅ GUARDADO");
 
-        alert("✅ GUARDADO EN LA NUBE");
-
-        document.querySelectorAll("input").forEach(i=>i.value="");
-        document.getElementById("total").innerText="TOTAL: S/. 0.00";
-
-    }catch(e){
-        alert("❌ ERROR: " + e.message);
-    }
+    document.querySelectorAll("input").forEach(i=>i.value="");
+    total.innerText="TOTAL: S/. 0.00";
 }
+
+// 📊 RESUMEN EN TIEMPO REAL
+onSnapshot(collection(db,"ventas"), snap=>{
+    let hoyTotal=0, mesTotal=0;
+
+    let hoy = new Date().toDateString();
+    let mes = new Date().getMonth();
+
+    snap.forEach(doc=>{
+        let v = doc.data();
+        let f = v.fecha.toDate();
+
+        if(f.toDateString()===hoy) hoyTotal+=v.total;
+        if(f.getMonth()===mes) mesTotal+=v.total;
+    });
+
+    document.getElementById("hoy").innerText="💰 HOY: S/. "+hoyTotal.toFixed(2);
+    document.getElementById("mes").innerText="📅 MES: S/. "+mesTotal.toFixed(2);
+});
 
 </script>
 
