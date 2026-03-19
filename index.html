@@ -297,6 +297,14 @@ window.guardarCliente=async ()=>{
 window.guardarVenta=async ()=>{
 
     if(!nombre.value) return alert("Seleccione cliente");
+    if(!marca.value) return alert("Seleccione marca");
+    if(!valvula.value) return alert("Seleccione válvula");
+    if(!cantidad.value) return alert("Ingrese cantidad");
+    if(!precio.value) return alert("Ingrese precio");
+    if(!pago.value) return alert("Seleccione método de pago");
+    if(!delivery.value) return alert("Seleccione delivery");
+
+    let totalCalc = Number(cantidad.value) * Number(precio.value);
 
     await addDoc(collection(db,"ventas"),{
         nombre:nombre.value,
@@ -306,10 +314,10 @@ window.guardarVenta=async ()=>{
         valvula:valvula.value,
         cantidad:Number(cantidad.value),
         precio:Number(precio.value),
-        total:Number(cantidad.value)*Number(precio.value),
+        total:totalCalc,
         pago:pago.value,
         delivery:delivery.value,
-        fecha:new Date()
+        fecha:new Date().toISOString() // 🔥 CLAVE
     });
 
     alert("VENTA GRABADO EXITOSAMENTE");
@@ -322,6 +330,7 @@ window.guardarVenta=async ()=>{
 
 // ADMIN CON VENTAS
 async function abrirAdmin(){
+
     adminPanel.style.display="block";
 
     const snap = await getDocs(collection(db,"ventas"));
@@ -329,20 +338,37 @@ async function abrirAdmin(){
     let html="<h3>VENTAS</h3>";
     let total=0;
 
-    snap.forEach(doc=>{
-        let v=doc.data();
-        total+=v.total||0;
+    if(snap.empty){
+        contenidoAdmin.innerHTML="<h3>⚠️ NO HAY VENTAS REGISTRADAS</h3>";
+        return;
+    }
 
-        let fecha=v.fecha?.seconds
-            ? new Date(v.fecha.seconds*1000).toLocaleString()
-            : "";
+    snap.forEach(doc=>{
+
+        let v=doc.data();
+
+        let monto = Number(v.total) || 0;
+        total += monto;
+
+        // 🔥 SOPORTA TODOS LOS FORMATOS DE FECHA
+        let fecha="";
+
+        if(typeof v.fecha === "string"){
+            fecha = new Date(v.fecha).toLocaleString();
+        }
+        else if(v.fecha?.seconds){
+            fecha = new Date(v.fecha.seconds*1000).toLocaleString();
+        }
+        else{
+            fecha = "SIN FECHA";
+        }
 
         html+=`
         <div style="margin-bottom:10px;">
-            <b>${v.nombre}</b><br>
-            💰 S/. ${v.total}<br>
-            🏷️ ${v.marca} - ${v.valvula}<br>
-            💳 ${v.pago} | 🚚 ${v.delivery}<br>
+            <b>${v.nombre || "-"}</b><br>
+            💰 S/. ${monto.toFixed(2)}<br>
+            🏷️ ${v.marca || "-"} - ${v.valvula || "-"}<br>
+            💳 ${v.pago || "-"} | 🚚 ${v.delivery || "-"}<br>
             📅 ${fecha}
         </div>`;
     });
