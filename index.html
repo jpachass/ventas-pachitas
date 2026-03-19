@@ -3,261 +3,188 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>VENTAS PACHITAS</title>
+<title>PANEL ADMIN PACHITAS</title>
 
 <style>
-body {
+body{
     font-family: Arial;
-    background: linear-gradient(to bottom, #ffcc00, #ff6600);
-    text-align: center;
-    margin:0;
+    background:#111;
+    color:white;
+    text-align:center;
 }
 
-h1 { color:#b30000; }
-
-input, select {
-    width: 85%;
-    max-width: 350px;
-    padding: 12px;
-    margin: 6px;
-    font-size: 16px;
-    border-radius: 10px;
-    border: 2px solid #ccc;
+input{
+    padding:10px;
+    margin:5px;
+    border-radius:8px;
+    border:none;
+    width:200px;
 }
 
-button {
-    padding: 12px 25px;
-    font-size: 18px;
-    margin-top: 10px;
-    background: green;
-    color: white;
-    border-radius: 8px;
-    border: none;
-}
-
-#panel {
+table{
+    width:95%;
+    margin:auto;
+    border-collapse: collapse;
     background:white;
-    padding:15px;
-    margin:15px;
-    border-radius:12px;
+    color:black;
+}
+
+th, td{
+    padding:10px;
+    border:1px solid #ccc;
+}
+
+th{
+    background:#ff6600;
+    color:white;
+}
+
+button{
+    padding:6px 10px;
+    border:none;
+    border-radius:6px;
+    cursor:pointer;
+}
+
+.eliminar{
+    background:red;
+    color:white;
 }
 </style>
 </head>
 
 <body>
 
-<h1>🔥 VENTAS PACHITAS 🔥</h1>
+<h1>📊 PANEL ADMIN PACHITAS</h1>
 
-<div id="panel">
-<h3>📋 REGISTRO DE VENTA</h3>
+<input id="buscar" placeholder="Buscar cliente / celular">
+<input type="date" id="filtroFecha">
 
-<input id="nombre" placeholder="NOMBRE">
-<input id="celular" placeholder="CELULAR">
-<input id="direccion" placeholder="DIRECCIÓN">
+<h2 id="totalGeneral">TOTAL: S/. 0.00</h2>
 
-<input id="cantidad" placeholder="CANTIDAD">
-<input id="precio" placeholder="PRECIO UNITARIO">
+<table>
+<thead>
+<tr>
+<th>Cliente</th>
+<th>Celular</th>
+<th>Dirección</th>
+<th>Cant</th>
+<th>Total</th>
+<th>Pago</th>
+<th>Delivery</th>
+<th>Fecha</th>
+<th>Acción</th>
+</tr>
+</thead>
 
-<select id="pago">
-    <option value="">MÉTODO DE PAGO</option>
-    <option>YAPE</option>
-    <option>EFECTIVO</option>
-</select>
+<tbody id="tabla"></tbody>
+</table>
 
-<select id="delivery">
-    <option value="">DELIVERY</option>
-    <option>SI</option>
-    <option>NO</option>
-</select>
-
-<h2 id="total">TOTAL: S/. 0.00</h2>
-
-<button onclick="guardarVenta()">GUARDAR VENTA</button>
-</div>
-
-<div id="panel">
-<h3>📊 RESUMEN</h3>
-<p id="hoy">💰 HOY: S/. 0.00</p>
-<p id="mes">📅 MES: S/. 0.00</p>
-</div>
-
-<button onclick="exportarExcel()">📊 EXPORTAR EXCEL</button>
+<!-- FIREBASE -->
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js"></script>
 
 <script>
 
-// 🔐 VALIDACIONES
-document.getElementById("nombre").addEventListener("input", function() {
-    this.value = this.value.toUpperCase().replace(/[^A-Z\s]/g, '');
-});
+// 🔥 CONFIG
+const firebaseConfig = {
+  apiKey: "AIzaSyA8MGBeJEo-eDyu0iHayj9WIQPZHx7UhMA",
+  authDomain: "ventas-pachitas.firebaseapp.com",
+  projectId: "ventas-pachitas",
+  storageBucket: "ventas-pachitas.firebasestorage.app",
+  messagingSenderId: "444948394496",
+  appId: "1:444948394496:web:5d03b37093d9d0f8031ee5"
+};
 
-document.getElementById("direccion").addEventListener("input", function() {
-    this.value = this.value.toUpperCase();
-});
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
 
-document.getElementById("celular").addEventListener("input", function() {
-    this.value = this.value.replace(/[^0-9]/g, '').slice(0,9);
-});
-
-document.getElementById("cantidad").addEventListener("input", function() {
-    this.value = this.value.replace(/[^0-9]/g, '');
-    calcularTotal();
-});
-
-document.getElementById("precio").addEventListener("input", function() {
-    this.value = this.value.replace(/[^0-9.]/g, '');
-    calcularTotal();
-});
-
-// 🧼 LIMPIAR TEXTO (acentos raros)
-function limpiarTexto(texto){
-    return texto.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+// FORMATO
+function money(v){
+    return "S/. " + v.toFixed(2);
 }
 
-// 💰 FORMATO MONEDA
-function formatearMoneda(valor){
-    return "S/. " + valor.toFixed(2);
+// ELEMENTOS
+let tabla = document.getElementById("tabla");
+let buscar = document.getElementById("buscar");
+let filtroFecha = document.getElementById("filtroFecha");
+let totalGeneral = document.getElementById("totalGeneral");
+
+let datos = [];
+
+// 🔄 TIEMPO REAL
+db.collection("ventas").onSnapshot(snapshot=>{
+    datos = [];
+    snapshot.forEach(doc=>{
+        let d = doc.data();
+        d.id = doc.id;
+        datos.push(d);
+    });
+
+    render();
+});
+
+// 🎯 RENDER
+function render(){
+
+    tabla.innerHTML = "";
+    let total = 0;
+
+    let texto = buscar.value.toUpperCase();
+    let fechaFiltro = filtroFecha.value;
+
+    datos.forEach(v=>{
+
+        let fecha = v.fecha?.toDate();
+
+        let fechaTexto = fecha ? fecha.toLocaleString() : "";
+
+        // 🔍 FILTROS
+        if(texto &&
+           !v.nombre.toUpperCase().includes(texto) &&
+           !v.celular.includes(texto)) return;
+
+        if(fechaFiltro){
+            let f = fecha.toISOString().split("T")[0];
+            if(f !== fechaFiltro) return;
+        }
+
+        total += v.total;
+
+        tabla.innerHTML += `
+        <tr>
+        <td>${v.nombre}</td>
+        <td>${v.celular}</td>
+        <td>${v.direccion}</td>
+        <td>${v.cantidad}</td>
+        <td>${money(v.total)}</td>
+        <td>${v.pago}</td>
+        <td>${v.delivery}</td>
+        <td>${fechaTexto}</td>
+        <td><button class="eliminar" onclick="eliminar('${v.id}')">X</button></td>
+        </tr>
+        `;
+    });
+
+    totalGeneral.innerText = "TOTAL: " + money(total);
 }
 
-// 📅 FECHA PRO
-function obtenerFechaPro(){
-    let f = new Date();
+// 🔍 EVENTOS
+buscar.oninput = render;
+filtroFecha.onchange = render;
 
-    let dia = String(f.getDate()).padStart(2,'0');
-    let mes = String(f.getMonth()+1).padStart(2,'0');
-    let año = f.getFullYear();
+// 🗑️ ELIMINAR
+function eliminar(id){
 
-    let hora = f.getHours();
-    let min = String(f.getMinutes()).padStart(2,'0');
+    let clave = prompt("Clave admin:");
 
-    let ampm = hora >= 12 ? "PM" : "AM";
-    hora = hora % 12 || 12;
-
-    return `${dia}/${mes}/${año} - ${hora}:${min} ${ampm}`;
-}
-
-// 📅 FECHA LOCAL
-function obtenerFechaLocal(){
-    let f = new Date();
-    return `${f.getFullYear()}-${String(f.getMonth()+1).padStart(2,'0')}-${String(f.getDate()).padStart(2,'0')}`;
-}
-
-// 💰 TOTAL
-function calcularTotal(){
-    let c = Number(document.getElementById("cantidad").value) || 0;
-    let p = Number(document.getElementById("precio").value) || 0;
-    let total = c * p;
-
-    document.getElementById("total").innerText = "TOTAL: " + formatearMoneda(total);
-}
-
-// 💾 GUARDAR
-function guardarVenta(){
-
-    let nombre = limpiarTexto(document.getElementById("nombre").value.trim());
-    let celular = document.getElementById("celular").value.trim();
-    let direccion = limpiarTexto(document.getElementById("direccion").value.trim());
-    let cantidad = Number(document.getElementById("cantidad").value);
-    let precio = Number(document.getElementById("precio").value);
-    let pago = document.getElementById("pago").value;
-
-    let delivery = document.getElementById("delivery").value.toUpperCase();
-    if(delivery === "SÍ") delivery = "SI";
-
-    if(nombre=="" || celular.length!==9 || cantidad==0 || precio==0){
-        alert("❌ COMPLETE CORRECTAMENTE LOS CAMPOS");
+    if(clave !== "PACHITAS"){
+        alert("❌ Acceso denegado");
         return;
     }
 
-    let total = cantidad * precio;
-
-    let ventas = JSON.parse(localStorage.getItem("ventasPachitas")) || [];
-    let id = ventas.length + 1;
-
-    let venta = {
-        id,
-        nombre,
-        celular,
-        direccion,
-        cantidad,
-        precio,
-        total,
-        pago,
-        delivery,
-        fecha: obtenerFechaPro(),
-        fechaISO: obtenerFechaLocal()
-    };
-
-    ventas.push(venta);
-    localStorage.setItem("ventasPachitas", JSON.stringify(ventas));
-
-    alert("✅ VENTA REGISTRADA");
-
-    limpiar();
-    resumen();
+    db.collection("ventas").doc(id).delete();
 }
-
-// 🧹 LIMPIAR
-function limpiar(){
-    document.querySelectorAll("input").forEach(i=>i.value="");
-    document.getElementById("total").innerText="TOTAL: S/. 0.00";
-}
-
-// 📊 RESUMEN
-function resumen(){
-    let ventas = JSON.parse(localStorage.getItem("ventasPachitas")) || [];
-
-    let hoy = obtenerFechaLocal();
-    let mesActual = hoy.substring(0,7);
-
-    let totalHoy = 0;
-    let totalMes = 0;
-
-    ventas.forEach(v=>{
-        if(v.fechaISO === hoy){
-            totalHoy += v.total;
-        }
-        if(v.fechaISO.startsWith(mesActual)){
-            totalMes += v.total;
-        }
-    });
-
-    document.getElementById("hoy").innerText = "💰 HOY: " + formatearMoneda(totalHoy);
-    document.getElementById("mes").innerText = "📅 MES: " + formatearMoneda(totalMes);
-}
-
-// 📁 EXPORTAR EXCEL PRO
-function exportarExcel(){
-
-    let v = JSON.parse(localStorage.getItem("ventasPachitas")) || [];
-
-    let html = "<table border='1'><tr><th>ID</th><th>Nombre</th><th>Celular</th><th>Dirección</th><th>Cantidad</th><th>Precio</th><th>Total</th><th>Pago</th><th>Delivery</th><th>Fecha</th></tr>";
-
-    v.forEach(x=>{
-        html+=`<tr>
-        <td>${x.id}</td>
-        <td>${x.nombre}</td>
-        <td>${x.celular}</td>
-        <td>${x.direccion}</td>
-        <td>${x.cantidad}</td>
-        <td>S/. ${x.precio}</td>
-        <td>S/. ${x.total}</td>
-        <td>${x.pago}</td>
-        <td>${x.delivery}</td>
-        <td>${x.fecha}</td>
-        </tr>`;
-    });
-
-    html+="</table>";
-
-    let blob = new Blob(["\ufeff"+html],{type:"application/vnd.ms-excel;charset=utf-8;"});
-    let a = document.createElement("a");
-    a.href = URL.createObjectURL(blob);
-    a.download = "ventas_pachitas.xls";
-    a.click();
-}
-
-// 🚀 INICIO
-window.onload = resumen;
 
 </script>
 
