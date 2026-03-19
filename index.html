@@ -182,7 +182,7 @@ async function cargarClientes(){
 }
 cargarClientes();
 
-// BUSCADOR CON SUGERENCIAS
+// BUSCADOR CON SUGERENCIAS + VALIDACIÓN
 buscarCliente.oninput = function(){
 
     this.value = this.value.toUpperCase().replace(/[^A-Z\s]/g,'');
@@ -210,7 +210,7 @@ buscarCliente.oninput = function(){
     });
 };
 
-// VALIDACIONES CAMPOS
+// VALIDACIONES CAMPOS VENTA
 nombre.oninput = ()=> nombre.value = nombre.value.toUpperCase().replace(/[^A-Z\s]/g,'');
 direccion.oninput = ()=> direccion.value = direccion.value.toUpperCase();
 celular.oninput = ()=> celular.value = celular.value.replace(/[^0-9]/g,'').slice(0,9);
@@ -221,16 +221,21 @@ cantidad.oninput = precio.oninput = ()=>{
     total.innerText="S/. "+((cantidad.value*precio.value)||0).toFixed(2);
 };
 
-// GUARDAR CLIENTE
+// VALIDACIONES MODAL
+nNombre.oninput = ()=> nNombre.value = nNombre.value.toUpperCase().replace(/[^A-Z\s]/g,'');
+nCelular.oninput = ()=> nCelular.value = nCelular.value.replace(/[^0-9]/g,'').slice(0,9);
+nDireccion.oninput = ()=> nDireccion.value = nDireccion.value.toUpperCase();
+
+// GUARDAR CLIENTE (VALIDADO + AUTOCOMPLETE)
 window.guardarCliente = async ()=>{
 
-    let nom = nNombre.value.toUpperCase();
+    let nom = nNombre.value.toUpperCase().replace(/[^A-Z\s]/g,'');
     let cel = nCelular.value.replace(/[^0-9]/g,'').slice(0,9);
     let dir = nDireccion.value.toUpperCase();
 
-    if(nom=="" || cel.length!==9){
-        return alert("❌ DATOS INCORRECTOS");
-    }
+    if(nom==="") return alert("❌ INGRESE NOMBRE");
+    if(cel.length!==9) return alert("❌ CELULAR INVÁLIDO");
+    if(dir==="") return alert("❌ INGRESE DIRECCIÓN");
 
     await addDoc(collection(db,"clientes"),{
         nombre:nom,
@@ -249,7 +254,7 @@ window.guardarCliente = async ()=>{
     cerrarModal();
     cargarClientes();
 
-    alert("✅ CLIENTE GUARDADO");
+    alert("✅ CLIENTE GUARDADO Y LISTO 🚀");
 };
 
 // GUARDAR VENTA
