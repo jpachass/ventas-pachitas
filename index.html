@@ -185,29 +185,32 @@ cargarClientes();
 // BUSCADOR CON SUGERENCIAS + VALIDACIÓN
 buscarCliente.oninput = function(){
 
-    // 🔥 PERMITE LETRAS + NÚMEROS
+    // 🔥 PERMITIR LETRAS + NÚMEROS
     this.value = this.value.toUpperCase().replace(/[^A-Z0-9\s]/g,'');
 
-    let texto = this.value;
+    let texto = this.value.trim();
     lista.innerHTML = "";
 
     if(texto.length < 1) return;
 
-    // 🔍 FILTRAR POR NOMBRE O CELULAR
-    let filtrados = clientes.filter(c => 
-        c.nombre.includes(texto) || c.celular.includes(texto)
-    );
+    let filtrados = clientes.filter(c => {
 
-    filtrados.slice(0,5).forEach(c=>{ // máximo 5 resultados
+        let nombre = (c.nombre || "").toUpperCase();
+        let celular = String(c.celular || ""); // 🔥 CONVERTIR A TEXTO
+
+        return nombre.includes(texto) || celular.includes(texto);
+    });
+
+    filtrados.slice(0,5).forEach(c=>{
 
         let div = document.createElement("div");
         div.className = "item";
+
         div.innerHTML = `
             <strong>${c.nombre}</strong><br>
             📱 ${c.celular}
         `;
 
-        // ⚡ AUTOCOMPLETAR AL HACER CLICK
         div.onclick = ()=>{
             nombre.value = c.nombre;
             celular.value = c.celular;
@@ -220,7 +223,6 @@ buscarCliente.oninput = function(){
         lista.appendChild(div);
     });
 };
-
     this.value = this.value.toUpperCase().replace(/[^A-Z\s]/g,'');
 
     let texto = this.value;
