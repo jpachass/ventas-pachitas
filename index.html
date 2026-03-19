@@ -335,47 +335,83 @@ async function abrirAdmin(){
 
     const snap = await getDocs(collection(db,"ventas"));
 
-    let html="<h3>VENTAS</h3>";
-    let total=0;
+    let html="<h3>📊 RESUMEN</h3>";
+
+    let totalGeneral=0;
+    let totalHoy=0;
+    let totalMes=0;
+    let count=0;
+
+    let hoy = new Date();
+    let diaHoy = hoy.toISOString().slice(0,10); // YYYY-MM-DD
+    let mesActual = hoy.toISOString().slice(0,7); // YYYY-MM
+
+    let listaVentas = "<h3>🧾 DETALLE VENTAS</h3>";
 
     if(snap.empty){
-        contenidoAdmin.innerHTML="<h3>⚠️ NO HAY VENTAS REGISTRADAS</h3>";
+        contenidoAdmin.innerHTML="<h3>⚠️ NO HAY VENTAS</h3>";
         return;
     }
 
     snap.forEach(doc=>{
 
-        let v=doc.data();
+        let v = doc.data();
 
         let monto = Number(v.total) || 0;
-        total += monto;
+        totalGeneral += monto;
+        count++;
 
-        // 🔥 SOPORTA TODOS LOS FORMATOS DE FECHA
-        let fecha="";
+        // 🔥 FECHA UNIVERSAL
+        let fechaISO="";
 
         if(typeof v.fecha === "string"){
-            fecha = new Date(v.fecha).toLocaleString();
+            fechaISO = v.fecha;
         }
         else if(v.fecha?.seconds){
-            fecha = new Date(v.fecha.seconds*1000).toLocaleString();
-        }
-        else{
-            fecha = "SIN FECHA";
+            fechaISO = new Date(v.fecha.seconds*1000).toISOString();
         }
 
-        html+=`
+        let fechaDia = fechaISO.slice(0,10);
+        let fechaMes = fechaISO.slice(0,7);
+
+        if(fechaDia === diaHoy) totalHoy += monto;
+        if(fechaMes === mesActual) totalMes += monto;
+
+        let fechaMostrar = fechaISO ? new Date(fechaISO).toLocaleString() : "SIN FECHA";
+
+        listaVentas += `
         <div style="margin-bottom:10px;">
             <b>${v.nombre || "-"}</b><br>
             💰 S/. ${monto.toFixed(2)}<br>
             🏷️ ${v.marca || "-"} - ${v.valvula || "-"}<br>
             💳 ${v.pago || "-"} | 🚚 ${v.delivery || "-"}<br>
-            📅 ${fecha}
+            📅 ${fechaMostrar}
         </div>`;
     });
 
-    html+=`<h2>💰 TOTAL: S/. ${total.toFixed(2)}</h2>`;
+    html += `
+        <div style="background:#222;padding:15px;border-radius:10px;margin-bottom:15px;">
+            <h3>📅 HOY</h3>
+            💰 S/. ${totalHoy.toFixed(2)}
+        </div>
 
-    contenidoAdmin.innerHTML=html;
+        <div style="background:#333;padding:15px;border-radius:10px;margin-bottom:15px;">
+            <h3>📆 ESTE MES</h3>
+            💰 S/. ${totalMes.toFixed(2)}
+        </div>
+
+        <div style="background:#444;padding:15px;border-radius:10px;margin-bottom:15px;">
+            <h3>📊 TOTAL GENERAL</h3>
+            💰 S/. ${totalGeneral.toFixed(2)}
+        </div>
+
+        <div style="background:#555;padding:15px;border-radius:10px;margin-bottom:15px;">
+            <h3>🔢 TOTAL VENTAS</h3>
+            ${count}
+        </div>
+    `;
+
+    contenidoAdmin.innerHTML = html + listaVentas;
 }
 
 </script>
