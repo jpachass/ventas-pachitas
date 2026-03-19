@@ -185,6 +185,42 @@ cargarClientes();
 // BUSCADOR CON SUGERENCIAS + VALIDACIÓN
 buscarCliente.oninput = function(){
 
+    // 🔥 PERMITE LETRAS + NÚMEROS
+    this.value = this.value.toUpperCase().replace(/[^A-Z0-9\s]/g,'');
+
+    let texto = this.value;
+    lista.innerHTML = "";
+
+    if(texto.length < 1) return;
+
+    // 🔍 FILTRAR POR NOMBRE O CELULAR
+    let filtrados = clientes.filter(c => 
+        c.nombre.includes(texto) || c.celular.includes(texto)
+    );
+
+    filtrados.slice(0,5).forEach(c=>{ // máximo 5 resultados
+
+        let div = document.createElement("div");
+        div.className = "item";
+        div.innerHTML = `
+            <strong>${c.nombre}</strong><br>
+            📱 ${c.celular}
+        `;
+
+        // ⚡ AUTOCOMPLETAR AL HACER CLICK
+        div.onclick = ()=>{
+            nombre.value = c.nombre;
+            celular.value = c.celular;
+            direccion.value = c.direccion;
+
+            buscarCliente.value = c.nombre;
+            lista.innerHTML = "";
+        };
+
+        lista.appendChild(div);
+    });
+};
+
     this.value = this.value.toUpperCase().replace(/[^A-Z\s]/g,'');
 
     let texto = this.value;
