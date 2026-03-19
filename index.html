@@ -3,82 +3,70 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>PANEL ADMIN PACHITAS</title>
+<title>VENTAS PACHITAS ONLINE</title>
 
 <style>
-body{
+body {
     font-family: Arial;
-    background:#111;
-    color:white;
-    text-align:center;
+    background: linear-gradient(to bottom, #ffcc00, #ff6600);
+    text-align: center;
 }
 
-input{
-    padding:10px;
-    margin:5px;
-    border-radius:8px;
-    border:none;
-    width:200px;
+input, select {
+    width: 85%;
+    max-width: 350px;
+    padding: 12px;
+    margin: 6px;
+    font-size: 16px;
+    border-radius: 10px;
 }
 
-table{
-    width:95%;
-    margin:auto;
-    border-collapse: collapse;
+button {
+    padding: 12px;
+    background: green;
+    color: white;
+    border-radius: 8px;
+}
+
+#panel {
     background:white;
-    color:black;
-}
-
-th, td{
-    padding:10px;
-    border:1px solid #ccc;
-}
-
-th{
-    background:#ff6600;
-    color:white;
-}
-
-button{
-    padding:6px 10px;
-    border:none;
-    border-radius:6px;
-    cursor:pointer;
-}
-
-.eliminar{
-    background:red;
-    color:white;
+    margin:15px;
+    padding:15px;
+    border-radius:12px;
 }
 </style>
 </head>
 
 <body>
 
-<h1>📊 PANEL ADMIN PACHITAS</h1>
+<h1>🔥 VENTAS PACHITAS ONLINE 🔥</h1>
 
-<input id="buscar" placeholder="Buscar cliente / celular">
-<input type="date" id="filtroFecha">
+<div id="panel">
+<input id="nombre" placeholder="NOMBRE">
+<input id="celular" placeholder="CELULAR">
+<input id="direccion" placeholder="DIRECCIÓN">
+<input id="cantidad" placeholder="CANTIDAD">
+<input id="precio" placeholder="PRECIO">
 
-<h2 id="totalGeneral">TOTAL: S/. 0.00</h2>
+<select id="pago">
+<option>YAPE</option>
+<option>EFECTIVO</option>
+</select>
 
-<table>
-<thead>
-<tr>
-<th>Cliente</th>
-<th>Celular</th>
-<th>Dirección</th>
-<th>Cant</th>
-<th>Total</th>
-<th>Pago</th>
-<th>Delivery</th>
-<th>Fecha</th>
-<th>Acción</th>
-</tr>
-</thead>
+<select id="delivery">
+<option>SI</option>
+<option>NO</option>
+</select>
 
-<tbody id="tabla"></tbody>
-</table>
+<h2 id="total">TOTAL: S/. 0.00</h2>
+<button onclick="guardarVenta()">GUARDAR</button>
+</div>
+
+<div id="panel">
+<h3>📊 RESUMEN</h3>
+<p id="hoy"></p>
+<p id="mes"></p>
+</div>
 
 <!-- FIREBASE -->
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js"></script>
@@ -86,105 +74,82 @@ button{
 
 <script>
 
-// 🔥 CONFIG
+// CONFIG TUYA
 const firebaseConfig = {
   apiKey: "AIzaSyA8MGBeJEo-eDyu0iHayj9WIQPZHx7UhMA",
   authDomain: "ventas-pachitas.firebaseapp.com",
   projectId: "ventas-pachitas",
   storageBucket: "ventas-pachitas.firebasestorage.app",
   messagingSenderId: "444948394496",
-  appId: "1:444948394496:web:5d03b37093d9d0f8031ee5"
+  appId: "1:444948394496:web:5d03b37093d9d0f8031ee5",
+  measurementId: "G-Y161Z07EK6"
 };
 
-firebase.initializeApp(firebaseConfig);
+// INICIALIZAR
+const app = firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 
-// FORMATO
-function money(v){
+// MONEDA
+function formatearMoneda(v){
     return "S/. " + v.toFixed(2);
 }
 
-// ELEMENTOS
-let tabla = document.getElementById("tabla");
-let buscar = document.getElementById("buscar");
-let filtroFecha = document.getElementById("filtroFecha");
-let totalGeneral = document.getElementById("totalGeneral");
+// TOTAL
+document.getElementById("cantidad").oninput =
+document.getElementById("precio").oninput = function(){
+    let c = Number(cantidad.value)||0;
+    let p = Number(precio.value)||0;
+    total.innerText = "TOTAL: " + formatearMoneda(c*p);
+}
 
-let datos = [];
+// GUARDAR EN LA NUBE
+function guardarVenta(){
 
-// 🔄 TIEMPO REAL
-db.collection("ventas").onSnapshot(snapshot=>{
-    datos = [];
-    snapshot.forEach(doc=>{
-        let d = doc.data();
-        d.id = doc.id;
-        datos.push(d);
-    });
+let nombre = nombreInput();
+let celular = celularInput();
+let direccion = direccionInput();
+let cantidadV = Number(cantidad.value);
+let precioV = Number(precio.value);
+let totalV = cantidadV * precioV;
 
-    render();
+db.collection("ventas").add({
+    nombre,
+    celular,
+    direccion,
+    cantidad: cantidadV,
+    precio: precioV,
+    total: totalV,
+    pago: pago.value,
+    delivery: delivery.value,
+    fecha: new Date()
 });
 
-// 🎯 RENDER
-function render(){
+alert("✅ GUARDADO EN LA NUBE");
 
-    tabla.innerHTML = "";
-    let total = 0;
+}
 
-    let texto = buscar.value.toUpperCase();
-    let fechaFiltro = filtroFecha.value;
+// HELPERS
+function nombreInput(){return document.getElementById("nombre").value.toUpperCase();}
+function celularInput(){return document.getElementById("celular").value;}
+function direccionInput(){return document.getElementById("direccion").value.toUpperCase();}
 
-    datos.forEach(v=>{
+// RESUMEN EN TIEMPO REAL
+db.collection("ventas").onSnapshot(snapshot=>{
+    let totalHoy=0, totalMes=0;
+    let hoy = new Date().toDateString();
+    let mes = new Date().getMonth();
 
-        let fecha = v.fecha?.toDate();
+    snapshot.forEach(doc=>{
+        let v = doc.data();
+        let f = v.fecha.toDate();
 
-        let fechaTexto = fecha ? fecha.toLocaleString() : "";
-
-        // 🔍 FILTROS
-        if(texto &&
-           !v.nombre.toUpperCase().includes(texto) &&
-           !v.celular.includes(texto)) return;
-
-        if(fechaFiltro){
-            let f = fecha.toISOString().split("T")[0];
-            if(f !== fechaFiltro) return;
-        }
-
-        total += v.total;
-
-        tabla.innerHTML += `
-        <tr>
-        <td>${v.nombre}</td>
-        <td>${v.celular}</td>
-        <td>${v.direccion}</td>
-        <td>${v.cantidad}</td>
-        <td>${money(v.total)}</td>
-        <td>${v.pago}</td>
-        <td>${v.delivery}</td>
-        <td>${fechaTexto}</td>
-        <td><button class="eliminar" onclick="eliminar('${v.id}')">X</button></td>
-        </tr>
-        `;
+        if(f.toDateString()===hoy) totalHoy+=v.total;
+        if(f.getMonth()===mes) totalMes+=v.total;
     });
 
-    totalGeneral.innerText = "TOTAL: " + money(total);
-}
-
-// 🔍 EVENTOS
-buscar.oninput = render;
-filtroFecha.onchange = render;
-
-// 🗑️ ELIMINAR
-function eliminar(id){
-
-    let clave = prompt("Clave admin:");
-
-    if(clave !== "PACHITAS"){
-        alert("❌ Acceso denegado");
-        return;
-    }
-
-    db.collection("ventas").doc(id).delete();
-}
+    hoyDiv.innerText = "💰 HOY: " + formatearMoneda(totalHoy);
+    mesDiv.innerText = "📅 MES: " + formatearMoneda(totalMes);
+});
 
 </script>
 
