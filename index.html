@@ -19,7 +19,7 @@ body{
     font-weight:bold;
     font-size:28px;
     border-radius:0 0 20px 20px;
-    cursor:pointer; /* 🔥 indica que es interactivo */
+    cursor:pointer;
 }
 
 .card{
@@ -38,7 +38,6 @@ input, select{
     border-radius:12px;
     border:2px solid #ddd;
     height:50px;
-    box-sizing:border-box;
 }
 
 input[readonly]{
@@ -73,6 +72,7 @@ button{
     box-shadow:0 5px 10px rgba(0,0,0,0.2);
     max-height:150px;
     overflow:auto;
+    z-index:10;
 }
 
 .item{
@@ -80,8 +80,24 @@ button{
     cursor:pointer;
 }
 
-.item:hover{
-    background:#eee;
+.item:hover{background:#eee;}
+
+.modal{
+    position:fixed;
+    top:0;left:0;
+    width:100%;height:100%;
+    background:rgba(0,0,0,0.6);
+    display:none;
+    justify-content:center;
+    align-items:center;
+}
+
+.modal-content{
+    background:white;
+    padding:20px;
+    border-radius:15px;
+    width:90%;
+    max-width:400px;
 }
 
 /* ADMIN */
@@ -95,7 +111,6 @@ button{
     color:white;
     display:none;
     padding:20px;
-    overflow:auto;
 }
 </style>
 </head>
@@ -133,11 +148,13 @@ button{
 <input id="precio" placeholder="PRECIO">
 
 <select id="pago">
+<option value="">MÉTODO DE PAGO</option>
 <option>YAPE</option>
 <option>EFECTIVO</option>
 </select>
 
 <select id="delivery">
+<option value="">DELIVERY</option>
 <option>SI</option>
 <option>NO</option>
 </select>
@@ -148,46 +165,132 @@ button{
 
 </div>
 
-<!-- ADMIN PANEL -->
+<!-- MODAL -->
+<div class="modal" id="modal">
+<div class="modal-content">
+<h3>➕ NUEVO CLIENTE</h3>
+<input id="nNombre" placeholder="NOMBRE">
+<input id="nCelular" placeholder="CELULAR">
+<input id="nDireccion" placeholder="DIRECCIÓN">
+<button class="btn-main" onclick="guardarCliente()">GUARDAR</button>
+<button onclick="cerrarModal()" style="background:red;color:white;">CERRAR</button>
+</div>
+</div>
+
+<!-- ADMIN -->
 <div id="adminPanel">
 <h2>📊 PANEL ADMIN</h2>
 <button onclick="cerrarAdmin()">Cerrar</button>
-<div id="datos"></div>
+<p>Aquí luego verás reportes</p>
 </div>
 
-<!-- MODAL -->
-<div class="modal" id="modal"></div>
+<script>
 
-<script type="module">
-
-// 🔥 CONTADOR DE CLICS
-let clicks = 0;
-
-titulo.addEventListener("click", ()=>{
+// 🔥 ADMIN POR 3 CLICKS
+let clicks=0;
+titulo.onclick=()=>{
     clicks++;
-
-    if(clicks === 3){
-        abrirAdmin();
-        clicks = 0;
+    if(clicks===3){
+        adminPanel.style.display="block";
+        clicks=0;
     }
+    setTimeout(()=>clicks=0,1000);
+};
 
-    setTimeout(()=>clicks=0,1000); // reset si tarda mucho
-});
-
-// 🔥 ABRIR ADMIN
-function abrirAdmin(){
-    document.getElementById("adminPanel").style.display="block";
-    cargarAdmin();
-}
-
-// 🔥 CERRAR ADMIN
 function cerrarAdmin(){
-    document.getElementById("adminPanel").style.display="none";
+    adminPanel.style.display="none";
 }
 
-// 🔥 SIMULACIÓN DATOS ADMIN (puedes conectar Firebase luego)
-function cargarAdmin(){
-    document.getElementById("datos").innerHTML = "📊 Aquí verás tus ventas...";
+// 🔥 BASE LOCAL (para pruebas rápidas)
+let clientes=[];
+
+// BUSCADOR
+buscarCliente.oninput=function(){
+
+    this.value=this.value.toUpperCase().replace(/[^A-Z0-9\s]/g,'');
+
+    let texto=this.value.trim();
+    lista.innerHTML="";
+
+    if(!texto) return;
+
+    let filtrados=clientes.filter(c =>
+        c.nombre.includes(texto) || c.celular.includes(texto)
+    );
+
+    filtrados.forEach(c=>{
+        let div=document.createElement("div");
+        div.className="item";
+        div.innerHTML=`<b>${c.nombre}</b><br>${c.celular}`;
+
+        div.onclick=()=>{
+            nombre.value=c.nombre;
+            celular.value=c.celular;
+            direccion.value=c.direccion;
+
+            buscarCliente.value="";
+            lista.innerHTML="";
+        };
+
+        lista.appendChild(div);
+    });
+};
+
+// VALIDACIONES
+cantidad.oninput=precio.oninput=()=>{
+    cantidad.value=cantidad.value.replace(/[^0-9]/g,'');
+    precio.value=precio.value.replace(/[^0-9.]/g,'');
+    total.innerText="S/. "+((cantidad.value*precio.value)||0).toFixed(2);
+};
+
+nNombre.oninput=()=>nNombre.value=nNombre.value.toUpperCase().replace(/[^A-Z\s]/g,'');
+nCelular.oninput=()=>nCelular.value=nCelular.value.replace(/[^0-9]/g,'').slice(0,9);
+nDireccion.oninput=()=>nDireccion.value=nDireccion.value.toUpperCase();
+
+// MODAL
+function abrirModal(){modal.style.display="flex";}
+function cerrarModal(){modal.style.display="none";}
+
+// GUARDAR CLIENTE
+function guardarCliente(){
+
+    let nom=nNombre.value;
+    let cel=nCelular.value;
+    let dir=nDireccion.value;
+
+    if(!nom) return alert("INGRESE NOMBRE");
+    if(cel.length!==9) return alert("CELULAR INVÁLIDO");
+    if(!dir) return alert("INGRESE DIRECCIÓN");
+
+    clientes.push({nombre:nom,celular:cel,direccion:dir});
+
+    nombre.value=nom;
+    celular.value=cel;
+    direccion.value=dir;
+
+    nNombre.value="";
+    nCelular.value="";
+    nDireccion.value="";
+
+    buscarCliente.value="";
+    lista.innerHTML="";
+
+    cerrarModal();
+
+    alert("CLIENTE GUARDADO");
+}
+
+// GUARDAR VENTA
+function guardarVenta(){
+
+    if(!nombre.value) return alert("SELECCIONE CLIENTE");
+
+    alert("VENTA GUARDADA");
+
+    document.querySelectorAll("input").forEach(i=>i.value="");
+    document.querySelectorAll("select").forEach(s=>s.value="");
+
+    total.innerText="S/. 0.00";
 }
 
 </script>
