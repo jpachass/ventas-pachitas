@@ -75,10 +75,7 @@ button{
     z-index:100;
 }
 
-.item{
-    padding:10px;
-    cursor:pointer;
-}
+.item{padding:10px;cursor:pointer;}
 .item:hover{background:#eee;}
 
 .modal{
@@ -125,55 +122,17 @@ button{
 
 <button class="btn-sec" onclick="abrirModal()">➕ NUEVO CLIENTE</button>
 
-<input id="nombre" placeholder="NOMBRE" readonly>
-<input id="celular" placeholder="CELULAR" readonly>
-<input id="direccion" placeholder="DIRECCIÓN" readonly>
-
-<select id="marca">
-<option value="">MARCA</option>
-<option>SOL GAS</option>
-<option>Z GAS</option>
-<option>MAS GAS</option>
-<option>AZUL GAS</option>
-</select>
-
-<select id="valvula">
-<option value="">VÁLVULA</option>
-<option>NORMAL</option>
-<option>PREMIUM</option>
-</select>
+<input id="nombre" readonly placeholder="NOMBRE">
+<input id="celular" readonly placeholder="CELULAR">
+<input id="direccion" readonly placeholder="DIRECCIÓN">
 
 <input id="cantidad" placeholder="CANTIDAD">
 <input id="precio" placeholder="PRECIO">
-
-<select id="pago">
-<option value="">MÉTODO DE PAGO</option>
-<option>YAPE</option>
-<option>EFECTIVO</option>
-</select>
-
-<select id="delivery">
-<option value="">DELIVERY</option>
-<option>SI</option>
-<option>NO</option>
-</select>
 
 <div id="total">S/. 0.00</div>
 
 <button class="btn-main" onclick="guardarVenta()">GUARDAR VENTA</button>
 
-</div>
-
-<!-- MODAL -->
-<div class="modal" id="modal">
-<div class="modal-content">
-<h3>➕ NUEVO CLIENTE</h3>
-<input id="nNombre" placeholder="NOMBRE">
-<input id="nCelular" placeholder="CELULAR">
-<input id="nDireccion" placeholder="DIRECCIÓN">
-<button class="btn-main" onclick="guardarCliente()">GUARDAR</button>
-<button onclick="cerrarModal()" style="background:red;color:white;">CERRAR</button>
-</div>
 </div>
 
 <!-- ADMIN -->
@@ -197,7 +156,7 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-// 🔥 ADMIN (3 TOQUES)
+// 🔥 ADMIN
 let clicks=0;
 titulo.onclick=()=>{
     clicks++;
@@ -208,156 +167,99 @@ titulo.onclick=()=>{
     setTimeout(()=>clicks=0,1000);
 };
 
-function abrirAdmin(){
-    adminPanel.style.display="block";
-    cargarAdmin();
-}
-
-function cerrarAdmin(){
-    adminPanel.style.display="none";
-}
-
 // 🔥 CLIENTES
 let clientes=[];
-
 async function cargarClientes(){
     const snap = await getDocs(collection(db,"clientes"));
     clientes=[];
-
-    snap.forEach(doc=>{
-        let c=doc.data();
-
-        clientes.push({
-            nombre:(c.nombre||"").toUpperCase().trim(),
-            celular:String(c.celular||"").trim(),
-            direccion:(c.direccion||"").toUpperCase().trim()
-        });
-    });
+    snap.forEach(doc=>clientes.push(doc.data()));
 }
 await cargarClientes();
 
-// 🔍 BUSCADOR
+// 🔥 BUSCADOR
 buscarCliente.oninput=function(){
-
-    let texto=this.value.toUpperCase().replace(/[^A-Z0-9\s]/g,'').trim();
-    this.value=texto;
-
+    let texto=this.value.toUpperCase().trim();
     lista.innerHTML="";
 
     if(!texto) return;
 
     let filtrados=clientes.filter(c =>
-        c.nombre.includes(texto) ||
-        c.celular.includes(texto)
+        (c.nombre||"").toUpperCase().includes(texto) ||
+        String(c.celular||"").includes(texto)
     );
 
-    if(filtrados.length===0){
-        lista.innerHTML="<div class='item'>❌ SIN RESULTADOS</div>";
-        return;
-    }
-
-    filtrados.slice(0,5).forEach(c=>{
+    filtrados.forEach(c=>{
         let div=document.createElement("div");
         div.className="item";
-
-        div.innerHTML=`<b>${c.nombre}</b><br>📱 ${c.celular}`;
-
+        div.innerHTML=`<b>${c.nombre}</b><br>${c.celular}`;
         div.onclick=()=>{
             nombre.value=c.nombre;
             celular.value=c.celular;
             direccion.value=c.direccion;
-
             buscarCliente.value="";
             lista.innerHTML="";
         };
-
         lista.appendChild(div);
     });
 };
 
-// VALIDACIONES
+// 🔥 VALIDACIONES
 cantidad.oninput=precio.oninput=()=>{
     cantidad.value=cantidad.value.replace(/[^0-9]/g,'');
     precio.value=precio.value.replace(/[^0-9.]/g,'');
     total.innerText="S/. "+((cantidad.value*precio.value)||0).toFixed(2);
 };
 
-nNombre.oninput=()=>nNombre.value=nNombre.value.toUpperCase();
-nCelular.oninput=()=>nCelular.value=nCelular.value.replace(/[^0-9]/g,'').slice(0,9);
-nDireccion.oninput=()=>nDireccion.value=nDireccion.value.toUpperCase();
-
-// MODAL
-window.abrirModal=()=>modal.style.display="flex";
-window.cerrarModal=()=>modal.style.display="none";
-
-// GUARDAR CLIENTE
-window.guardarCliente=async ()=>{
-
-    let nom=nNombre.value;
-    let cel=nCelular.value;
-    let dir=nDireccion.value;
-
-    if(!nom) return alert("INGRESE NOMBRE");
-    if(cel.length!==9) return alert("CELULAR INVÁLIDO");
-    if(!dir) return alert("INGRESE DIRECCIÓN");
-
-    await addDoc(collection(db,"clientes"),{
-        nombre:nom,
-        celular:cel,
-        direccion:dir
-    });
-
-    await cargarClientes();
-
-    nombre.value=nom;
-    celular.value=cel;
-    direccion.value=dir;
-
-    nNombre.value="";
-    nCelular.value="";
-    nDireccion.value="";
-
-    buscarCliente.value="";
-    lista.innerHTML="";
-
-    cerrarModal();
-};
-
-// GUARDAR VENTA
+// 🔥 GUARDAR VENTA
 window.guardarVenta=async ()=>{
-
-    if(!nombre.value) return alert("SELECCIONE CLIENTE");
+    if(!nombre.value) return alert("Seleccione cliente");
 
     await addDoc(collection(db,"ventas"),{
         nombre:nombre.value,
         celular:celular.value,
-        direccion:direccion.value,
         total:total.innerText,
         fecha:new Date()
     });
 
     alert("VENTA GUARDADA");
-
-    document.querySelectorAll("input").forEach(i=>i.value="");
-    document.querySelectorAll("select").forEach(s=>s.value="");
-
-    total.innerText="S/. 0.00";
 };
 
-// 📊 PANEL ADMIN
-function cargarAdmin(){
+// 🔥 ADMIN PANEL
+async function abrirAdmin(){
+    document.getElementById("adminPanel").style.display="block";
+    await cargarVentas();
+}
 
-    let html="<h3>CLIENTES</h3>";
+window.cerrarAdmin=function(){
+    document.getElementById("adminPanel").style.display="none";
+};
 
-    clientes.forEach(c=>{
+// 🔥 CARGAR VENTAS
+async function cargarVentas(){
+
+    const snap = await getDocs(collection(db,"ventas"));
+
+    let total=0;
+    let html="<h3>VENTAS</h3>";
+
+    snap.forEach(doc=>{
+        let v=doc.data();
+
+        let monto=parseFloat((v.total||"0").replace("S/. ","")) || 0;
+        total+=monto;
+
+        let fecha=new Date(v.fecha.seconds*1000).toLocaleString();
+
         html+=`
             <div style="margin-bottom:10px;">
-                <b>${c.nombre}</b><br>
-                📱 ${c.celular}<br>
-                📍 ${c.direccion}
+                <b>${v.nombre}</b><br>
+                💰 ${v.total}<br>
+                📅 ${fecha}
             </div>
         `;
     });
+
+    html+=`<h2>💰 TOTAL: S/. ${total.toFixed(2)}</h2>`;
 
     contenidoAdmin.innerHTML=html;
 }
