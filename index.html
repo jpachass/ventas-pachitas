@@ -14,9 +14,10 @@ body{
 
 .header{
     background:white;
-    padding:15px;
+    padding:20px;
     text-align:center;
     font-weight:bold;
+    font-size:28px; /* 🔥 MÁS GRANDE */
     border-radius:0 0 20px 20px;
 }
 
@@ -37,6 +38,13 @@ input, select{
     border:2px solid #ddd;
     height:50px;
     box-sizing:border-box;
+}
+
+/* 🔒 CAMPOS BLOQUEADOS */
+input[readonly]{
+    background:#f5f5f5;
+    color:#555;
+    cursor:not-allowed;
 }
 
 button{
@@ -72,6 +80,15 @@ button{
     background:#f1f1f1;
 }
 
+/* 💰 TOTAL GRANDE Y CENTRADO */
+#total{
+    text-align:center;
+    font-size:32px;
+    font-weight:bold;
+    margin-top:10px;
+    color:#27ae60;
+}
+
 .modal{
     position:fixed;
     top:0;left:0;
@@ -103,9 +120,10 @@ button{
 
 <button class="btn-sec" onclick="abrirModal()">➕ NUEVO CLIENTE</button>
 
-<input id="nombre" placeholder="NOMBRE">
-<input id="celular" placeholder="CELULAR">
-<input id="direccion" placeholder="DIRECCIÓN">
+<!-- 🔒 CAMPOS BLOQUEADOS -->
+<input id="nombre" placeholder="NOMBRE" readonly>
+<input id="celular" placeholder="CELULAR" readonly>
+<input id="direccion" placeholder="DIRECCIÓN" readonly>
 
 <select id="marca">
 <option value="">MARCA</option>
@@ -212,7 +230,6 @@ buscarCliente.oninput = function(){
             celular.value = c.celular;
             direccion.value = c.direccion;
 
-            // 🔥 LIMPIAR BUSCADOR
             buscarCliente.value = "";
             lista.innerHTML = "";
         };
@@ -222,10 +239,6 @@ buscarCliente.oninput = function(){
 };
 
 // VALIDACIONES
-nombre.oninput = ()=> nombre.value = nombre.value.toUpperCase().replace(/[^A-Z\s]/g,'');
-direccion.oninput = ()=> direccion.value = direccion.value.toUpperCase();
-celular.oninput = ()=> celular.value = celular.value.replace(/[^0-9]/g,'').slice(0,9);
-
 cantidad.oninput = precio.oninput = ()=>{
     cantidad.value=cantidad.value.replace(/[^0-9]/g,'');
     precio.value=precio.value.replace(/[^0-9.]/g,'');
@@ -261,21 +274,20 @@ window.guardarCliente = async ()=>{
     nCelular.value="";
     nDireccion.value="";
 
-    // 🔥 LIMPIAR BUSCADOR
     buscarCliente.value="";
     lista.innerHTML="";
 
     cerrarModal();
     cargarClientes();
 
-    alert("✅ CLIENTE GUARDADO Y LISTO 🚀");
+    alert("✅ CLIENTE GUARDADO 🚀");
 };
 
 // GUARDAR VENTA
 window.guardarVenta = async ()=>{
 
-    if(nombre.value=="" || celular.value.length!==9 || marca.value=="" || valvula.value==""){
-        return alert("❌ COMPLETE LOS CAMPOS");
+    if(nombre.value=="" || celular.value=="" || marca.value=="" || valvula.value==""){
+        return alert("❌ SELECCIONE UN CLIENTE Y COMPLETE DATOS");
     }
 
     await addDoc(collection(db,"ventas"),{
@@ -292,7 +304,7 @@ window.guardarVenta = async ()=>{
         fecha:new Date()
     });
 
-    alert("✅ VENTA REALIZDO EXITOSAMENTE");
+    alert("✅ VENTA GRABADO EXITOSAMENTE");
 
     document.querySelectorAll("input").forEach(i=>i.value="");
     document.querySelectorAll("select").forEach(s=>s.value="");
