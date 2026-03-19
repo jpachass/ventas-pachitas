@@ -21,10 +21,26 @@ button {padding:12px; background:green; color:white; border-radius:8px;}
 <h1>🔥 VENTAS PACHITAS 🔥</h1>
 
 <div id="panel">
+
 <input id="nombre" placeholder="NOMBRE">
 <input id="celular" placeholder="CELULAR">
 <input id="direccion" placeholder="DIRECCIÓN">
-<input id="direccion" placeholder="VALVULA">
+
+<!-- NUEVO -->
+<select id="marca">
+<option value="">MARCA</option>
+<option>SOL GAS</option>
+<option>Z GAS</option>
+<option>MAS GAS</option>
+<option>AZUL GAS</option>
+</select>
+
+<select id="valvula">
+<option value="">VÁLVULA</option>
+<option>NORMAL</option>
+<option>PREMIUM</option>
+</select>
+
 <input id="cantidad" placeholder="CANTIDAD">
 <input id="precio" placeholder="PRECIO">
 
@@ -42,39 +58,24 @@ button {padding:12px; background:green; color:white; border-radius:8px;}
 
 <h2 id="total">TOTAL: S/. 0.00</h2>
 <button onclick="guardarVenta()">GUARDAR</button>
-</div>
 
-<div id="panel">
-<h3>📊 RESUMEN</h3>
-<p id="hoy">💰 HOY: S/. 0.00</p>
-<p id="mes">📅 MES: S/. 0.00</p>
 </div>
 
 <script type="module">
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-import { getFirestore, collection, addDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import { getFirestore, collection, addDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-// CONFIG
 const firebaseConfig = {
   apiKey: "AIzaSyA8MGBeJEo-eDyu0iHayj9WIQPZHx7UhMA",
   authDomain: "ventas-pachitas.firebaseapp.com",
-  projectId: "ventas-pachitas",
-  storageBucket: "ventas-pachitas.firebasestorage.app",
-  messagingSenderId: "444948394496",
-  appId: "1:444948394496:web:5d03b37093d9d0f8031ee5"
+  projectId: "ventas-pachitas"
 };
 
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
 // VALIDACIONES
-const nombre = document.getElementById("nombre");
-const celular = document.getElementById("celular");
-const direccion = document.getElementById("direccion");
-const cantidad = document.getElementById("cantidad");
-const precio = document.getElementById("precio");
-
 nombre.oninput = ()=> nombre.value = nombre.value.toUpperCase().replace(/[^A-Z\s]/g,'');
 direccion.oninput = ()=> direccion.value = direccion.value.toUpperCase();
 celular.oninput = ()=> celular.value = celular.value.replace(/[^0-9]/g,'').slice(0,9);
@@ -88,12 +89,17 @@ function calc(){
 
 // GUARDAR
 window.guardarVenta = async ()=>{
-    if(nombre.value=="" || celular.value.length!==9) return alert("❌ DATOS INCORRECTOS");
+
+    if(nombre.value=="" || celular.value.length!==9 || marca.value=="" || valvula.value==""){
+        return alert("❌ COMPLETE TODOS LOS CAMPOS");
+    }
 
     await addDoc(collection(db,"ventas"),{
         nombre:nombre.value,
         celular:celular.value,
         direccion:direccion.value,
+        marca:marca.value,
+        valvula:valvula.value,
         cantidad:Number(cantidad.value),
         precio:Number(precio.value),
         total:Number(cantidad.value)*Number(precio.value),
@@ -105,27 +111,10 @@ window.guardarVenta = async ()=>{
     alert("✅ GUARDADO");
 
     document.querySelectorAll("input").forEach(i=>i.value="");
+    document.querySelectorAll("select").forEach(s=>s.value="");
+
     total.innerText="TOTAL: S/. 0.00";
 }
-
-// 📊 RESUMEN EN TIEMPO REAL
-onSnapshot(collection(db,"ventas"), snap=>{
-    let hoyTotal=0, mesTotal=0;
-
-    let hoy = new Date().toDateString();
-    let mes = new Date().getMonth();
-
-    snap.forEach(doc=>{
-        let v = doc.data();
-        let f = v.fecha.toDate();
-
-        if(f.toDateString()===hoy) hoyTotal+=v.total;
-        if(f.getMonth()===mes) mesTotal+=v.total;
-    });
-
-    document.getElementById("hoy").innerText="💰 HOY: S/. "+hoyTotal.toFixed(2);
-    document.getElementById("mes").innerText="📅 MES: S/. "+mesTotal.toFixed(2);
-});
 
 </script>
 
