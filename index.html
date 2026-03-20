@@ -362,33 +362,55 @@ async function abrirAdmin(){
             return;
         }
 
-        let docs=snap.docs;
+        let docs = snap.docs;
 
         let totalHoy=0,totalMes=0,totalGeneral=0;
         let hoy=new Date().toISOString().slice(0,10);
         let mes=new Date().toISOString().slice(0,7);
 
+        // 🔥 ORDEN SEGURO
         docs.sort((a,b)=>{
-            let fa=a.data().fecha||"";
-            let fb=b.data().fecha||"";
+            let fa=a.data().fecha;
+            let fb=b.data().fecha;
+
+            fa = (typeof fa==="string") ? fa :
+                 (fa?.seconds ? new Date(fa.seconds*1000).toISOString() : "");
+
+            fb = (typeof fb==="string") ? fb :
+                 (fb?.seconds ? new Date(fb.seconds*1000).toISOString() : "");
+
             return fb.localeCompare(fa);
         });
 
         let html="";
 
         docs.forEach((doc,i)=>{
-            let v=doc.data();
+
+            let v=doc.data()||{};
 
             let nombreV=(v.nombre||"").toUpperCase();
             let celularV=String(v.celular||"");
-            let fechaISO=v.fecha||"";
             let monto=Number(v.total)||0;
 
+            // 🔥 FECHA SEGURA
+            let fechaISO="";
+
+            if(typeof v.fecha==="string"){
+                fechaISO=v.fecha;
+            }
+            else if(v.fecha?.seconds){
+                fechaISO=new Date(v.fecha.seconds*1000).toISOString();
+            }
+
+            let fechaMostrar = fechaISO
+                ? new Date(fechaISO).toLocaleString()
+                : "SIN FECHA";
+
+            // 🔥 ACUMULADORES
             totalGeneral+=monto;
+
             if(fechaISO.slice(0,10)===hoy) totalHoy+=monto;
             if(fechaISO.slice(0,7)===mes) totalMes+=monto;
-
-            let fechaMostrar=new Date(fechaISO).toLocaleString();
 
             html+=`
             <div class="card-venta ${i==0?'card-top':''}" 
@@ -411,10 +433,12 @@ async function abrirAdmin(){
             <div class="box mes"><h4>MES</h4><p>S/. ${totalMes.toFixed(2)}</p></div>
             <div class="box totalb"><h4>TOTAL</h4><p>S/. ${totalGeneral.toFixed(2)}</p></div>
         </div>
-        ${html}`;
+
+        ${html}
+        `;
 
     }catch(error){
-        console.error(error);
+        console.error("🔥 ERROR REAL:", error);
         contenidoAdmin.innerHTML="❌ ERROR AL CARGAR";
     }
 }
