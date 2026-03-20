@@ -223,140 +223,36 @@ let ventasGlobal=[];
 async function cargarClientes(){
     const snap = await getDocs(collection(db,"clientes"));
     clientes=[];
-    snap.forEach(doc=>{
-        let c=doc.data();
-        clientes.push({
-            nombre:(c.nombre||"").toUpperCase(),
-            celular:String(c.celular||""),
-            direccion:(c.direccion||"").toUpperCase()
-        });
-    });
-}
-await cargarClientes();
-
-// BUSCADOR CLIENTES
-buscarCliente.oninput=function(){
-    this.value=this.value.toUpperCase().replace(/[^A-Z0-9\s]/g,'');
-    let texto=this.value.trim();
-    lista.innerHTML="";
-    if(!texto) return;
-
-    let filtrados=clientes.filter(c =>
-        c.nombre.includes(texto) || c.celular.includes(texto)
-    );
-
-    filtrados.forEach(c=>{
-        let div=document.createElement("div");
-        div.className="item";
-        div.innerHTML=`<b>${c.nombre}</b><br>${c.celular}`;
-        div.onclick=()=>{
-            nombre.value=c.nombre;
-            celular.value=c.celular;
-            direccion.value=c.direccion;
-            buscarCliente.value="";
-            lista.innerHTML="";
-        };
-        lista.appendChild(div);
-    });
-};
-
-// VALIDACIONES
-nNombre.oninput=()=>nNombre.value=nNombre.value.toUpperCase();
-nCelular.oninput=()=>nCelular.value=nCelular.value.replace(/[^0-9]/g,'').slice(0,9);
-nDireccion.oninput=()=>nDireccion.value=nDireccion.value.toUpperCase();
-
-cantidad.oninput=precio.oninput=()=>{
-    cantidad.value=cantidad.value.replace(/[^0-9]/g,'');
-    precio.value=precio.value.replace(/[^0-9.]/g,'');
-    total.innerText="S/. "+((cantidad.value*precio.value)||0).toFixed(2);
-};
-
-// MODAL
-window.abrirModal=()=>modal.style.display="flex";
-window.cerrarModal=()=>modal.style.display="none";
-
-// GUARDAR CLIENTE
-window.guardarCliente=async ()=>{
-    if(!nNombre.value) return alert("Ingrese nombre");
-    if(nCelular.value.length!==9) return alert("Celular inválido");
-    if(!nDireccion.value) return alert("Ingrese dirección");
-
-    await addDoc(collection(db,"clientes"),{
-        nombre:nNombre.value,
-        celular:nCelular.value,
-        direccion:nDireccion.value
-    });
-
-    await cargarClientes();
-    cerrarModal();
-};
-
-// GUARDAR VENTA
-window.guardarVenta=async ()=>{
-    if(!nombre.value) return alert("Seleccione cliente");
-    if(!marca.value) return alert("Seleccione marca");
-    if(!valvula.value) return alert("Seleccione válvula");
-    if(!cantidad.value) return alert("Ingrese cantidad");
-    if(!precio.value) return alert("Ingrese precio");
-    if(!pago.value) return alert("Seleccione pago");
-    if(!delivery.value) return alert("Seleccione delivery");
-
-    let totalCalc = Number(cantidad.value)*Number(precio.value);
-
-    await addDoc(collection(db,"ventas"),{
-        nombre:nombre.value,
-        celular:celular.value,
-        direccion:direccion.value,
-        marca:marca.value,
-        valvula:valvula.value,
-        cantidad:Number(cantidad.value),
-        precio:Number(precio.value),
-        total:totalCalc,
-        pago:pago.value,
-        delivery:delivery.value,
-        fecha:new Date().toISOString()
-    });
-
-    alert("VENTA GUARDADA");
-
-    document.querySelectorAll("input").forEach(i=>i.value="");
-    document.querySelectorAll("select").forEach(s=>s.value="");
-    total.innerText="S/. 0.00";
-};
-
-// ADMIN
-async function abrirAdmin(){
-
-    adminPanel.style.display="block";
-
-    const snap = await getDocs(collection(db,"ventas"));
-
-    ventasGlobal = [];
-
-    let totalHoy = 0;
-    let totalMes = 0;
-    let totalGeneral = 0;
-
-    let hoy = new Date();
-    let hoyStr = hoy.toISOString().slice(0,10);
-    let mesStr = hoy.toISOString().slice(0,7);
-
-    let html = "";
-
-    if(snap.empty){
-        contenidoAdmin.innerHTML = "<h3>⚠️ NO HAY VENTAS</h3>";
-        return;
-    }
-let docsOrdenados = snap.docs.sort((a,b)=>{
-
-    let fa = a.data().fecha || "";
-    let fb = b.data().fecha || "";
-
-    return fb.localeCompare(fa); // 🔥 DESCENDENTE
-});
-    let esPrimero = true;
+let esPrimero = true;
 
 docsOrdenados.forEach(doc=>{
+
+    let v = doc.data();
+
+    let fechaISO = "";
+
+    if(typeof v.fecha === "string"){
+        fechaISO = v.fecha;
+    }
+    else if(v.fecha?.seconds){
+        fechaISO = new Date(v.fecha.seconds * 1000).toISOString();
+    }
+
+    let monto = Number(v.total) || 0;
+
+    totalGeneral += monto;
+
+    if(fechaISO && fechaISO.slice(0,10) === hoyStr){
+        totalHoy += monto;
+    }
+
+    if(fechaISO && fechaISO.slice(0,7) === mesStr){
+        totalMes += monto;
+    }
+
+    let fechaMostrar = fechaISO
+        ? new Date(fechaISO).toLocaleString()
+        : "SIN FECHA";
 
     let estilo = esPrimero 
         ? "background:#2ecc71;color:black;"
@@ -364,55 +260,24 @@ docsOrdenados.forEach(doc=>{
 
     esPrimero = false;
 
-        let v = doc.data();
-
-        // 🔥 CORREGIR FECHA (ESTO ES CLAVE)
-        let fechaISO = "";
-
-        if(typeof v.fecha === "string"){
-            fechaISO = v.fecha;
-        }
-        else if(v.fecha?.seconds){
-            fechaISO = new Date(v.fecha.seconds * 1000).toISOString();
-        }
-
-        let monto = Number(v.total) || 0;
-
-        totalGeneral += monto;
-
-        if(fechaISO && fechaISO.slice(0,10) === hoyStr){
-            totalHoy += monto;
-        }
-
-        if(fechaISO && fechaISO.slice(0,7) === mesStr){
-            totalMes += monto;
-        }
-
-        let fechaMostrar = fechaISO
-            ? new Date(fechaISO).toLocaleString()
-            : "SIN FECHA";
-
-        // 🔥 GUARDAR PARA BUSCADOR
-        ventasGlobal.push({
-            nombre:(v.nombre||"").toUpperCase(),
-            celular:String(v.celular||""),
-            total:monto,
-            fechaISO:fechaISO,
-            fechaMostrar:fechaMostrar
-        });
-
-        // 🔥 CREAR LISTA (ESTO ES LO QUE TE FALTABA BIEN)
-        html += `
-            <div style="${estilo}; padding:12px; border-radius:10px; margin-bottom:10px;">
-            <b>${v.nombre || "-"}</b><br>
-            📱 ${v.celular || "-"}<br>
-            💰 S/. ${monto.toFixed(2)}<br>
-            🏷️ ${v.marca || "-"} - ${v.valvula || "-"}<br>
-            💳 ${v.pago || "-"} | 🚚 ${v.delivery || "-"}<br>
-            📅 ${fechaMostrar}
-        </div>
-        `;
+    ventasGlobal.push({
+        nombre:(v.nombre||"").toUpperCase(),
+        celular:String(v.celular||""),
+        total:monto,
+        fechaISO:fechaISO,
+        fechaMostrar:fechaMostrar
     });
+
+    html += `
+    <div style="${estilo} padding:12px; border-radius:10px; margin-bottom:10px;">
+        <b>${v.nombre || "-"}</b><br>
+        📱 ${v.celular || "-"}<br>
+        💰 S/. ${monto.toFixed(2)}<br>
+        🏷️ ${v.marca || "-"} - ${v.valvula || "-"}<br>
+        💳 ${v.pago || "-"} | 🚚 ${v.delivery || "-"}<br>
+        📅 ${fechaMostrar}
+    </div>`;
+});
 
     // 🔥 PINTAR TODO
     contenidoAdmin.innerHTML = `
