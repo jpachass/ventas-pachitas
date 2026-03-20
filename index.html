@@ -231,7 +231,8 @@ await cargarClientes();
 // 🔍 BUSCADOR ADMIN (AQUÍ VA)
 buscarAdmin.oninput = function(){
 
-    this.value = this.value.toUpperCase().replace(/[^A-Z\s]/g,'');
+    // 🔥 PERMITIR LETRAS Y NÚMEROS
+    this.value = this.value.toUpperCase().replace(/[^A-Z0-9\s]/g,'');
 
     let texto = this.value.trim();
     listaAdmin.innerHTML = "";
@@ -244,7 +245,7 @@ buscarAdmin.oninput = function(){
     contenidoAdmin.style.display="none";
 
     let filtrados = ventasGlobal.filter(v =>
-        (v.nombre || "").toUpperCase().includes(texto)
+        v.nombre.includes(texto)
     );
 
     if(filtrados.length === 0){
