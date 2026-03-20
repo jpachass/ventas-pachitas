@@ -69,6 +69,7 @@ button{
     box-shadow:0 5px 10px rgba(0,0,0,0.2);
     max-height:150px;
     overflow:auto;
+    display:none;
 }
 
 .item{padding:10px;cursor:pointer;}
@@ -124,7 +125,7 @@ button{
 <div class="card">
 
 <input id="buscarCliente" placeholder="🔍 BUSCAR CLIENTE">
-<div id="lista"></div>
+<div id="lista" class="sugerencias"></div>
 
 <button class="btn-sec" onclick="abrirModal()">➕ NUEVO CLIENTE</button>
 
@@ -206,7 +207,7 @@ const db = getFirestore(app);
 let clientes=[];
 let ventasGlobal=[];
 
-// CLICK ADMIN
+// ADMIN CLICK
 let clicks=0;
 titulo.onclick=()=>{
     clicks++;
@@ -231,14 +232,32 @@ async function cargarClientes(){
 }
 await cargarClientes();
 
-// BUSCADOR CLIENTE
+// 🔍 BUSCADOR CLIENTE CORREGIDO
 buscarCliente.oninput=function(){
+
     this.value=this.value.toUpperCase().replace(/[^A-Z0-9\s]/g,'');
-    let t=this.value;
+
+    let texto=this.value.trim();
     lista.innerHTML="";
 
-    clientes.filter(c=>c.nombre.includes(t)||c.celular.includes(t))
-    .forEach(c=>{
+    if(!texto){
+        lista.style.display="none";
+        return;
+    }
+
+    let filtrados=clientes.filter(c =>
+        c.nombre.includes(texto) || c.celular.includes(texto)
+    );
+
+    if(filtrados.length===0){
+        lista.style.display="block";
+        lista.innerHTML="<div class='item'>❌ SIN RESULTADOS</div>";
+        return;
+    }
+
+    lista.style.display="block";
+
+    filtrados.forEach(c=>{
         let div=document.createElement("div");
         div.className="item";
         div.innerHTML=`${c.nombre} - ${c.celular}`;
@@ -246,8 +265,10 @@ buscarCliente.oninput=function(){
             nombre.value=c.nombre;
             celular.value=c.celular;
             direccion.value=c.direccion;
+
             buscarCliente.value="";
             lista.innerHTML="";
+            lista.style.display="none";
         };
         lista.appendChild(div);
     });
@@ -304,63 +325,94 @@ window.guardarVenta=async ()=>{
     total.innerText="S/. 0.00";
 };
 
-// ADMIN
+// 🔥 ADMIN CORREGIDO
 async function abrirAdmin(){
 
     adminPanel.style.display="block";
     contenidoAdmin.innerHTML="CARGANDO...";
 
-    const snap = await getDocs(collection(db,"ventas"));
+    try{
 
-    ventasGlobal=[];
+        const snap = await getDocs(collection(db,"ventas"));
 
-    if(snap.docs.length===0){
-        contenidoAdmin.innerHTML="NO HAY VENTAS";
+        ventasGlobal=[];
+
+        if(!snap || snap.docs.length===0){
+            contenidoAdmin.innerHTML="⚠️ NO HAY VENTAS";
+            return;
+        }
+
+        let docs = snap.docs;
+
+        docs.sort((a,b)=>{
+            let fa=a.data().fecha || "";
+            let fb=b.data().fecha || "";
+            return fb.localeCompare(fa);
+        });
+
+        let html="";
+
+        docs.forEach((doc,i)=>{
+
+            let v = doc.data() || {};
+
+            let nombreV = (v.nombre||"").toUpperCase();
+            let celularV = String(v.celular||"");
+            let totalV = Number(v.total)||0;
+            let fechaV = v.fecha || "";
+
+            ventasGlobal.push({
+                nombre:nombreV,
+                celular:celularV,
+                total:totalV,
+                fechaISO:fechaV
+            });
+
+            html += `
+            <div style="background:${i==0?'#2ecc71':'#1c1c1c'};padding:10px;margin-bottom:10px;border-radius:10px;">
+                <b>${nombreV}</b><br>
+                📱 ${celularV}<br>
+                💰 S/. ${totalV.toFixed(2)}
+            </div>`;
+        });
+
+        contenidoAdmin.innerHTML = html;
+
+    }catch(error){
+        console.error(error);
+        contenidoAdmin.innerHTML="❌ ERROR AL CARGAR";
+    }
+}
+
+// 🔍 BUSCADOR ADMIN
+buscarAdmin.oninput=function(){
+
+    this.value=this.value.toUpperCase().replace(/[^A-Z0-9-\s]/g,'');
+
+    let texto=this.value.trim();
+    listaAdmin.innerHTML="";
+
+    if(!texto) return;
+
+    let filtrados=ventasGlobal.filter(v =>
+        (v.nombre||"").includes(texto) ||
+        (v.celular||"").includes(texto) ||
+        (v.fechaISO||"").includes(texto)
+    );
+
+    if(filtrados.length===0){
+        listaAdmin.innerHTML="<div class='item'>❌ SIN RESULTADOS</div>";
         return;
     }
 
-    let html="";
-    let docs=snap.docs.sort((a,b)=> (b.data().fecha||"").localeCompare(a.data().fecha||""));
-
-    docs.forEach((doc,i)=>{
-        let v=doc.data();
-
-        ventasGlobal.push({
-            nombre:(v.nombre||"").toUpperCase(),
-            celular:String(v.celular||""),
-            total:v.total,
-            fechaISO:v.fecha||""
-        });
-
-        html+=`
-        <div style="background:${i==0?'#2ecc71':'#1c1c1c'};padding:10px;margin-bottom:10px;border-radius:10px;">
-            <b>${v.nombre}</b><br>
-            📱 ${v.celular}<br>
-            💰 S/. ${v.total}
-        </div>`;
-    });
-
-    contenidoAdmin.innerHTML=html;
-}
-
-// BUSCADOR ADMIN
-buscarAdmin.oninput=function(){
-
-    this.value=this.value.toUpperCase();
-
-    let t=this.value;
-    listaAdmin.innerHTML="";
-
-    if(!t) return;
-
-    ventasGlobal.filter(v=>
-        v.nombre.includes(t) ||
-        v.celular.includes(t) ||
-        v.fechaISO.includes(t)
-    ).forEach(v=>{
+    filtrados.forEach(v=>{
         let div=document.createElement("div");
         div.className="item";
-        div.innerHTML=`${v.nombre} - S/. ${v.total}`;
+        div.innerHTML=`
+            ${v.nombre}<br>
+            📱 ${v.celular}<br>
+            💰 S/. ${v.total}
+        `;
         listaAdmin.appendChild(div);
     });
 };
