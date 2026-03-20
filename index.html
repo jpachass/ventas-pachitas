@@ -115,6 +115,45 @@ button{
     overflow:auto;
     margin-top:10px;
 }
+    /* 🎨 TARJETAS PREMIUM ADMIN */
+.card-venta{
+    border-radius:18px;
+    padding:15px;
+    margin-bottom:12px;
+    background:#222;
+    color:white;
+    box-shadow:0 4px 12px rgba(0,0,0,0.4);
+    transition:transform 0.2s, box-shadow 0.2s;
+}
+
+.card-venta:hover{
+    transform:scale(1.02);
+    box-shadow:0 6px 18px rgba(0,0,0,0.6);
+}
+
+/* 🟢 ÚLTIMA VENTA DESTACADA */
+.card-top{
+    background:linear-gradient(135deg,#2ecc71,#27ae60);
+    color:black;
+    font-weight:bold;
+}
+
+/* 📌 TEXTOS */
+.titulo-nombre{
+    font-size:18px;
+    font-weight:bold;
+}
+
+.subtexto{
+    font-size:14px;
+    opacity:0.9;
+}
+
+.total{
+    font-size:18px;
+    font-weight:bold;
+    margin-top:5px;
+}
 </style>
 </head>
 
@@ -420,14 +459,16 @@ async function abrirAdmin(){
                 fechaMostrar:fechaMostrar
             });
 
-            html += `
-<div style="background:${i==0?'#2ecc71':'#222'};padding:12px;margin-bottom:10px;border-radius:10px;">
+html += `
+<div class="card-venta ${i==0?'card-top':''}">
     
-    👤 <b>${nombreV}</b><br>
-    🏷️ ${v.marca || "-"}<br>
-    🔧 ${v.valvula || "-"}<br>
-    📅 ${fechaMostrar}<br>
-    💰 <b>S/. ${totalV.toFixed(2)}</b>
+    <div class="titulo-nombre">👤 ${nombreV}</div>
+
+    <div class="subtexto">🏷️ ${v.marca || "-"}</div>
+    <div class="subtexto">🔧 ${v.valvula || "-"}</div>
+    <div class="subtexto">📅 ${fechaMostrar}</div>
+
+    <div class="total">💰 S/. ${totalV.toFixed(2)}</div>
 
 </div>`;
         });
