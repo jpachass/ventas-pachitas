@@ -118,6 +118,11 @@ button{
 #listaAdmin{
     color:black;
 }
+    /* 🔥 SCROLL RESULTADOS */
+#listaAdmin{
+    max-height:200px;
+    overflow:auto;
+}
 </style>
 </head>
 
@@ -296,7 +301,14 @@ window.guardarVenta=async ()=>{
     if(!nombre.value) return alert("Seleccione cliente");
     if(!marca.value) return alert("Seleccione marca");
     if(!valvula.value) return alert("Seleccione válvula");
-    if(!cantidad.value) return alert("Ingrese cantidad");
+    if(!cantidad.value) return alert("Ingrese cantidad");.sugerencias{
+    position:absolute;
+    /* 🔥 FIX ADMIN */
+#adminPanel .sugerencias{
+    position:relative;
+    z-index:1;
+    margin-top:5px;
+}
     if(!precio.value) return alert("Ingrese precio");
     if(!pago.value) return alert("Seleccione pago");
     if(!delivery.value) return alert("Seleccione delivery");
@@ -328,7 +340,10 @@ window.guardarVenta=async ()=>{
 async function abrirAdmin(){
 
     adminPanel.style.display="block";
-
+ // 🔥 FIX VISUAL
+    contenidoAdmin.style.display = "block";
+    listaAdmin.innerHTML = "";
+    buscarAdmin.value = "";
     const snap = await getDocs(collection(db,"ventas"));
 
     console.log("DOCS:", snap.docs.length);
