@@ -295,12 +295,38 @@ window.cerrarModal=()=>modal.style.display="none";
 
 // GUARDAR CLIENTE
 window.guardarCliente=async ()=>{
-    await addDoc(collection(db,"clientes"),{
-        nombre:nNombre.value,
-        celular:nCelular.value,
-        direccion:nDireccion.value
-    });
+
+    if(!nNombre.value) return alert("Ingrese nombre");
+    if(nCelular.value.length!==9) return alert("Celular inválido");
+    if(!nDireccion.value) return alert("Ingrese dirección");
+
+    let nuevoCliente = {
+        nombre: nNombre.value.toUpperCase(),
+        celular: nCelular.value,
+        direccion: nDireccion.value.toUpperCase()
+    };
+
+    // 🔥 Guardar en Firebase
+    await addDoc(collection(db,"clientes"), nuevoCliente);
+
+    // 🔥 Actualizar lista local
     await cargarClientes();
+
+    // 🔥 AUTOCOMPLETAR EN VENTAS (CLAVE)
+    nombre.value = nuevoCliente.nombre;
+    celular.value = nuevoCliente.celular;
+    direccion.value = nuevoCliente.direccion;
+
+    // 🔥 LIMPIAR BUSCADOR
+    buscarCliente.value = "";
+    lista.innerHTML = "";
+    lista.style.display = "none";
+
+    // 🔥 LIMPIAR MODAL
+    nNombre.value = "";
+    nCelular.value = "";
+    nDireccion.value = "";
+
     cerrarModal();
 };
 
