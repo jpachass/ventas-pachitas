@@ -115,7 +115,8 @@ button{
     overflow:auto;
     margin-top:10px;
 }
-    /* 🎨 TARJETAS PREMIUM ADMIN */
+
+/* 🎨 TARJETAS PREMIUM */
 .card-venta{
     border-radius:18px;
     padding:15px;
@@ -123,38 +124,19 @@ button{
     background:#222;
     color:white;
     box-shadow:0 4px 12px rgba(0,0,0,0.4);
-    transition:transform 0.2s, box-shadow 0.2s;
 }
 
-.card-venta:hover{
-    transform:scale(1.02);
-    box-shadow:0 6px 18px rgba(0,0,0,0.6);
-}
-
-/* 🟢 ÚLTIMA VENTA DESTACADA */
 .card-top{
     background:linear-gradient(135deg,#2ecc71,#27ae60);
     color:black;
     font-weight:bold;
 }
 
-/* 📌 TEXTOS */
-.titulo-nombre{
-    font-size:18px;
-    font-weight:bold;
-}
+.titulo-nombre{font-size:18px;font-weight:bold;}
+.subtexto{font-size:14px;opacity:0.9;}
+.total{font-size:18px;font-weight:bold;margin-top:5px;}
 
-.subtexto{
-    font-size:14px;
-    opacity:0.9;
-}
-
-.total{
-    font-size:18px;
-    font-weight:bold;
-    margin-top:5px;
-}
-    /* 📊 RESUMEN DASHBOARD */
+/* 📊 RESUMEN */
 .resumen{
     display:grid;
     grid-template-columns:repeat(3,1fr);
@@ -167,22 +149,11 @@ button{
     border-radius:15px;
     padding:12px;
     text-align:center;
-    box-shadow:0 4px 10px rgba(0,0,0,0.4);
 }
 
-.box h4{
-    margin:0;
-    font-size:13px;
-    opacity:0.8;
-}
+.box h4{margin:0;font-size:13px;}
+.box p{margin:5px 0 0;font-size:18px;font-weight:bold;}
 
-.box p{
-    margin:5px 0 0;
-    font-size:18px;
-    font-weight:bold;
-}
-
-/* COLORES */
 .hoy{border-top:4px solid #2ecc71;}
 .mes{border-top:4px solid #3498db;}
 .total{border-top:4px solid #f1c40f;}
@@ -242,22 +213,19 @@ button{
 <div class="modal" id="modal">
 <div class="modal-content">
 <h3>NUEVO CLIENTE</h3>
-<input id="nNombre" placeholder="NOMBRE">
-<input id="nCelular" placeholder="CELULAR">
-<input id="nDireccion" placeholder="DIRECCIÓN">
+<input id="nNombre">
+<input id="nCelular">
+<input id="nDireccion">
 <button onclick="guardarCliente()" class="btn-main">GUARDAR</button>
-<button onclick="cerrarModal()" style="background:red;color:white;">CERRAR</button>
+<button onclick="cerrarModal()">CERRAR</button>
 </div>
 </div>
 
 <div id="adminPanel">
 <h2>PANEL ADMIN</h2>
-
-<input id="buscarAdmin" placeholder="BUSCAR NOMBRE / CELULAR / FECHA">
+<input id="buscarAdmin" placeholder="BUSCAR">
 <div id="listaAdmin"></div>
-
 <button onclick="cerrarAdmin()">Cerrar</button>
-
 <div id="contenidoAdmin"></div>
 </div>
 
@@ -270,10 +238,9 @@ const firebaseConfig = {
   apiKey: "AIzaSyA8MGBeJEo-eDyu0iHayj9WIQPZHx7UhMA",
   authDomain: "ventas-pachitas.firebaseapp.com",
   projectId: "ventas-pachitas",
-  storageBucket: "ventas-pachitas.firebasestorage.app",
+  storageBucket: "ventas-pachitas.appspot.com",
   messagingSenderId: "444948394496",
-  appId: "1:444948394496:web:5d03b37093d9d0f8031ee5",
-  measurementId: "G-Y161Z07EK6"
+  appId: "1:444948394496:web:5d03b37093d9d0f8031ee5"
 };
 
 const app = initializeApp(firebaseConfig);
@@ -282,7 +249,6 @@ const db = getFirestore(app);
 let clientes=[];
 let ventasGlobal=[];
 
-// ADMIN CLICK
 let clicks=0;
 titulo.onclick=()=>{
     clicks++;
@@ -292,7 +258,6 @@ titulo.onclick=()=>{
 
 window.cerrarAdmin=()=>adminPanel.style.display="none";
 
-// CARGAR CLIENTES
 async function cargarClientes(){
     const snap = await getDocs(collection(db,"clientes"));
     clientes=[];
@@ -307,28 +272,15 @@ async function cargarClientes(){
 }
 await cargarClientes();
 
-// 🔍 BUSCADOR CLIENTE CORREGIDO
 buscarCliente.oninput=function(){
-
     this.value=this.value.toUpperCase().replace(/[^A-Z0-9\s]/g,'');
-
     let texto=this.value.trim();
     lista.innerHTML="";
-
-    if(!texto){
-        lista.style.display="none";
-        return;
-    }
+    if(!texto){ lista.style.display="none"; return; }
 
     let filtrados=clientes.filter(c =>
         c.nombre.includes(texto) || c.celular.includes(texto)
     );
-
-    if(filtrados.length===0){
-        lista.style.display="block";
-        lista.innerHTML="<div class='item'>❌ SIN RESULTADOS</div>";
-        return;
-    }
 
     lista.style.display="block";
 
@@ -340,70 +292,39 @@ buscarCliente.oninput=function(){
             nombre.value=c.nombre;
             celular.value=c.celular;
             direccion.value=c.direccion;
-
             buscarCliente.value="";
-            lista.innerHTML="";
             lista.style.display="none";
         };
         lista.appendChild(div);
     });
 };
 
-// VALIDACIONES
-nNombre.oninput=()=>nNombre.value=nNombre.value.toUpperCase();
-nCelular.oninput=()=>nCelular.value=nCelular.value.replace(/[^0-9]/g,'').slice(0,9);
-nDireccion.oninput=()=>nDireccion.value=nDireccion.value.toUpperCase();
-
-cantidad.oninput=precio.oninput=()=>{
-    cantidad.value=cantidad.value.replace(/[^0-9]/g,'');
-    precio.value=precio.value.replace(/[^0-9.]/g,'');
-    total.innerText="S/. "+((cantidad.value*precio.value)||0).toFixed(2);
-};
-
-// MODAL
 window.abrirModal=()=>modal.style.display="flex";
 window.cerrarModal=()=>modal.style.display="none";
 
-// GUARDAR CLIENTE
 window.guardarCliente=async ()=>{
-
-    if(!nNombre.value) return alert("Ingrese nombre");
-    if(nCelular.value.length!==9) return alert("Celular inválido");
-    if(!nDireccion.value) return alert("Ingrese dirección");
-
-    let nuevoCliente = {
-        nombre: nNombre.value.toUpperCase(),
-        celular: nCelular.value,
-        direccion: nDireccion.value.toUpperCase()
+    let nuevo={
+        nombre:nNombre.value.toUpperCase(),
+        celular:nCelular.value,
+        direccion:nDireccion.value.toUpperCase()
     };
 
-    // 🔥 Guardar en Firebase
-    await addDoc(collection(db,"clientes"), nuevoCliente);
-
-    // 🔥 Actualizar lista local
+    await addDoc(collection(db,"clientes"),nuevo);
     await cargarClientes();
 
-    // 🔥 AUTOCOMPLETAR EN VENTAS (CLAVE)
-    nombre.value = nuevoCliente.nombre;
-    celular.value = nuevoCliente.celular;
-    direccion.value = nuevoCliente.direccion;
+    nombre.value=nuevo.nombre;
+    celular.value=nuevo.celular;
+    direccion.value=nuevo.direccion;
 
-    // 🔥 LIMPIAR BUSCADOR
-    buscarCliente.value = "";
-    lista.innerHTML = "";
-    lista.style.display = "none";
+    buscarCliente.value="";
+    lista.style.display="none";
 
-    // 🔥 LIMPIAR MODAL
-    nNombre.value = "";
-    nCelular.value = "";
-    nDireccion.value = "";
-
+    nNombre.value=nCelular.value=nDireccion.value="";
     cerrarModal();
 };
 
-// GUARDAR VENTA
 window.guardarVenta=async ()=>{
-    let totalCalc = Number(cantidad.value)*Number(precio.value);
+    let totalCalc = cantidad.value*precio.value;
 
     await addDoc(collection(db,"ventas"),{
         nombre:nombre.value,
@@ -411,11 +332,7 @@ window.guardarVenta=async ()=>{
         direccion:direccion.value,
         marca:marca.value,
         valvula:valvula.value,
-        cantidad:Number(cantidad.value),
-        precio:Number(precio.value),
-        total:totalCalc,
-        pago:pago.value,
-        delivery:delivery.value,
+        total:Number(totalCalc),
         fecha:new Date().toISOString()
     });
 
@@ -426,162 +343,55 @@ window.guardarVenta=async ()=>{
     total.innerText="S/. 0.00";
 };
 
-// 🔥 ADMIN CORREGIDO
 async function abrirAdmin(){
 
     adminPanel.style.display="block";
-    contenidoAdmin.innerHTML="CARGANDO...";
 
-    try{
+    const snap = await getDocs(collection(db,"ventas"));
 
-        const snap = await getDocs(collection(db,"ventas"));
+    ventasGlobal=[];
 
-        ventasGlobal=[];
+    let totalHoy=0,totalMes=0,totalGeneral=0;
+    let hoy=new Date().toISOString().slice(0,10);
+    let mes=new Date().toISOString().slice(0,7);
 
-        if(!snap || snap.docs.length===0){
-            contenidoAdmin.innerHTML="⚠️ NO HAY VENTAS";
-            return;
-        }
+    let docs=snap.docs;
 
-        let docs = snap.docs;
-
-        // 🔥 ORDENAMIENTO SEGURO (SIN ROMPER)
-        docs.sort((a,b)=>{
-            let fa = a.data().fecha;
-            let fb = b.data().fecha;
-
-            fa = (typeof fa === "string") ? fa :
-                 (fa?.seconds ? new Date(fa.seconds*1000).toISOString() : "");
-
-            fb = (typeof fb === "string") ? fb :
-                 (fb?.seconds ? new Date(fb.seconds*1000).toISOString() : "");
-
-            return fb.localeCompare(fa);
-        });
-
-        let html="";
-let totalHoy = 0;
-let totalMes = 0;
-let totalGeneral = 0;
-
-let hoyStr = new Date().toISOString().slice(0,10);
-let mesStr = new Date().toISOString().slice(0,7);
-        docs.forEach((doc,i)=>{
-            let monto = totalV;
-
-totalGeneral += monto;
-
-if(fechaISO && fechaISO.slice(0,10) === hoyStr){
-    totalHoy += monto;
-}
-
-if(fechaISO && fechaISO.slice(0,7) === mesStr){
-    totalMes += monto;
-}
-
-            let v = doc.data() || {};
-
-            let nombreV = (v.nombre||"").toUpperCase();
-            let celularV = String(v.celular||"");
-            let totalV = Number(v.total)||0;
-
-            // 🔥 FECHA SEGURA
-            let fechaISO = "";
-
-            if(typeof v.fecha === "string"){
-                fechaISO = v.fecha;
-            }
-            else if(v.fecha?.seconds){
-                fechaISO = new Date(v.fecha.seconds*1000).toISOString();
-            }
-
-            let fechaMostrar = fechaISO
-                ? new Date(fechaISO).toLocaleString()
-                : "SIN FECHA";
-
-            ventasGlobal.push({
-                nombre:nombreV,
-                celular:celularV,
-                total:totalV,
-                fechaISO:fechaISO,
-                fechaMostrar:fechaMostrar
-            });
-
-html += `
-<div class="card-venta ${i==0?'card-top':''}">
-    
-    <div class="titulo-nombre">👤 ${nombreV}</div>
-
-    <div class="subtexto">🏷️ ${v.marca || "-"}</div>
-    <div class="subtexto">🔧 ${v.valvula || "-"}</div>
-    <div class="subtexto">📅 ${fechaMostrar}</div>
-
-    <div class="total">💰 S/. ${totalV.toFixed(2)}</div>
-
-</div>`;
-        });
-
-        contenidoAdmin.innerHTML = `
-<div class="resumen">
-
-    <div class="box hoy">
-        <h4>HOY</h4>
-        <p>S/. ${totalHoy.toFixed(2)}</p>
-    </div>
-
-    <div class="box mes">
-        <h4>MES</h4>
-        <p>S/. ${totalMes.toFixed(2)}</p>
-    </div>
-
-    <div class="box total">
-        <h4>TOTAL</h4>
-        <p>S/. ${totalGeneral.toFixed(2)}</p>
-    </div>
-
-</div>
-
-${html}
-`;
-
-    }catch(error){
-        console.error("🔥 ERROR REAL:", error);
-        contenidoAdmin.innerHTML="❌ ERROR AL CARGAR";
-    }
-}
-
-// 🔍 BUSCADOR ADMIN
-buscarAdmin.oninput=function(){
-
-    this.value=this.value.toUpperCase().replace(/[^A-Z0-9-\s]/g,'');
-
-    let texto=this.value.trim();
-    listaAdmin.innerHTML="";
-
-    if(!texto) return;
-
-    let filtrados=ventasGlobal.filter(v =>
-        (v.nombre||"").includes(texto) ||
-        (v.celular||"").includes(texto) ||
-        (v.fechaISO||"").includes(texto)
-    );
-
-    if(filtrados.length===0){
-        listaAdmin.innerHTML="<div class='item'>❌ SIN RESULTADOS</div>";
-        return;
-    }
-
-    filtrados.forEach(v=>{
-        let div=document.createElement("div");
-        div.className="item";
-        div.innerHTML=`
-            ${v.nombre}<br>
-            📱 ${v.celular}<br>
-            💰 S/. ${v.total}
-        `;
-        listaAdmin.appendChild(div);
+    docs.sort((a,b)=>{
+        let fa=a.data().fecha||"";
+        let fb=b.data().fecha||"";
+        return fb.localeCompare(fa);
     });
-};
+
+    let html="";
+
+    docs.forEach((doc,i)=>{
+        let v=doc.data();
+        let fecha=v.fecha||"";
+        let monto=Number(v.total)||0;
+
+        totalGeneral+=monto;
+        if(fecha.slice(0,10)===hoy) totalHoy+=monto;
+        if(fecha.slice(0,7)===mes) totalMes+=monto;
+
+        html+=`
+        <div class="card-venta ${i==0?'card-top':''}">
+            <div class="titulo-nombre">${v.nombre}</div>
+            <div class="subtexto">${v.marca}</div>
+            <div class="subtexto">${v.valvula}</div>
+            <div class="subtexto">${new Date(fecha).toLocaleString()}</div>
+            <div class="total">S/. ${monto.toFixed(2)}</div>
+        </div>`;
+    });
+
+    contenidoAdmin.innerHTML=`
+    <div class="resumen">
+        <div class="box hoy"><h4>HOY</h4><p>S/. ${totalHoy.toFixed(2)}</p></div>
+        <div class="box mes"><h4>MES</h4><p>S/. ${totalMes.toFixed(2)}</p></div>
+        <div class="box total"><h4>TOTAL</h4><p>S/. ${totalGeneral.toFixed(2)}</p></div>
+    </div>
+    ${html}`;
+}
 
 </script>
 </body>
