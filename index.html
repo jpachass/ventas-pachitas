@@ -154,6 +154,38 @@ button{
     font-weight:bold;
     margin-top:5px;
 }
+    /* 📊 RESUMEN DASHBOARD */
+.resumen{
+    display:grid;
+    grid-template-columns:repeat(3,1fr);
+    gap:10px;
+    margin-bottom:15px;
+}
+
+.box{
+    background:#111;
+    border-radius:15px;
+    padding:12px;
+    text-align:center;
+    box-shadow:0 4px 10px rgba(0,0,0,0.4);
+}
+
+.box h4{
+    margin:0;
+    font-size:13px;
+    opacity:0.8;
+}
+
+.box p{
+    margin:5px 0 0;
+    font-size:18px;
+    font-weight:bold;
+}
+
+/* COLORES */
+.hoy{border-top:4px solid #2ecc71;}
+.mes{border-top:4px solid #3498db;}
+.total{border-top:4px solid #f1c40f;}
 </style>
 </head>
 
@@ -428,8 +460,24 @@ async function abrirAdmin(){
         });
 
         let html="";
+let totalHoy = 0;
+let totalMes = 0;
+let totalGeneral = 0;
 
+let hoyStr = new Date().toISOString().slice(0,10);
+let mesStr = new Date().toISOString().slice(0,7);
         docs.forEach((doc,i)=>{
+            let monto = totalV;
+
+totalGeneral += monto;
+
+if(fechaISO && fechaISO.slice(0,10) === hoyStr){
+    totalHoy += monto;
+}
+
+if(fechaISO && fechaISO.slice(0,7) === mesStr){
+    totalMes += monto;
+}
 
             let v = doc.data() || {};
 
@@ -473,7 +521,28 @@ html += `
 </div>`;
         });
 
-        contenidoAdmin.innerHTML = html;
+        contenidoAdmin.innerHTML = `
+<div class="resumen">
+
+    <div class="box hoy">
+        <h4>HOY</h4>
+        <p>S/. ${totalHoy.toFixed(2)}</p>
+    </div>
+
+    <div class="box mes">
+        <h4>MES</h4>
+        <p>S/. ${totalMes.toFixed(2)}</p>
+    </div>
+
+    <div class="box total">
+        <h4>TOTAL</h4>
+        <p>S/. ${totalGeneral.toFixed(2)}</p>
+    </div>
+
+</div>
+
+${html}
+`;
 
     }catch(error){
         console.error("🔥 ERROR REAL:", error);
