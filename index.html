@@ -265,7 +265,17 @@ async function cargarClientes(){
     });
 }
 await cargarClientes();
+nNombre.oninput = ()=>{
+    nNombre.value = nNombre.value.toUpperCase().replace(/[^A-Z\s]/g,'');
+};
 
+nCelular.oninput = ()=>{
+    nCelular.value = nCelular.value.replace(/[^0-9]/g,'').slice(0,9);
+};
+
+nDireccion.oninput = ()=>{
+    nDireccion.value = nDireccion.value.toUpperCase();
+};
 /* BUSCADOR CLIENTE */
 buscarCliente.oninput=function(){
     this.value=this.value.toUpperCase().replace(/[^A-Z0-9\s]/g,'');
@@ -300,27 +310,68 @@ window.cerrarModal=()=>modal.style.display="none";
 
 /* GUARDAR CLIENTE */
 window.guardarCliente=async ()=>{
-    if(!nNombre.value) return alert("Ingrese nombre");
-    if(nCelular.value.length!==9) return alert("Celular inválido");
-    if(!nDireccion.value) return alert("Ingrese dirección");
 
-    let nuevo={
-        nombre:nNombre.value.toUpperCase(),
-        celular:nCelular.value,
-        direccion:nDireccion.value.toUpperCase()
+    let nombreVal = nNombre.value.trim();
+    let celularVal = nCelular.value.trim();
+    let direccionVal = nDireccion.value.trim();
+
+    // 🔴 VALIDACIONES
+    if(!nombreVal){
+        alert("Ingrese nombre");
+        return;
+    }
+
+    if(nombreVal.length < 3){
+        alert("Nombre muy corto");
+        return;
+    }
+
+    if(!celularVal){
+        alert("Ingrese celular");
+        return;
+    }
+
+    if(celularVal.length !== 9){
+        alert("Celular debe tener 9 dígitos");
+        return;
+    }
+
+    if(!direccionVal){
+        alert("Ingrese dirección");
+        return;
+    }
+
+    // 🔥 EVITAR DUPLICADOS (PRO)
+    let existe = clientes.some(c => c.celular === celularVal);
+
+    if(existe){
+        alert("Este cliente ya existe");
+        return;
+    }
+
+    let nuevo = {
+        nombre: nombreVal.toUpperCase(),
+        celular: celularVal,
+        direccion: direccionVal.toUpperCase()
     };
 
-    await addDoc(collection(db,"clientes"),nuevo);
+    await addDoc(collection(db,"clientes"), nuevo);
+
     await cargarClientes();
 
-    nombre.value=nuevo.nombre;
-    celular.value=nuevo.celular;
-    direccion.value=nuevo.direccion;
+    // 🔥 AUTOCOMPLETAR
+    nombre.value = nuevo.nombre;
+    celular.value = nuevo.celular;
+    direccion.value = nuevo.direccion;
 
-    buscarCliente.value="";
-    lista.style.display="none";
+    // 🔥 LIMPIAR
+    buscarCliente.value = "";
+    lista.style.display = "none";
 
-    nNombre.value=nCelular.value=nDireccion.value="";
+    nNombre.value = "";
+    nCelular.value = "";
+    nDireccion.value = "";
+
     cerrarModal();
 };
 
