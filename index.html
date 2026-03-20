@@ -329,29 +329,57 @@ async function abrirAdmin(){
     let hoy=new Date().toISOString().slice(0,10);
     let mes=new Date().toISOString().slice(0,7);
 
+    let htmlLista = "<h3>🧾 LISTADO DE VENTAS</h3>";
+
+    if(snap.empty){
+        contenidoAdmin.innerHTML = "<h3>⚠️ NO HAY VENTAS</h3>";
+        return;
+    }
+
     snap.forEach(doc=>{
         let v=doc.data();
 
-        let fechaISO=v.fecha || "";
-        let monto=Number(v.total)||0;
+        let fechaISO = v.fecha || "";
+        let monto = Number(v.total) || 0;
 
-        totalGeneral+=monto;
-        if(fechaISO.startsWith(hoy)) totalHoy+=monto;
-        if(fechaISO.startsWith(mes)) totalMes+=monto;
+        totalGeneral += monto;
 
+        if(fechaISO.startsWith(hoy)) totalHoy += monto;
+        if(fechaISO.startsWith(mes)) totalMes += monto;
+
+        let fechaMostrar = fechaISO
+            ? new Date(fechaISO).toLocaleString()
+            : "SIN FECHA";
+
+        // 🔥 GUARDAR PARA BUSCADOR
         ventasGlobal.push({
             nombre:(v.nombre||"").toUpperCase(),
             celular:String(v.celular||""),
             total:monto,
             fechaISO:fechaISO,
-            fechaMostrar:new Date(fechaISO).toLocaleString()
+            fechaMostrar:fechaMostrar
         });
+
+        // 🔥 CREAR LISTA VISUAL
+        htmlLista += `
+        <div style="margin-bottom:10px; padding:10px; background:#222; border-radius:10px;">
+            <b>${v.nombre || "-"}</b><br>
+            📱 ${v.celular || "-"}<br>
+            💰 S/. ${monto.toFixed(2)}<br>
+            🏷️ ${v.marca || "-"} - ${v.valvula || "-"}<br>
+            💳 ${v.pago || "-"} | 🚚 ${v.delivery || "-"}<br>
+            📅 ${fechaMostrar}
+        </div>`;
     });
 
-    contenidoAdmin.innerHTML=`
-    <h3>📅 HOY: S/. ${totalHoy.toFixed(2)}</h3>
-    <h3>📆 MES: S/. ${totalMes.toFixed(2)}</h3>
-    <h3>📊 TOTAL: S/. ${totalGeneral.toFixed(2)}</h3>
+    // 🔥 RESUMEN + LISTA
+    contenidoAdmin.innerHTML = `
+        <div style="background:#111;padding:10px;border-radius:10px;margin-bottom:10px;">
+            <h3>📅 HOY: S/. ${totalHoy.toFixed(2)}</h3>
+            <h3>📆 MES: S/. ${totalMes.toFixed(2)}</h3>
+            <h3>📊 TOTAL: S/. ${totalGeneral.toFixed(2)}</h3>
+        </div>
+        ${htmlLista}
     `;
 }
 
