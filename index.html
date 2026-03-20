@@ -108,6 +108,14 @@ button{
     padding:20px;
     overflow:auto;
 }
+#adminPanel input{
+    color:black;
+    background:white;
+}
+
+#listaAdmin{
+    color:black;
+}
 </style>
 </head>
 
@@ -339,8 +347,22 @@ async function abrirAdmin(){
         contenidoAdmin.innerHTML = "<h3>⚠️ NO HAY VENTAS</h3>";
         return;
     }
+let docsOrdenados = snap.docs.sort((a,b)=>{
 
-    snap.forEach(doc=>{
+    let fa = a.data().fecha || "";
+    let fb = b.data().fecha || "";
+
+    return fb.localeCompare(fa); // 🔥 DESCENDENTE
+});
+    let esPrimero = true;
+
+docsOrdenados.forEach(doc=>{
+
+    let estilo = esPrimero 
+        ? "background:#2ecc71;color:black;"
+        : "background:#1c1c1c;";
+
+    esPrimero = false;
 
         let v = doc.data();
 
@@ -381,7 +403,7 @@ async function abrirAdmin(){
 
         // 🔥 CREAR LISTA (ESTO ES LO QUE TE FALTABA BIEN)
         html += `
-        <div style="background:#1c1c1c; padding:12px; border-radius:10px; margin-bottom:10px;">
+            <div style="${estilo}; padding:12px; border-radius:10px; margin-bottom:10px;">
             <b>${v.nombre || "-"}</b><br>
             📱 ${v.celular || "-"}<br>
             💰 S/. ${monto.toFixed(2)}<br>
