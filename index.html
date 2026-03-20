@@ -16,10 +16,10 @@ body{
 
 .header{
     background:white;
-    padding:20px;
+    padding:18px;
     text-align:center;
     font-weight:bold;
-    font-size:26px;
+    font-size:24px;
     border-radius:0 0 20px 20px;
     cursor:pointer;
 }
@@ -30,20 +30,19 @@ body{
     padding:15px;
     border-radius:20px;
     box-shadow:0 5px 10px rgba(0,0,0,0.2);
-    position:relative;
 }
 
 input, select{
     width:100%;
     height:50px;
-    padding:12px;
+    padding:10px;
     margin:6px 0;
     border-radius:12px;
     border:2px solid #ddd;
     font-size:16px;
 }
 
-input[readonly]{background:#f5f5f5;}
+input[readonly]{background:#eee;}
 
 button{
     width:100%;
@@ -59,20 +58,17 @@ button{
 
 #total{
     text-align:center;
-    font-size:34px;
+    font-size:32px;
     font-weight:bold;
     color:#27ae60;
 }
 
 .sugerencias{
-    position:absolute;
-    width:100%;
     background:white;
     border-radius:10px;
     box-shadow:0 5px 10px rgba(0,0,0,0.2);
     max-height:150px;
     overflow:auto;
-    z-index:100;
 }
 
 .item{padding:10px;cursor:pointer;}
@@ -93,7 +89,6 @@ button{
     padding:20px;
     border-radius:15px;
     width:90%;
-    max-width:400px;
 }
 
 #adminPanel{
@@ -105,23 +100,19 @@ button{
     background:black;
     color:white;
     display:none;
-    padding:20px;
+    padding:15px;
     overflow:auto;
 }
 
-/* 🔥 CORRECCIÓN COLOR BUSCADOR ADMIN */
 #adminPanel input{
     color:black;
     background:white;
 }
 
 #listaAdmin{
-    color:black;
-}
-    /* 🔥 SCROLL RESULTADOS */
-#listaAdmin{
     max-height:200px;
     overflow:auto;
+    margin-top:10px;
 }
 </style>
 </head>
@@ -133,7 +124,7 @@ button{
 <div class="card">
 
 <input id="buscarCliente" placeholder="🔍 BUSCAR CLIENTE">
-<div id="lista" class="sugerencias"></div>
+<div id="lista"></div>
 
 <button class="btn-sec" onclick="abrirModal()">➕ NUEVO CLIENTE</button>
 
@@ -159,7 +150,7 @@ button{
 <input id="precio" placeholder="PRECIO">
 
 <select id="pago">
-<option value="">MÉTODO DE PAGO</option>
+<option value="">PAGO</option>
 <option>YAPE</option>
 <option>EFECTIVO</option>
 </select>
@@ -176,26 +167,25 @@ button{
 
 </div>
 
-<!-- MODAL -->
 <div class="modal" id="modal">
 <div class="modal-content">
-<h3>➕ NUEVO CLIENTE</h3>
+<h3>NUEVO CLIENTE</h3>
 <input id="nNombre" placeholder="NOMBRE">
 <input id="nCelular" placeholder="CELULAR">
 <input id="nDireccion" placeholder="DIRECCIÓN">
-<button class="btn-main" onclick="guardarCliente()">GUARDAR</button>
+<button onclick="guardarCliente()" class="btn-main">GUARDAR</button>
 <button onclick="cerrarModal()" style="background:red;color:white;">CERRAR</button>
 </div>
 </div>
 
-<!-- ADMIN -->
 <div id="adminPanel">
-<h2>📊 PANEL ADMIN</h2>
+<h2>PANEL ADMIN</h2>
 
-<input id="buscarAdmin" placeholder="🔍 NOMBRE / CELULAR / FECHA (YYYY-MM-DD)">
-<div id="listaAdmin" class="sugerencias"></div>
+<input id="buscarAdmin" placeholder="BUSCAR NOMBRE / CELULAR / FECHA">
+<div id="listaAdmin"></div>
 
 <button onclick="cerrarAdmin()">Cerrar</button>
+
 <div id="contenidoAdmin"></div>
 </div>
 
@@ -213,6 +203,10 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
+let clientes=[];
+let ventasGlobal=[];
+
+// CLICK ADMIN
 let clicks=0;
 titulo.onclick=()=>{
     clicks++;
@@ -222,9 +216,7 @@ titulo.onclick=()=>{
 
 window.cerrarAdmin=()=>adminPanel.style.display="none";
 
-let clientes=[];
-let ventasGlobal=[];
-
+// CARGAR CLIENTES
 async function cargarClientes(){
     const snap = await getDocs(collection(db,"clientes"));
     clientes=[];
@@ -239,21 +231,17 @@ async function cargarClientes(){
 }
 await cargarClientes();
 
-// 🔍 BUSCADOR CLIENTE
+// BUSCADOR CLIENTE
 buscarCliente.oninput=function(){
     this.value=this.value.toUpperCase().replace(/[^A-Z0-9\s]/g,'');
-    let texto=this.value.trim();
+    let t=this.value;
     lista.innerHTML="";
-    if(!texto) return;
 
-    let filtrados=clientes.filter(c =>
-        c.nombre.includes(texto) || c.celular.includes(texto)
-    );
-
-    filtrados.forEach(c=>{
+    clientes.filter(c=>c.nombre.includes(t)||c.celular.includes(t))
+    .forEach(c=>{
         let div=document.createElement("div");
         div.className="item";
-        div.innerHTML=`<b>${c.nombre}</b><br>${c.celular}`;
+        div.innerHTML=`${c.nombre} - ${c.celular}`;
         div.onclick=()=>{
             nombre.value=c.nombre;
             celular.value=c.celular;
@@ -282,37 +270,17 @@ window.cerrarModal=()=>modal.style.display="none";
 
 // GUARDAR CLIENTE
 window.guardarCliente=async ()=>{
-    if(!nNombre.value) return alert("Ingrese nombre");
-    if(nCelular.value.length!==9) return alert("Celular inválido");
-    if(!nDireccion.value) return alert("Ingrese dirección");
-
     await addDoc(collection(db,"clientes"),{
         nombre:nNombre.value,
         celular:nCelular.value,
         direccion:nDireccion.value
     });
-
     await cargarClientes();
     cerrarModal();
 };
 
 // GUARDAR VENTA
 window.guardarVenta=async ()=>{
-    if(!nombre.value) return alert("Seleccione cliente");
-    if(!marca.value) return alert("Seleccione marca");
-    if(!valvula.value) return alert("Seleccione válvula");
-    if(!cantidad.value) return alert("Ingrese cantidad");.sugerencias{
-    position:absolute;
-    /* 🔥 FIX ADMIN */
-#adminPanel .sugerencias{
-    position:relative;
-    z-index:1;
-    margin-top:5px;
-}
-    if(!precio.value) return alert("Ingrese precio");
-    if(!pago.value) return alert("Seleccione pago");
-    if(!delivery.value) return alert("Seleccione delivery");
-
     let totalCalc = Number(cantidad.value)*Number(precio.value);
 
     await addDoc(collection(db,"ventas"),{
@@ -336,150 +304,63 @@ window.guardarVenta=async ()=>{
     total.innerText="S/. 0.00";
 };
 
-// 🔥 ADMIN COMPLETO
+// ADMIN
 async function abrirAdmin(){
 
     adminPanel.style.display="block";
- // 🔥 FIX VISUAL
-    contenidoAdmin.style.display = "block";
-    listaAdmin.innerHTML = "";
-    buscarAdmin.value = "";
+    contenidoAdmin.innerHTML="CARGANDO...";
+
     const snap = await getDocs(collection(db,"ventas"));
 
-    console.log("DOCS:", snap.docs.length);
-    console.log("DATA:", snap.docs.map(d=>d.data()));
+    ventasGlobal=[];
 
-    ventasGlobal = [];
-
-    let totalHoy = 0;
-    let totalMes = 0;
-    let totalGeneral = 0;
-
-    let hoyStr = new Date().toISOString().slice(0,10);
-    let mesStr = new Date().toISOString().slice(0,7);
-
-    let html = "";
-
-    let docs = snap.docs;
-
-    // 🔥 SI NO HAY DATOS
-    if(docs.length === 0){
-        contenidoAdmin.innerHTML = "<h3>⚠️ NO HAY VENTAS</h3>";
+    if(snap.docs.length===0){
+        contenidoAdmin.innerHTML="NO HAY VENTAS";
         return;
     }
 
-    // 🔥 ORDENAR SEGURO
-    docs.sort((a,b)=>{
-        let fa = a.data().fecha || "";
-        let fb = b.data().fecha || "";
-        return fb.localeCompare(fa);
-    });
+    let html="";
+    let docs=snap.docs.sort((a,b)=> (b.data().fecha||"").localeCompare(a.data().fecha||""));
 
-    let esPrimero = true;
+    docs.forEach((doc,i)=>{
+        let v=doc.data();
 
-    docs.forEach(doc=>{
-
-        let v = doc.data();
-
-        let fechaISO = "";
-
-        if(typeof v.fecha === "string"){
-            fechaISO = v.fecha;
-        }
-        else if(v.fecha?.seconds){
-            fechaISO = new Date(v.fecha.seconds * 1000).toISOString();
-        }
-
-        let monto = Number(v.total) || 0;
-
-        totalGeneral += monto;
-
-        if(fechaISO && fechaISO.slice(0,10) === hoyStr){
-            totalHoy += monto;
-        }
-
-        if(fechaISO && fechaISO.slice(0,7) === mesStr){
-            totalMes += monto;
-        }
-
-        let fechaMostrar = fechaISO
-            ? new Date(fechaISO).toLocaleString()
-            : "SIN FECHA";
-
-        let estilo = esPrimero
-            ? "background:#2ecc71;color:black;"
-            : "background:#1c1c1c;";
-
-        esPrimero = false;
-
-        // 🔥 ESTO ES CLAVE (LLENA EL BUSCADOR)
         ventasGlobal.push({
             nombre:(v.nombre||"").toUpperCase(),
             celular:String(v.celular||""),
-            total:monto,
-            fechaISO:fechaISO,
-            fechaMostrar:fechaMostrar
+            total:v.total,
+            fechaISO:v.fecha||""
         });
 
-        html += `
-        <div style="${estilo} padding:12px;border-radius:10px;margin-bottom:10px;">
-            <b>${v.nombre || "-"}</b><br>
-            📱 ${v.celular || "-"}<br>
-            💰 S/. ${monto.toFixed(2)}<br>
-            🏷️ ${v.marca || "-"} - ${v.valvula || "-"}<br>
-            💳 ${v.pago || "-"} | 🚚 ${v.delivery || "-"}<br>
-            📅 ${fechaMostrar}
+        html+=`
+        <div style="background:${i==0?'#2ecc71':'#1c1c1c'};padding:10px;margin-bottom:10px;border-radius:10px;">
+            <b>${v.nombre}</b><br>
+            📱 ${v.celular}<br>
+            💰 S/. ${v.total}
         </div>`;
     });
 
-    contenidoAdmin.innerHTML = `
-        <div style="background:#111;padding:10px;border-radius:10px;margin-bottom:10px;">
-            <h3>📅 HOY: S/. ${totalHoy.toFixed(2)}</h3>
-            <h3>📆 MES: S/. ${totalMes.toFixed(2)}</h3>
-            <h3>📊 TOTAL: S/. ${totalGeneral.toFixed(2)}</h3>
-        </div>
-
-        <h3>🧾 LISTADO DE VENTAS</h3>
-
-        ${html}
-    `;
+    contenidoAdmin.innerHTML=html;
 }
 
-// 🔍 BUSCADOR ADMIN PRO
+// BUSCADOR ADMIN
 buscarAdmin.oninput=function(){
 
-    this.value=this.value.toUpperCase().replace(/[^A-Z0-9-\s]/g,'');
+    this.value=this.value.toUpperCase();
 
-    let texto=this.value.trim();
+    let t=this.value;
     listaAdmin.innerHTML="";
 
-    if(!texto){
-        contenidoAdmin.style.display="block";
-        return;
-    }
+    if(!t) return;
 
-    contenidoAdmin.style.display="none";
-
-    let filtrados=ventasGlobal.filter(v =>
-        v.nombre.includes(texto) ||
-        v.celular.includes(texto) ||
-        v.fechaISO.includes(texto)
-    );
-
-    if(filtrados.length===0){
-        listaAdmin.innerHTML="<div class='item'>❌ SIN RESULTADOS</div>";
-        return;
-    }
-
-    filtrados.forEach(v=>{
+    ventasGlobal.filter(v=>
+        v.nombre.includes(t) ||
+        v.celular.includes(t) ||
+        v.fechaISO.includes(t)
+    ).forEach(v=>{
         let div=document.createElement("div");
         div.className="item";
-        div.innerHTML=`
-        <b>${v.nombre}</b><br>
-        📱 ${v.celular}<br>
-        💰 S/. ${v.total}<br>
-        📅 ${v.fechaMostrar}
-        `;
+        div.innerHTML=`${v.nombre} - S/. ${v.total}`;
         listaAdmin.appendChild(div);
     });
 };
