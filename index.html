@@ -421,12 +421,15 @@ async function abrirAdmin(){
             });
 
             html += `
-            <div style="background:${i==0?'#2ecc71':'#1c1c1c'};padding:10px;margin-bottom:10px;border-radius:10px;">
-                <b>${nombreV}</b><br>
-                📱 ${celularV}<br>
-                💰 S/. ${totalV.toFixed(2)}<br>
-                📅 ${fechaMostrar}
-            </div>`;
+<div style="background:${i==0?'#2ecc71':'#222'};padding:12px;margin-bottom:10px;border-radius:10px;">
+    
+    👤 <b>${nombreV}</b><br>
+    🏷️ ${v.marca || "-"}<br>
+    🔧 ${v.valvula || "-"}<br>
+    📅 ${fechaMostrar}<br>
+    💰 <b>S/. ${totalV.toFixed(2)}</b>
+
+</div>`;
         });
 
         contenidoAdmin.innerHTML = html;
