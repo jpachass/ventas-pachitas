@@ -331,23 +331,38 @@ async function abrirAdmin(){
 
     const snap = await getDocs(collection(db,"ventas"));
 
+    console.log("DOCS:", snap.docs.length);
+    console.log("DATA:", snap.docs.map(d=>d.data()));
+
     ventasGlobal = [];
+
+    let totalHoy = 0;
+    let totalMes = 0;
+    let totalGeneral = 0;
 
     let hoyStr = new Date().toISOString().slice(0,10);
     let mesStr = new Date().toISOString().slice(0,7);
 
-    let totalHoy = 0, totalMes = 0, totalGeneral = 0;
-
     let html = "";
 
-    // 🔥 ORDENAR (ÚLTIMO ARRIBA)
-    let docsOrdenados = snap.docs.sort((a,b)=>{
-        return (b.data().fecha || "").localeCompare(a.data().fecha || "");
+    let docs = snap.docs;
+
+    // 🔥 SI NO HAY DATOS
+    if(docs.length === 0){
+        contenidoAdmin.innerHTML = "<h3>⚠️ NO HAY VENTAS</h3>";
+        return;
+    }
+
+    // 🔥 ORDENAR SEGURO
+    docs.sort((a,b)=>{
+        let fa = a.data().fecha || "";
+        let fb = b.data().fecha || "";
+        return fb.localeCompare(fa);
     });
 
     let esPrimero = true;
 
-    docsOrdenados.forEach(doc=>{
+    docs.forEach(doc=>{
 
         let v = doc.data();
 
@@ -382,6 +397,7 @@ async function abrirAdmin(){
 
         esPrimero = false;
 
+        // 🔥 ESTO ES CLAVE (LLENA EL BUSCADOR)
         ventasGlobal.push({
             nombre:(v.nombre||"").toUpperCase(),
             celular:String(v.celular||""),
@@ -400,12 +416,6 @@ async function abrirAdmin(){
             📅 ${fechaMostrar}
         </div>`;
     });
-
-    // 🔥 SI NO HAY DATOS
-    if(html === ""){
-        contenidoAdmin.innerHTML = "<h3>⚠️ NO HAY VENTAS REGISTRADAS</h3>";
-        return;
-    }
 
     contenidoAdmin.innerHTML = `
         <div style="background:#111;padding:10px;border-radius:10px;margin-bottom:10px;">
