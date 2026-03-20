@@ -253,24 +253,34 @@ buscarAdmin.oninput=function(){
     this.value=this.value.toUpperCase().replace(/[^A-Z0-9-\s]/g,'');
 
     let texto=this.value.trim();
+    listaAdmin.innerHTML="";
 
-    let cards = document.querySelectorAll(".card-venta");
+    if(!texto){
+    listaAdmin.innerHTML="";
+    return;
+}
 
-    cards.forEach(card=>{
+    let filtrados=ventasGlobal.filter(v =>
+        v.nombre.includes(texto) ||
+        v.celular.includes(texto) ||
+        v.fechaISO.includes(texto)
+    );
 
-        let nombre = card.dataset.nombre || "";
-        let celular = card.dataset.celular || "";
-        let fecha = card.dataset.fecha || "";
+    if(filtrados.length===0){
+        listaAdmin.innerHTML="<div class='item'>❌ SIN RESULTADOS</div>";
+        return;
+    }
 
-        let coincide =
-            nombre.includes(texto) ||
-            celular.includes(texto) ||
-            fecha.includes(texto);
-
-        card.style.display = coincide ? "block" : "none";
-    });
-
-};
+    filtrados.forEach(v=>{
+        let div=document.createElement("div");
+        div.className="item";
+        div.innerHTML=`
+            <b>${v.nombre}</b><br>
+            📱 ${v.celular}<br>
+            💰 S/. ${v.total}<br>
+            📅 ${v.fechaMostrar}
+        `;
+        listaAdmin.appendChild(div);
     });
 };
 let clicks=0;
@@ -451,18 +461,13 @@ async function abrirAdmin(){
             });
 
             html += `
-<div class="card-venta ${i==0?'card-top':''}" 
-data-nombre="${nombreV}" 
-data-celular="${celularV}" 
-data-fecha="${fechaISO}">
-
-    <div class="titulo-nombre">👤 ${nombreV}</div>
-    <div class="subtexto">🏷️ ${marcaV}</div>
-    <div class="subtexto">🔧 ${valvulaV}</div>
-    <div class="subtexto">📅 ${fechaMostrar}</div>
-    <div class="total">💰 S/. ${totalV.toFixed(2)}</div>
-
-</div>`;
+            <div class="card-venta ${i==0?'card-top':''}">
+                <div class="titulo-nombre">👤 ${nombreV}</div>
+                <div class="subtexto">🏷️ ${marcaV}</div>
+                <div class="subtexto">🔧 ${valvulaV}</div>
+                <div class="subtexto">📅 ${fechaMostrar}</div>
+                <div class="total">💰 S/. ${totalV.toFixed(2)}</div>
+            </div>`;
         });
 
         // 🔥 RENDER FINAL
