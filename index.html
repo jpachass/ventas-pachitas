@@ -176,6 +176,9 @@ button{
 <!-- ADMIN -->
 <div id="adminPanel">
 <h2>📊 PANEL ADMIN</h2>
+
+<input id="buscarAdmin" placeholder="🔍 BUSCAR CLIENTE EN VENTAS">
+<div id="listaAdmin" class="sugerencias"></div>
 <button onclick="cerrarAdmin()">Cerrar</button>
 <div id="contenidoAdmin"></div>
 </div>
@@ -209,6 +212,7 @@ window.cerrarAdmin=()=>adminPanel.style.display="none";
 
 // CLIENTES
 let clientes=[];
+let ventasGlobal = [];
 async function cargarClientes(){
     const snap = await getDocs(collection(db,"clientes"));
     clientes=[];
@@ -222,7 +226,55 @@ async function cargarClientes(){
     });
 }
 await cargarClientes();
+await cargarClientes();
 
+// 🔍 BUSCADOR ADMIN (AQUÍ VA)
+buscarAdmin.oninput = function(){
+
+    this.value = this.value.toUpperCase().replace(/[^A-Z\s]/g,'');
+
+    let texto = this.value.trim();
+    listaAdmin.innerHTML = "";
+
+    if(!texto){
+        contenidoAdmin.style.display="block";
+        return;
+    }
+
+    contenidoAdmin.style.display="none";
+
+    let filtrados = ventasGlobal.filter(v =>
+        (v.nombre || "").toUpperCase().includes(texto)
+    );
+
+    if(filtrados.length === 0){
+        listaAdmin.innerHTML = "<div class='item'>❌ SIN RESULTADOS</div>";
+        return;
+    }
+
+    filtrados.forEach(v=>{
+
+        let fecha = "";
+
+        if(typeof v.fecha === "string"){
+            fecha = new Date(v.fecha).toLocaleString();
+        }
+        else if(v.fecha?.seconds){
+            fecha = new Date(v.fecha.seconds*1000).toLocaleString();
+        }
+
+        let div = document.createElement("div");
+        div.className = "item";
+
+        div.innerHTML = `
+            <b>${v.nombre}</b><br>
+            💰 S/. ${v.total}<br>
+            📅 ${fecha}
+        `;
+
+        listaAdmin.appendChild(div);
+    });
+};
 // BUSCADOR VALIDADO
 buscarCliente.oninput=function(){
     this.value=this.value.toUpperCase().replace(/[^A-Z0-9\s]/g,'');
@@ -330,7 +382,9 @@ window.guardarVenta=async ()=>{
 
 // ADMIN CON VENTAS
 async function abrirAdmin(){
-
+    buscarAdmin.value="";
+    listaAdmin.innerHTML="";
+    contenidoAdmin.style.display="block";
     adminPanel.style.display="block";
 
     const snap = await getDocs(collection(db,"ventas"));
@@ -388,7 +442,12 @@ async function abrirAdmin(){
             📅 ${fechaMostrar}
         </div>`;
     });
-
+ventasGlobal = [];
+    
+snap.forEach(doc=>{
+    let v = doc.data();
+    ventasGlobal.push(v);
+});
     html += `
         <div style="background:#222;padding:15px;border-radius:10px;margin-bottom:15px;">
             <h3>📅 HOY</h3>
