@@ -348,9 +348,17 @@ async function abrirAdmin(){
 
         let docs = snap.docs;
 
+        // 🔥 ORDENAMIENTO SEGURO (SIN ROMPER)
         docs.sort((a,b)=>{
-            let fa=a.data().fecha || "";
-            let fb=b.data().fecha || "";
+            let fa = a.data().fecha;
+            let fb = b.data().fecha;
+
+            fa = (typeof fa === "string") ? fa :
+                 (fa?.seconds ? new Date(fa.seconds*1000).toISOString() : "");
+
+            fb = (typeof fb === "string") ? fb :
+                 (fb?.seconds ? new Date(fb.seconds*1000).toISOString() : "");
+
             return fb.localeCompare(fa);
         });
 
@@ -363,27 +371,42 @@ async function abrirAdmin(){
             let nombreV = (v.nombre||"").toUpperCase();
             let celularV = String(v.celular||"");
             let totalV = Number(v.total)||0;
-            let fechaV = v.fecha || "";
+
+            // 🔥 FECHA SEGURA
+            let fechaISO = "";
+
+            if(typeof v.fecha === "string"){
+                fechaISO = v.fecha;
+            }
+            else if(v.fecha?.seconds){
+                fechaISO = new Date(v.fecha.seconds*1000).toISOString();
+            }
+
+            let fechaMostrar = fechaISO
+                ? new Date(fechaISO).toLocaleString()
+                : "SIN FECHA";
 
             ventasGlobal.push({
                 nombre:nombreV,
                 celular:celularV,
                 total:totalV,
-                fechaISO:fechaV
+                fechaISO:fechaISO,
+                fechaMostrar:fechaMostrar
             });
 
             html += `
             <div style="background:${i==0?'#2ecc71':'#1c1c1c'};padding:10px;margin-bottom:10px;border-radius:10px;">
                 <b>${nombreV}</b><br>
                 📱 ${celularV}<br>
-                💰 S/. ${totalV.toFixed(2)}
+                💰 S/. ${totalV.toFixed(2)}<br>
+                📅 ${fechaMostrar}
             </div>`;
         });
 
         contenidoAdmin.innerHTML = html;
 
     }catch(error){
-        console.error(error);
+        console.error("🔥 ERROR REAL:", error);
         contenidoAdmin.innerHTML="❌ ERROR AL CARGAR";
     }
 }
