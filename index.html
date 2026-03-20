@@ -331,47 +331,56 @@ async function abrirAdmin(){
 
     const snap = await getDocs(collection(db,"ventas"));
 
-    if(snap.empty){
-        contenidoAdmin.innerHTML = "<h3>⚠️ NO HAY VENTAS</h3>";
-        return;
-    }
+    ventasGlobal = [];
 
-    ventasGlobal=[];
+    let hoyStr = new Date().toISOString().slice(0,10);
+    let mesStr = new Date().toISOString().slice(0,7);
 
-    let hoyStr=new Date().toISOString().slice(0,10);
-    let mesStr=new Date().toISOString().slice(0,7);
+    let totalHoy = 0, totalMes = 0, totalGeneral = 0;
 
-    let totalHoy=0, totalMes=0, totalGeneral=0;
+    let html = "";
 
-    let html="";
-
+    // 🔥 ORDENAR (ÚLTIMO ARRIBA)
     let docsOrdenados = snap.docs.sort((a,b)=>{
-        return (b.data().fecha||"").localeCompare(a.data().fecha||"");
+        return (b.data().fecha || "").localeCompare(a.data().fecha || "");
     });
 
-    let esPrimero=true;
+    let esPrimero = true;
 
     docsOrdenados.forEach(doc=>{
 
-        let v=doc.data();
+        let v = doc.data();
 
-        let fechaISO = typeof v.fecha==="string"
-            ? v.fecha
-            : (v.fecha?.seconds ? new Date(v.fecha.seconds*1000).toISOString() : "");
+        let fechaISO = "";
 
-        let monto=Number(v.total)||0;
+        if(typeof v.fecha === "string"){
+            fechaISO = v.fecha;
+        }
+        else if(v.fecha?.seconds){
+            fechaISO = new Date(v.fecha.seconds * 1000).toISOString();
+        }
 
-        totalGeneral+=monto;
-        if(fechaISO.slice(0,10)===hoyStr) totalHoy+=monto;
-        if(fechaISO.slice(0,7)===mesStr) totalMes+=monto;
+        let monto = Number(v.total) || 0;
+
+        totalGeneral += monto;
+
+        if(fechaISO && fechaISO.slice(0,10) === hoyStr){
+            totalHoy += monto;
+        }
+
+        if(fechaISO && fechaISO.slice(0,7) === mesStr){
+            totalMes += monto;
+        }
+
+        let fechaMostrar = fechaISO
+            ? new Date(fechaISO).toLocaleString()
+            : "SIN FECHA";
 
         let estilo = esPrimero
             ? "background:#2ecc71;color:black;"
             : "background:#1c1c1c;";
 
-        esPrimero=false;
-
-        let fechaMostrar = fechaISO ? new Date(fechaISO).toLocaleString() : "";
+        esPrimero = false;
 
         ventasGlobal.push({
             nombre:(v.nombre||"").toUpperCase(),
@@ -381,23 +390,32 @@ async function abrirAdmin(){
             fechaMostrar:fechaMostrar
         });
 
-        html+=`
+        html += `
         <div style="${estilo} padding:12px;border-radius:10px;margin-bottom:10px;">
-            <b>${v.nombre}</b><br>
-            📱 ${v.celular}<br>
+            <b>${v.nombre || "-"}</b><br>
+            📱 ${v.celular || "-"}<br>
             💰 S/. ${monto.toFixed(2)}<br>
-            🏷️ ${v.marca} - ${v.valvula}<br>
-            💳 ${v.pago} | 🚚 ${v.delivery}<br>
+            🏷️ ${v.marca || "-"} - ${v.valvula || "-"}<br>
+            💳 ${v.pago || "-"} | 🚚 ${v.delivery || "-"}<br>
             📅 ${fechaMostrar}
         </div>`;
     });
 
-    contenidoAdmin.innerHTML=`
+    // 🔥 SI NO HAY DATOS
+    if(html === ""){
+        contenidoAdmin.innerHTML = "<h3>⚠️ NO HAY VENTAS REGISTRADAS</h3>";
+        return;
+    }
+
+    contenidoAdmin.innerHTML = `
         <div style="background:#111;padding:10px;border-radius:10px;margin-bottom:10px;">
             <h3>📅 HOY: S/. ${totalHoy.toFixed(2)}</h3>
             <h3>📆 MES: S/. ${totalMes.toFixed(2)}</h3>
             <h3>📊 TOTAL: S/. ${totalGeneral.toFixed(2)}</h3>
         </div>
+
+        <h3>🧾 LISTADO DE VENTAS</h3>
+
         ${html}
     `;
 }
