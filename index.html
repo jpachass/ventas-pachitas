@@ -530,6 +530,7 @@ data-fecha="${fechaISO}">
     <div class="subtexto">💳 ${v.pago||"-"}</div>
     <div class="subtexto">🚚 ${v.delivery||"-"}</div>
     <div class="subtexto">📅 ${fechaMostrar}</div>
+    <div class="subtexto">💲 Precio: S/. ${Number(v.precio||0).toFixed(2)}</div>
     <div class="total">💰 S/. ${monto.toFixed(2)}</div>
 
 </div>`;
