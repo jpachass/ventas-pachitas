@@ -494,6 +494,7 @@ async function abrirAdmin(){
             let nombreV=(v.nombre||"").toUpperCase();
             let celularV=String(v.celular||"");
             let monto=Number(v.total)||0;
+            let cantidadV = Number(v.cantidad) || 0;
             let direccionV = (v.direccion || "").toUpperCase();
             // 🔥 FECHA SEGURA
             let fechaISO="";
@@ -525,6 +526,7 @@ data-fecha="${fechaISO}">
     <div class="subtexto">📍 ${direccionV}</div>
     <div class="subtexto">🏷️ ${v.marca||"-"}</div>
     <div class="subtexto">🔧 ${v.valvula||"-"}</div>
+    <div class="subtexto">📦 Cantidad: ${cantidadV}</div>
     <div class="subtexto">💳 ${v.pago||"-"}</div>
     <div class="subtexto">🚚 ${v.delivery||"-"}</div>
     <div class="subtexto">📅 ${fechaMostrar}</div>
