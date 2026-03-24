@@ -219,7 +219,7 @@ button{
 
 <!-- PANEL ADMIN -->
 <div id="adminPanel">
-<h3>ADMINISTRACIÓN</h3>
+<h1>ADMINISTRACIÓN 📊</h1>
 <input id="buscarAdmin" placeholder="BUSCAR NOMBRE / CELULAR / FECHA">
 <!--<button onclick="cerrarAdmin()">Cerrar</button>-->
 <div id="contenidoAdmin"></div>
@@ -517,7 +517,7 @@ async function abrirAdmin(){
                 ? new Date(fechaISO).toLocaleString()
                 : "SIN FECHA";
 
-            // 🔥 ACUMULADORES
+            // 🔥 📦 ACUMULADORES
             totalGeneral+=monto;
 
             if(fechaISO.slice(0,10)===hoy) totalHoy+=monto;
@@ -533,7 +533,7 @@ data-fecha="${fechaISO}">
     <div class="subtexto">📍 ${direccionV}</div>
     <div class="subtexto">🏷️ ${v.marca||"-"}</div>
     <div class="subtexto">🔧 ${v.valvula||"-"}</div>
-    <div class="subtexto">📦 Cantidad: ${cantidadV}</div>
+    <div class="subtexto">🛒 Cantidad: ${cantidadV}</div>
     <div class="subtexto">💳 ${v.pago||"-"}</div>
     <div class="subtexto">🚚 ${v.delivery||"-"}</div>
     <div class="subtexto">📅 ${fechaMostrar}</div>
