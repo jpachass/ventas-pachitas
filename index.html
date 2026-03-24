@@ -387,22 +387,64 @@ window.guardarCliente=async ()=>{
 
 /* GUARDAR VENTA */
 window.guardarVenta=async ()=>{
+
+    // 🔴 VALIDAR CLIENTE
     if(!nombre.value) return alert("Seleccione cliente");
 
+    // 🔴 VALIDAR CAMPOS OBLIGATORIOS
+    if(!marca.value) return alert("Seleccione marca");
+    if(!valvula.value) return alert("Seleccione válvula");
+
+    if(!cantidad.value){
+        alert("Ingrese cantidad");
+        return;
+    }
+
+    if(Number(cantidad.value) <= 0){
+        alert("Cantidad inválida");
+        return;
+    }
+
+    if(!precio.value){
+        alert("Ingrese precio");
+        return;
+    }
+
+    if(Number(precio.value) <= 0){
+        alert("Precio inválido");
+        return;
+    }
+
+    if(!pago.value) return alert("Seleccione método de pago");
+    if(!delivery.value) return alert("Seleccione delivery");
+
+    // 🔥 CALCULAR TOTAL SEGURO
     let totalCalc = (Number(cantidad.value)||0) * (Number(precio.value)||0);
 
+    // 🔴 VALIDAR TOTAL
+    if(totalCalc <= 0){
+        alert("Total inválido");
+        return;
+    }
+
+    // 🔥 GUARDAR EN FIREBASE
     await addDoc(collection(db,"ventas"),{
         nombre:nombre.value,
         celular:celular.value,
         direccion:direccion.value,
         marca:marca.value,
         valvula:valvula.value,
+        cantidad:Number(cantidad.value),
+        precio:Number(precio.value),
+        pago:pago.value,
+        delivery:delivery.value,
         total:totalCalc,
         fecha:new Date().toISOString()
     });
 
-    alert("VENTA GUARDADA");
+    alert("VENTA GRABADO EXITOSAMENTE");
 
+    // 🔥 LIMPIAR CAMPOS
     document.querySelectorAll("input").forEach(i=>i.value="");
     document.querySelectorAll("select").forEach(s=>s.value="");
     total.innerText="S/. 0.00";
