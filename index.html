@@ -265,6 +265,8 @@ async function cargarClientes(){
     });
 }
 await cargarClientes();
+cantidad.oninput = calcularTotal;
+precio.oninput = calcularTotal;
 nNombre.oninput = ()=>{
     nNombre.value = nNombre.value.toUpperCase().replace(/[^A-Z\s]/g,'');
 };
@@ -276,6 +278,14 @@ nCelular.oninput = ()=>{
 nDireccion.oninput = ()=>{
     nDireccion.value = nDireccion.value.toUpperCase();
 };
+    function calcularTotal(){
+    let cant = Number(cantidad.value) || 0;
+    let prec = Number(precio.value) || 0;
+
+    let totalCalc = cant * prec;
+
+    total.innerText = "S/. " + totalCalc.toFixed(2);
+}
 /* BUSCADOR CLIENTE */
 buscarCliente.oninput=function(){
     this.value=this.value.toUpperCase().replace(/[^A-Z0-9\s]/g,'');
@@ -379,7 +389,7 @@ window.guardarCliente=async ()=>{
 window.guardarVenta=async ()=>{
     if(!nombre.value) return alert("Seleccione cliente");
 
-    let totalCalc = Number(cantidad.value)*Number(precio.value);
+    let totalCalc = (Number(cantidad.value)||0) * (Number(precio.value)||0);
 
     await addDoc(collection(db,"ventas"),{
         nombre:nombre.value,
