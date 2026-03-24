@@ -316,7 +316,13 @@ buscarCliente.oninput=function(){
 };
 
 /* MODAL */
-window.abrirModal=()=>modal.style.display="flex";
+window.abrirModal=()=>{
+    modal.style.display="flex";
+    setTimeout(()=>{
+        nNombre.focus();
+        nNombre.select();
+    }, 100);
+};
 window.cerrarModal=()=>modal.style.display="none";
 
 /* GUARDAR CLIENTE */
