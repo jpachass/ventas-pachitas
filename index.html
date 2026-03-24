@@ -7,147 +7,30 @@
 
 <style>
 *{box-sizing:border-box;}
-
-body{
-    margin:0;
-    font-family:'Segoe UI',sans-serif;
-    background: linear-gradient(135deg,#ff6600,#ffcc00);
-}
-
-.header{
-    background:white;
-    padding:18px;
-    text-align:center;
-    font-weight:bold;
-    font-size:24px;
-    border-radius:0 0 20px 20px;
-    cursor:pointer;
-}
-
-.card{
-    background:white;
-    margin:15px;
-    padding:15px;
-    border-radius:20px;
-    box-shadow:0 5px 10px rgba(0,0,0,0.2);
-}
-
-input, select{
-    width:100%;
-    height:50px;
-    padding:10px;
-    margin:6px 0;
-    border-radius:12px;
-    border:2px solid #ddd;
-    font-size:16px;
-}
-
+body{margin:0;font-family:'Segoe UI',sans-serif;background: linear-gradient(135deg,#ff6600,#ffcc00);}
+.header{background:white;padding:18px;text-align:center;font-weight:bold;font-size:24px;border-radius:0 0 20px 20px;cursor:pointer;}
+.card{background:white;margin:15px;padding:15px;border-radius:20px;box-shadow:0 5px 10px rgba(0,0,0,0.2);}
+input, select{width:100%;height:50px;padding:10px;margin:6px 0;border-radius:12px;border:2px solid #ddd;font-size:16px;}
 input[readonly]{background:#eee;}
-
-button{
-    width:100%;
-    height:50px;
-    border:none;
-    border-radius:12px;
-    font-size:16px;
-    margin-top:10px;
-}
-
+button{width:100%;height:50px;border:none;border-radius:12px;font-size:16px;margin-top:10px;}
 .btn-main{background:#27ae60;color:white;}
 .btn-sec{background:#3498db;color:white;}
-
-#total{
-    text-align:center;
-    font-size:32px;
-    font-weight:bold;
-    color:#27ae60;
-}
-
-.sugerencias{
-    background:white;
-    border-radius:10px;
-    box-shadow:0 5px 10px rgba(0,0,0,0.2);
-    max-height:150px;
-    overflow:auto;
-    display:none;
-}
-
+#total{text-align:center;font-size:32px;font-weight:bold;color:#27ae60;}
+.sugerencias{background:white;border-radius:10px;box-shadow:0 5px 10px rgba(0,0,0,0.2);max-height:150px;overflow:auto;display:none;}
 .item{padding:10px;cursor:pointer;}
 .item:hover{background:#eee;}
-
-.modal{
-    position:fixed;
-    top:0;left:0;
-    width:100%;height:100%;
-    background:rgba(0,0,0,0.6);
-    display:none;
-    justify-content:center;
-    align-items:center;
-}
-
-.modal-content{
-    background:white;
-    padding:20px;
-    border-radius:15px;
-    width:90%;
-}
-
-#adminPanel{
-    position:fixed;
-    top:0;
-    left:0;
-    width:100%;
-    height:100%;
-    background:black;
-    color:white;
-    display:none;
-    padding:15px;
-    overflow:auto;
-}
-
-#adminPanel input{
-    color:black;
-    background:white;
-}
-
-/* TARJETAS */
-.card-venta{
-    border-radius:18px;
-    padding:15px;
-    margin-bottom:12px;
-    background:#222;
-    color:white;
-    box-shadow:0 4px 12px rgba(0,0,0,0.4);
-    transition:all .2s;
-}
-
-.card-top{
-    background:linear-gradient(135deg,#2ecc71,#27ae60);
-    color:black;
-}
-
+.modal{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.6);display:none;justify-content:center;align-items:center;}
+.modal-content{background:white;padding:20px;border-radius:15px;width:90%;}
+#adminPanel{position:fixed;top:0;left:0;width:100%;height:100%;background:black;color:white;display:none;padding:15px;overflow:auto;}
+#adminPanel input{color:black;background:white;}
+.card-venta{border-radius:18px;padding:15px;margin-bottom:12px;background:#222;color:white;}
+.card-top{background:linear-gradient(135deg,#2ecc71,#27ae60);color:black;}
 .titulo-nombre{font-size:18px;font-weight:bold;}
 .subtexto{font-size:14px;}
 .total{font-size:18px;font-weight:bold;margin-top:5px;}
-
-/* RESUMEN */
-.resumen{
-    display:grid;
-    grid-template-columns:repeat(3,1fr);
-    gap:10px;
-    margin-bottom:15px;
-}
-
-.box{
-    background:#111;
-    border-radius:15px;
-    padding:12px;
-    text-align:center;
-}
-
-.box h4{margin:0;font-size:13px;}
+.resumen{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:15px;}
+.box{background:#111;border-radius:15px;padding:12px;text-align:center;}
 .box p{margin:5px 0 0;font-size:18px;font-weight:bold;}
-
 .hoy{border-top:4px solid #2ecc71;}
 .mes{border-top:4px solid #3498db;}
 .totalb{border-top:4px solid #f1c40f;}
@@ -243,6 +126,7 @@ const db = getFirestore(app);
 
 let clientes=[];
 
+/* ADMIN CLICK */
 let clicks=0;
 titulo.onclick=()=>{
     clicks++;
@@ -251,194 +135,59 @@ titulo.onclick=()=>{
 };
 
 window.cerrarAdmin=()=>adminPanel.style.display="none";
-    window.inactivarVenta = async (id) => {
 
+/* INACTIVAR */
+window.inactivarVenta = async (id) => {
     if(!confirm("¿Inactivar esta venta?")) return;
-
-    await updateDoc(doc(db,"ventas",id),{
-        activo:false
-    });
-
-    alert("Venta inactivada");
-
-    abrirAdmin(); // 🔄 refresca
+    await updateDoc(doc(db,"ventas",id),{activo:false});
+    abrirAdmin();
 };
+
+/* TOTAL */
+function calcularTotal(){
+    let t=(Number(cantidad.value)||0)*(Number(precio.value)||0);
+    total.innerText="S/. "+t.toFixed(2);
+}
+cantidad.oninput=calcularTotal;
+precio.oninput=calcularTotal;
+
+/* CLIENTES */
 async function cargarClientes(){
     const snap = await getDocs(collection(db,"clientes"));
     clientes=[];
     snap.forEach(doc=>{
         let c=doc.data();
-        clientes.push({
-            nombre:(c.nombre||"").toUpperCase(),
-            celular:String(c.celular||""),
-            direccion:(c.direccion||"").toUpperCase()
-        });
+        clientes.push(c);
     });
 }
 await cargarClientes();
-cantidad.oninput = calcularTotal;
-precio.oninput = calcularTotal;
-nNombre.oninput = ()=>{
-    nNombre.value = nNombre.value.toUpperCase().replace(/[^A-Z\s]/g,'');
-};
-
-nCelular.oninput = ()=>{
-    nCelular.value = nCelular.value.replace(/[^0-9]/g,'').slice(0,9);
-};
-
-nDireccion.oninput = ()=>{
-    nDireccion.value = nDireccion.value.toUpperCase();
-};
-    function calcularTotal(){
-    let cant = Number(cantidad.value) || 0;
-    let prec = Number(precio.value) || 0;
-
-    let totalCalc = cant * prec;
-
-    total.innerText = "S/. " + totalCalc.toFixed(2);
-}
-/* BUSCADOR CLIENTE */
-buscarCliente.oninput=function(){
-    this.value=this.value.toUpperCase().replace(/[^A-Z0-9\s]/g,'');
-    let texto=this.value.trim();
-    lista.innerHTML="";
-    if(!texto){ lista.style.display="none"; return; }
-
-    let filtrados=clientes.filter(c =>
-        c.nombre.includes(texto) || c.celular.includes(texto)
-    );
-
-    lista.style.display="block";
-
-    filtrados.forEach(c=>{
-        let div=document.createElement("div");
-        div.className="item";
-        div.innerHTML=`${c.nombre} - ${c.celular}`;
-        div.onclick=()=>{
-            nombre.value=c.nombre;
-            celular.value=c.celular;
-            direccion.value=c.direccion;
-            buscarCliente.value="";
-            lista.style.display="none";
-        };
-        lista.appendChild(div);
-    });
-};
-
-/* MODAL */
-window.abrirModal=()=>modal.style.display="flex";
-window.cerrarModal=()=>modal.style.display="none";
 
 /* GUARDAR CLIENTE */
 window.guardarCliente=async ()=>{
+    if(!nNombre.value || !nCelular.value || !nDireccion.value) return alert("Complete datos");
 
-    let nombreVal = nNombre.value.trim();
-    let celularVal = nCelular.value.trim();
-    let direccionVal = nDireccion.value.trim();
-
-    // 🔴 VALIDACIONES
-    if(!nombreVal){
-        alert("Ingrese nombre");
-        return;
-    }
-
-    if(nombreVal.length < 3){
-        alert("Nombre muy corto");
-        return;
-    }
-
-    if(!celularVal){
-        alert("Ingrese celular");
-        return;
-    }
-
-    if(celularVal.length !== 9){
-        alert("Celular debe tener 9 dígitos");
-        return;
-    }
-
-    if(!direccionVal){
-        alert("Ingrese dirección");
-        return;
-    }
-
-    // 🔥 EVITAR DUPLICADOS (PRO)
-    let existe = clientes.some(c => c.celular === celularVal);
-
-    if(existe){
-        alert("Este cliente ya existe");
-        return;
-    }
-
-    let nuevo = {
-        nombre: nombreVal.toUpperCase(),
-        celular: celularVal,
-        direccion: direccionVal.toUpperCase()
-    };
-
-    await addDoc(collection(db,"clientes"), nuevo);
+    await addDoc(collection(db,"clientes"),{
+        nombre:nNombre.value.toUpperCase(),
+        celular:nCelular.value,
+        direccion:nDireccion.value.toUpperCase()
+    });
 
     await cargarClientes();
-
-    // 🔥 AUTOCOMPLETAR
-    nombre.value = nuevo.nombre;
-    celular.value = nuevo.celular;
-    direccion.value = nuevo.direccion;
-
-    // 🔥 LIMPIAR
-    buscarCliente.value = "";
-    lista.style.display = "none";
-
-    nNombre.value = "";
-    nCelular.value = "";
-    nDireccion.value = "";
-
     cerrarModal();
 };
 
 /* GUARDAR VENTA */
 window.guardarVenta=async ()=>{
-
-    // 🔴 VALIDAR CLIENTE
     if(!nombre.value) return alert("Seleccione cliente");
-
-    // 🔴 VALIDAR CAMPOS OBLIGATORIOS
     if(!marca.value) return alert("Seleccione marca");
     if(!valvula.value) return alert("Seleccione válvula");
-
-    if(!cantidad.value){
-        alert("Ingrese cantidad");
-        return;
-    }
-
-    if(Number(cantidad.value) <= 0){
-        alert("Cantidad inválida");
-        return;
-    }
-
-    if(!precio.value){
-        alert("Ingrese precio");
-        return;
-    }
-
-    if(Number(precio.value) <= 0){
-        alert("Precio inválido");
-        return;
-    }
-
-    if(!pago.value) return alert("Seleccione método de pago");
+    if(!cantidad.value || Number(cantidad.value)<=0) return alert("Cantidad inválida");
+    if(!precio.value || Number(precio.value)<=0) return alert("Precio inválido");
+    if(!pago.value) return alert("Seleccione pago");
     if(!delivery.value) return alert("Seleccione delivery");
 
-    // 🔥 CALCULAR TOTAL SEGURO
-    let totalCalc = (Number(cantidad.value)||0) * (Number(precio.value)||0);
+    let totalCalc=(Number(cantidad.value)||0)*(Number(precio.value)||0);
 
-    // 🔴 VALIDAR TOTAL
-    if(totalCalc <= 0){
-        alert("Total inválido");
-        return;
-    }
-
-    // 🔥 GUARDAR EN FIREBASE
     await addDoc(collection(db,"ventas"),{
         nombre:nombre.value,
         celular:celular.value,
@@ -450,13 +199,12 @@ window.guardarVenta=async ()=>{
         pago:pago.value,
         delivery:delivery.value,
         total:totalCalc,
-        fecha: new Date().toLocaleString("sv-SE", { timeZone: "America/Lima" })
-        activo: true,
+        fecha:new Date().toLocaleString("sv-SE",{timeZone:"America/Lima"}),
+        activo:true
     });
 
-    alert("VENTA GRABADO EXITOSAMENTE");
+    alert("VENTA GUARDADA");
 
-    // 🔥 LIMPIAR CAMPOS
     document.querySelectorAll("input").forEach(i=>i.value="");
     document.querySelectorAll("select").forEach(s=>s.value="");
     total.innerText="S/. 0.00";
@@ -464,130 +212,54 @@ window.guardarVenta=async ()=>{
 
 /* ADMIN */
 async function abrirAdmin(){
-
     adminPanel.style.display="block";
-    contenidoAdmin.innerHTML="CARGANDO...";
 
-    try{
+    const snap = await getDocs(collection(db,"ventas"));
 
-        const snap = await getDocs(collection(db,"ventas"));
+    let hoy = new Date().toLocaleString("sv-SE",{timeZone:"America/Lima"}).slice(0,10);
+    let mes = hoy.slice(0,7);
 
-        if(!snap || snap.docs.length===0){
-            contenidoAdmin.innerHTML="⚠️ NO HAY VENTAS";
-            return;
-        }
+    let totalHoy=0,totalMes=0,totalGeneral=0;
+    let html="";
 
-        let docs = snap.docs;
+    snap.forEach(docu=>{
+        let v=docu.data();
+        if(v.activo===false) return;
 
-        let totalHoy=0,totalMes=0,totalGeneral=0;
-        let hoy = new Date().toLocaleString("sv-SE", { timeZone: "America/Lima" }).slice(0,10);
-        let mes = new Date().toLocaleString("sv-SE", { timeZone: "America/Lima" }).slice(0,7);
+        let monto=Number(v.total)||0;
 
-        // 🔥 ORDEN SEGURO
-        docs.sort((a,b)=>{
-            let fa=a.data().fecha;
-            let fb=b.data().fecha;
+        totalGeneral+=monto;
+        if(v.fecha?.slice(0,10)===hoy) totalHoy+=monto;
+        if(v.fecha?.slice(0,7)===mes) totalMes+=monto;
 
-            fa = (typeof fa==="string") ? fa :
-                 (fa?.seconds ? new Date(fa.seconds*1000).toISOString() : "");
+        html+=`
+        <div class="card-venta">
+            <div class="titulo-nombre">👤 ${v.nombre}</div>
+            <div class="subtexto">📍 ${v.direccion}</div>
+            <div class="subtexto">🏷️ ${v.marca}</div>
+            <div class="subtexto">🔧 ${v.valvula}</div>
+            <div class="subtexto">📦 Cantidad: ${v.cantidad}</div>
+            <div class="subtexto">💳 ${v.pago}</div>
+            <div class="subtexto">🚚 ${v.delivery}</div>
+            <div class="subtexto">📅 ${v.fecha}</div>
+            <div class="total">💰 S/. ${monto.toFixed(2)}</div>
 
-            fb = (typeof fb==="string") ? fb :
-                 (fb?.seconds ? new Date(fb.seconds*1000).toISOString() : "");
-
-            return fb.localeCompare(fa);
-        });
-
-        let html="";
-
-        docs.forEach((doc,i)=>{
-
-            let v=doc.data()||{};
-            if(v.activo === false) return;
-            let nombreV=(v.nombre||"").toUpperCase();
-            let celularV=String(v.celular||"");
-            let monto=Number(v.total)||0;
-            let cantidadV = Number(v.cantidad) || 0;
-            let direccionV = (v.direccion || "").toUpperCase();
-            // 🔥 FECHA SEGURA
-            let fechaISO="";
-
-            if(typeof v.fecha==="string"){
-                fechaISO=v.fecha;
-            }
-            else if(v.fecha?.seconds){
-                fechaISO=new Date(v.fecha.seconds*1000).toISOString();
-            }
-
-            let fechaMostrar = fechaISO
-                ? new Date(fechaISO).toLocaleString()
-                : "SIN FECHA";
-
-            // 🔥 ACUMULADORES
-            totalGeneral+=monto;
-
-            if(fechaISO.slice(0,10)===hoy) totalHoy+=monto;
-            if(fechaISO.slice(0,7)===mes) totalMes+=monto;
-
-html+=`
-<div class="card-venta ${i==0?'card-top':''}" 
-data-nombre="${nombreV}" 
-data-celular="${celularV}" 
-data-fecha="${fechaISO}">
-
-    <div class="titulo-nombre">👤 ${nombreV}</div>
-    <div class="subtexto">📍 ${direccionV}</div>
-    <div class="subtexto">🏷️ ${v.marca||"-"}</div>
-    <div class="subtexto">🔧 ${v.valvula||"-"}</div>
-    <div class="subtexto">📦 Cantidad: ${cantidadV}</div>
-    <div class="subtexto">💳 ${v.pago||"-"}</div>
-    <div class="subtexto">🚚 ${v.delivery||"-"}</div>
-    <div class="subtexto">📅 ${fechaMostrar}</div>
-    <div class="subtexto">💲 Precio Unit.: S/. ${Number(v.precio||0).toFixed(2)}</div>
-    <div class="total">💰 Total S/. ${monto.toFixed(2)}</div>
-    <div style="margin-top:8px;">
-        <button onclick="inactivarVenta('${doc.id}')" style="background:red;color:white;border:none;padding:5px 10px;border-radius:8px;">
+            <button onclick="inactivarVenta('${docu.id}')" style="background:red;color:white">
             ❌ Inactivar
-        </button>
+            </button>
+        </div>`;
+    });
+
+    contenidoAdmin.innerHTML=`
+    <div class="resumen">
+        <div class="box hoy"><p>HOY<br>S/. ${totalHoy.toFixed(2)}</p></div>
+        <div class="box mes"><p>MES<br>S/. ${totalMes.toFixed(2)}</p></div>
+        <div class="box totalb"><p>TOTAL<br>S/. ${totalGeneral.toFixed(2)}</p></div>
     </div>
-</div>`;
-        });
-
-        contenidoAdmin.innerHTML=`
-        <div class="resumen">
-            <div class="box hoy"><h4>HOY</h4><p>S/. ${totalHoy.toFixed(2)}</p></div>
-            <div class="box mes"><h4>MES</h4><p>S/. ${totalMes.toFixed(2)}</p></div>
-            <div class="box totalb"><h4>TOTAL</h4><p>S/. ${totalGeneral.toFixed(2)}</p></div>
-        </div>
-
-        ${html}
-        `;
-
-    }catch(error){
-        console.error("🔥 ERROR REAL:", error);
-        contenidoAdmin.innerHTML="❌ ERROR AL CARGAR";
-    }
+    ${html}`;
 }
 
-/* 🔍 BUSCADOR QUE FILTRA TARJETAS */
-buscarAdmin.oninput=function(){
-
-    this.value=this.value.toUpperCase().replace(/[^A-Z0-9-\s]/g,'');
-
-    let texto=this.value.trim();
-
-    let cards=document.querySelectorAll(".card-venta");
-
-    cards.forEach(card=>{
-        let nombre=card.dataset.nombre||"";
-        let celular=card.dataset.celular||"";
-        let fecha=card.dataset.fecha||"";
-
-        let ok=nombre.includes(texto) || celular.includes(texto) || fecha.includes(texto);
-
-        card.style.display= ok ? "block":"none";
-    });
-};
-
 </script>
+
 </body>
 </html>
