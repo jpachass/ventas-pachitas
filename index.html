@@ -227,7 +227,7 @@ button{
 <script type="module">
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-import { getFirestore, collection, addDoc, getDocs } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import { getFirestore, collection, addDoc, getDocs, doc, updateDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyA8MGBeJEo-eDyu0iHayj9WIQPZHx7UhMA",
@@ -251,7 +251,18 @@ titulo.onclick=()=>{
 };
 
 window.cerrarAdmin=()=>adminPanel.style.display="none";
+    window.inactivarVenta = async (id) => {
 
+    if(!confirm("¿Inactivar esta venta?")) return;
+
+    await updateDoc(doc(db,"ventas",id),{
+        activo:false
+    });
+
+    alert("Venta inactivada");
+
+    abrirAdmin(); // 🔄 refresca
+};
 async function cargarClientes(){
     const snap = await getDocs(collection(db,"clientes"));
     clientes=[];
@@ -440,6 +451,7 @@ window.guardarVenta=async ()=>{
         delivery:delivery.value,
         total:totalCalc,
         fecha: new Date().toLocaleString("sv-SE", { timeZone: "America/Lima" })
+        activo: true,
     });
 
     alert("VENTA GRABADO EXITOSAMENTE");
@@ -490,7 +502,7 @@ async function abrirAdmin(){
         docs.forEach((doc,i)=>{
 
             let v=doc.data()||{};
-
+            if(v.activo === false) return;
             let nombreV=(v.nombre||"").toUpperCase();
             let celularV=String(v.celular||"");
             let monto=Number(v.total)||0;
@@ -532,7 +544,11 @@ data-fecha="${fechaISO}">
     <div class="subtexto">📅 ${fechaMostrar}</div>
     <div class="subtexto">💲 Precio Unit.: S/. ${Number(v.precio||0).toFixed(2)}</div>
     <div class="total">💰 Total S/. ${monto.toFixed(2)}</div>
-
+    <div style="margin-top:8px;">
+        <button onclick="inactivarVenta('${doc.id}')" style="background:red;color:white;border:none;padding:5px 10px;border-radius:8px;">
+            ❌ Inactivar
+        </button>
+    </div>
 </div>`;
         });
 
