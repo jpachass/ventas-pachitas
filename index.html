@@ -494,7 +494,7 @@ async function abrirAdmin(){
             let nombreV=(v.nombre||"").toUpperCase();
             let celularV=String(v.celular||"");
             let monto=Number(v.total)||0;
-
+            let direccionV = (v.direccion || "").toUpperCase();
             // 🔥 FECHA SEGURA
             let fechaISO="";
 
@@ -515,19 +515,22 @@ async function abrirAdmin(){
             if(fechaISO.slice(0,10)===hoy) totalHoy+=monto;
             if(fechaISO.slice(0,7)===mes) totalMes+=monto;
 
-            html+=`
-            <div class="card-venta ${i==0?'card-top':''}" 
-            data-nombre="${nombreV}" 
-            data-celular="${celularV}" 
-            data-fecha="${fechaISO}">
+html+=`
+<div class="card-venta ${i==0?'card-top':''}" 
+data-nombre="${nombreV}" 
+data-celular="${celularV}" 
+data-fecha="${fechaISO}">
 
-                <div class="titulo-nombre">👤 ${nombreV}</div>
-                <div class="subtexto">🏷️ ${v.marca||"-"}</div>
-                <div class="subtexto">🔧 ${v.valvula||"-"}</div>
-                <div class="subtexto">📅 ${fechaMostrar}</div>
-                <div class="total">💰 S/. ${monto.toFixed(2)}</div>
+    <div class="titulo-nombre">👤 ${nombreV}</div>
+    <div class="subtexto">📍 ${direccionV}</div>
+    <div class="subtexto">🏷️ ${v.marca||"-"}</div>
+    <div class="subtexto">🔧 ${v.valvula||"-"}</div>
+    <div class="subtexto">💳 ${v.pago||"-"}</div>
+    <div class="subtexto">🚚 ${v.delivery||"-"}</div>
+    <div class="subtexto">📅 ${fechaMostrar}</div>
+    <div class="total">💰 S/. ${monto.toFixed(2)}</div>
 
-            </div>`;
+</div>`;
         });
 
         contenidoAdmin.innerHTML=`
