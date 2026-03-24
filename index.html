@@ -439,7 +439,7 @@ window.guardarVenta=async ()=>{
         pago:pago.value,
         delivery:delivery.value,
         total:totalCalc,
-        fecha:new Date().toISOString()
+        fecha: new Date().toLocaleString("sv-SE", { timeZone: "America/Lima" })
     });
 
     alert("VENTA GRABADO EXITOSAMENTE");
@@ -468,8 +468,8 @@ async function abrirAdmin(){
         let docs = snap.docs;
 
         let totalHoy=0,totalMes=0,totalGeneral=0;
-        let hoy=new Date().toISOString().slice(0,10);
-        let mes=new Date().toISOString().slice(0,7);
+        let hoy = new Date().toLocaleString("sv-SE", { timeZone: "America/Lima" }).slice(0,10);
+        let mes = new Date().toLocaleString("sv-SE", { timeZone: "America/Lima" }).slice(0,7);
 
         // 🔥 ORDEN SEGURO
         docs.sort((a,b)=>{
