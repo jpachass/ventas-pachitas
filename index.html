@@ -220,6 +220,9 @@ button{
 <!-- PANEL ADMIN -->
 <div id="adminPanel">
 <h3>REPORTES 📊</h3>
+<button onclick="exportarExcel()" style="background:#27ae60;color:white;margin-bottom:10px;">
+📊 EXPORTAR EXCEL
+</button>
 <input id="buscarAdmin" placeholder="BUSCAR NOMBRE / CELULAR / FECHA">
 <!--<button onclick="cerrarAdmin()">Cerrar</button>-->
 <div id="contenidoAdmin"></div>
@@ -578,7 +581,41 @@ buscarAdmin.oninput=function(){
         card.style.display= ok ? "block":"none";
     });
 };
+window.exportarExcel = async () => {
 
+    const snap = await getDocs(collection(db,"ventas"));
+
+    let datos = [];
+
+    snap.forEach(docu=>{
+        let v = docu.data();
+
+        // 👇 SOLO ACTIVOS (opcional)
+        if(v.activo === false) return;
+
+        datos.push({
+            Cliente: v.nombre || "",
+            Celular: v.celular || "",
+            Direccion: v.direccion || "",
+            Marca: v.marca || "",
+            Valvula: v.valvula || "",
+            Cantidad: v.cantidad || 0,
+            Precio: v.precio || 0,
+            Pago: v.pago || "",
+            Delivery: v.delivery || "",
+            Fecha: v.fecha || "",
+            Total: v.total || 0
+        });
+    });
+
+    // 🔥 CONVERTIR A EXCEL
+    const worksheet = XLSX.utils.json_to_sheet(datos);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Ventas");
+
+    XLSX.writeFile(workbook, "Ventas_Pachitas.xlsx");
+};
 </script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 </body>
 </html>
