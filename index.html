@@ -733,15 +733,26 @@ for(let R = 1; R <= rangeTop.e.r; ++R){
     }
 }
 
-// 🔥 FORMATO MONEDA - DASHBOARD
+// 🔥 FORMATO MONEDA - DASHBOARD (CORRECTO TOTAL)
+
 let rangeDash = XLSX.utils.decode_range(wsDashboard['!ref']);
+
 for(let R = 1; R <= rangeDash.e.r; ++R){
 
-    let cell = wsDashboard[XLSX.utils.encode_cell({r:R,c:1})];
+    // 👉 COLUMNA VALOR (KPIs) → columna C (index 2)
+    let cellValor = wsDashboard[XLSX.utils.encode_cell({r:R,c:2})];
 
-    if(cell && typeof cell.v === "number"){
-        cell.t = "n";
-        cell.z = '"S/." #,##0.00';
+    if(cellValor && typeof cellValor.v === "number"){
+        cellValor.t = "n";
+        cellValor.z = '"S/." #,##0.00';
+    }
+
+    // 👉 COLUMNA TOTAL CLIENTES → columna E (index 4)
+    let cellTotal = wsDashboard[XLSX.utils.encode_cell({r:R,c:4})];
+
+    if(cellTotal && typeof cellTotal.v === "number"){
+        cellTotal.t = "n";
+        cellTotal.z = '"S/." #,##0.00';
     }
 }
     XLSX.utils.book_append_sheet(wb, wsDetalle, "DETALLE");
