@@ -589,31 +589,114 @@ window.exportarExcel = async () => {
 
     snap.forEach(docu=>{
         let v = docu.data();
-
-        // 👇 SOLO ACTIVOS (opcional)
         if(v.activo === false) return;
 
         datos.push({
-            Cliente: v.nombre || "",
-            Celular: v.celular || "",
-            Direccion: v.direccion || "",
-            Marca: v.marca || "",
-            Valvula: v.valvula || "",
-            Cantidad: v.cantidad || 0,
-            Precio: v.precio || 0,
-            Pago: v.pago || "",
-            Delivery: v.delivery || "",
-            Fecha: v.fecha || "",
-            Total: v.total || 0
+            nombre: v.nombre || "",
+            celular: v.celular || "",
+            direccion: v.direccion || "",
+            marca: v.marca || "",
+            valvula: v.valvula || "",
+            cantidad: Number(v.cantidad)||0,
+            precio: Number(v.precio)||0,
+            pago: v.pago || "",
+            delivery: v.delivery || "",
+            fecha: v.fecha || "",
+            total: Number(v.total)||0
         });
     });
 
-    // 🔥 CONVERTIR A EXCEL
-    const worksheet = XLSX.utils.json_to_sheet(datos);
-    const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, worksheet, "Ventas");
+    // 🔥 ORDENAR POR FECHA
+    datos.sort((a,b)=> b.fecha.localeCompare(a.fecha));
 
-    XLSX.writeFile(workbook, "Ventas_Pachitas.xlsx");
+    // 🔥 FECHAS BASE
+    let hoy = new Date().toLocaleString("sv-SE",{timeZone:"America/Lima"}).slice(0,10);
+    let mes = hoy.slice(0,7);
+
+    let totalHoy=0,totalMes=0,totalGeneral=0;
+
+    // 🔥 MAP DETALLE
+    let detalle = datos.map((v,i)=>{
+
+        let fechaFormateada = "";
+        if(v.fecha){
+            let f = new Date(v.fecha);
+            fechaFormateada = f.toLocaleString("es-PE",{
+                timeZone:"America/Lima",
+                day:"2-digit",
+                month:"2-digit",
+                year:"numeric",
+                hour:"2-digit",
+                minute:"2-digit"
+            });
+        }
+
+        totalGeneral+=v.total;
+        if(v.fecha.slice(0,10)===hoy) totalHoy+=v.total;
+        if(v.fecha.slice(0,7)===mes) totalMes+=v.total;
+
+        return {
+            ITEM: i+1,
+            CLIENTE: v.nombre,
+            CELULAR: v.celular,
+            DIRECCIÓN: v.direccion,
+            MARCA: v.marca,
+            VÁLVULA: v.valvula,
+            CANTIDAD: v.cantidad,
+            PRECIO: "S/. "+v.precio.toFixed(2),
+            PAGO: v.pago,
+            DELIVERY: v.delivery,
+            FECHA: fechaFormateada,
+            TOTAL: "S/. "+v.total.toFixed(2)
+        };
+    });
+
+    // 🔥 RESUMEN
+    let resumen = [
+        {TIPO:"TOTAL HOY", MONTO:"S/. "+totalHoy.toFixed(2)},
+        {TIPO:"TOTAL MES", MONTO:"S/. "+totalMes.toFixed(2)},
+        {TIPO:"TOTAL GENERAL", MONTO:"S/. "+totalGeneral.toFixed(2)}
+    ];
+
+    // 🔥 TOP CLIENTES
+    let clientesMap = {};
+
+    datos.forEach(v=>{
+        if(!clientesMap[v.nombre]){
+            clientesMap[v.nombre]=0;
+        }
+        clientesMap[v.nombre]+=v.total;
+    });
+
+    let topClientes = Object.keys(clientesMap)
+        .map(nombre=>({
+            CLIENTE:nombre,
+            TOTAL:clientesMap[nombre]
+        }))
+        .sort((a,b)=>b.TOTAL-a.TOTAL)
+        .map((v,i)=>({
+            RANK:i+1,
+            CLIENTE:v.CLIENTE,
+            TOTAL:"S/. "+v.TOTAL.toFixed(2)
+        }));
+
+    // 🔥 CREAR EXCEL
+    const wb = XLSX.utils.book_new();
+
+    const wsDetalle = XLSX.utils.json_to_sheet(detalle);
+    const wsResumen = XLSX.utils.json_to_sheet(resumen);
+    const wsTop = XLSX.utils.json_to_sheet(topClientes);
+
+    wsDetalle["!cols"] = [
+        {wch:6},{wch:20},{wch:12},{wch:25},{wch:12},
+        {wch:12},{wch:10},{wch:12},{wch:12},{wch:10},{wch:18},{wch:12}
+    ];
+
+    XLSX.utils.book_append_sheet(wb, wsDetalle, "DETALLE");
+    XLSX.utils.book_append_sheet(wb, wsResumen, "RESUMEN");
+    XLSX.utils.book_append_sheet(wb, wsTop, "TOP CLIENTES");
+
+    XLSX.writeFile(wb, "Ventas_Pachitas_PRO.xlsx");
 };
 </script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
