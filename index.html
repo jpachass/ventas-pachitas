@@ -696,6 +696,28 @@ topClientes.slice(0,5).forEach(c=>{
     const wsTop = XLSX.utils.json_to_sheet(topClientes);
     const wsDashboard = XLSX.utils.json_to_sheet(dashboard);
 
+    // 🔥 FORMATO MONEDA - RESUMEN
+let rangeResumen = XLSX.utils.decode_range(wsResumen['!ref']);
+for(let R = 1; R <= rangeResumen.e.r; ++R){
+    let cell = wsResumen[XLSX.utils.encode_cell({r:R,c:1})];
+    if(cell) cell.z = '"S/." #,##0.00';
+}
+
+// 🔥 FORMATO MONEDA - TOP CLIENTES
+let rangeTop = XLSX.utils.decode_range(wsTop['!ref']);
+for(let R = 1; R <= rangeTop.e.r; ++R){
+    let cell = wsTop[XLSX.utils.encode_cell({r:R,c:2})];
+    if(cell) cell.z = '"S/." #,##0.00';
+}
+
+// 🔥 FORMATO MONEDA - DASHBOARD
+let rangeDash = XLSX.utils.decode_range(wsDashboard['!ref']);
+for(let R = 1; R <= rangeDash.e.r; ++R){
+    let cell = wsDashboard[XLSX.utils.encode_cell({r:R,c:1})];
+    if(cell && typeof cell.v === "number"){
+        cell.z = '"S/." #,##0.00';
+    }
+}
 // 🔥 ANCHOS DASHBOARD
 wsDashboard["!cols"] = [
     {wch:30}, // KPI
