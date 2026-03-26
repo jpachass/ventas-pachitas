@@ -696,11 +696,16 @@ topClientes.slice(0,5).forEach(c=>{
     const wsTop = XLSX.utils.json_to_sheet(topClientes);
     const wsDashboard = XLSX.utils.json_to_sheet(dashboard);
 
-    // 🔥 FORMATO MONEDA - RESUMEN
-let rangeResumen = XLSX.utils.decode_range(wsResumen['!ref']);
-for(let R = 1; R <= rangeResumen.e.r; ++R){
-    let cell = wsResumen[XLSX.utils.encode_cell({r:R,c:1})];
-    if(cell) cell.z = '"S/." #,##0.00';
+// 🔥 FORMATO MONEDA - DASHBOARD (CORREGIDO)
+let rangeDash = XLSX.utils.decode_range(wsDashboard['!ref']);
+for(let R = 1; R <= rangeDash.e.r; ++R){
+let cell = wsDashboard[XLSX.utils.encode_cell({r:R,c:1})];
+
+    // 👇 SOLO si es número real
+    if(cell && !isNaN(cell.v) && cell.v !== ""){
+        cell.t = "n"; // asegurar tipo numérico
+        cell.z = '"S/." #,##0.00';
+    }
 }
 
 // 🔥 FORMATO MONEDA - TOP CLIENTES
