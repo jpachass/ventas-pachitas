@@ -696,14 +696,29 @@ topClientes.slice(0,5).forEach(c=>{
     const wsTop = XLSX.utils.json_to_sheet(topClientes);
     const wsDashboard = XLSX.utils.json_to_sheet(dashboard);
 
-// 🔥 FORMATO MONEDA - DASHBOARD (CORREGIDO)
-let rangeDash = XLSX.utils.decode_range(wsDashboard['!ref']);
-for(let R = 1; R <= rangeDash.e.r; ++R){
-let cell = wsDashboard[XLSX.utils.encode_cell({r:R,c:1})];
+// 🔥 FORMATO MONEDA - DETALLE
+let rangeDetalle = XLSX.utils.decode_range(wsDetalle['!ref']);
+for(let R = 1; R <= rangeDetalle.e.r; ++R){
 
-    // 👇 SOLO si es número real
-    if(cell && !isNaN(cell.v) && cell.v !== ""){
-        cell.t = "n"; // asegurar tipo numérico
+    let cellTotal = wsDetalle[XLSX.utils.encode_cell({r:R,c:11})];
+    if(cellTotal){
+        cellTotal.t = "n";
+        cellTotal.z = '"S/." #,##0.00';
+    }
+
+    let cellPrecio = wsDetalle[XLSX.utils.encode_cell({r:R,c:7})];
+    if(cellPrecio){
+        cellPrecio.t = "n";
+        cellPrecio.z = '"S/." #,##0.00';
+    }
+}
+
+// 🔥 FORMATO MONEDA - RESUMEN
+let rangeResumen = XLSX.utils.decode_range(wsResumen['!ref']);
+for(let R = 1; R <= rangeResumen.e.r; ++R){
+    let cell = wsResumen[XLSX.utils.encode_cell({r:R,c:1})];
+    if(cell){
+        cell.t = "n";
         cell.z = '"S/." #,##0.00';
     }
 }
@@ -712,30 +727,23 @@ let cell = wsDashboard[XLSX.utils.encode_cell({r:R,c:1})];
 let rangeTop = XLSX.utils.decode_range(wsTop['!ref']);
 for(let R = 1; R <= rangeTop.e.r; ++R){
     let cell = wsTop[XLSX.utils.encode_cell({r:R,c:2})];
-    if(cell) cell.z = '"S/." #,##0.00';
+    if(cell){
+        cell.t = "n";
+        cell.z = '"S/." #,##0.00';
+    }
 }
 
-    // 🔥 ANCHOS DASHBOARD
-wsDashboard["!cols"] = [
-    {wch:30}, // KPI
-    {wch:25}  // VALOR
-];
-    // 🔥 FORMATOS MONEDA
-    const range = XLSX.utils.decode_range(wsDetalle['!ref']);
-    for(let R = 1; R <= range.e.r; ++R){
-        let cellTotal = wsDetalle[XLSX.utils.encode_cell({r:R,c:11})];
-        if(cellTotal) cellTotal.z = '"S/." #,##0.00';
+// 🔥 FORMATO MONEDA - DASHBOARD
+let rangeDash = XLSX.utils.decode_range(wsDashboard['!ref']);
+for(let R = 1; R <= rangeDash.e.r; ++R){
 
-        let cellPrecio = wsDetalle[XLSX.utils.encode_cell({r:R,c:7})];
-        if(cellPrecio) cellPrecio.z = '"S/." #,##0.00';
+    let cell = wsDashboard[XLSX.utils.encode_cell({r:R,c:1})];
+
+    if(cell && typeof cell.v === "number"){
+        cell.t = "n";
+        cell.z = '"S/." #,##0.00';
     }
-
-    // 🔥 ANCHOS
-    wsDetalle["!cols"] = [
-        {wch:6},{wch:20},{wch:12},{wch:25},{wch:12},
-        {wch:12},{wch:10},{wch:12},{wch:12},{wch:10},{wch:18},{wch:12}
-    ];
-
+}
     XLSX.utils.book_append_sheet(wb, wsDetalle, "DETALLE");
     XLSX.utils.book_append_sheet(wb, wsResumen, "RESUMEN");
     XLSX.utils.book_append_sheet(wb, wsTop, "TOP CLIENTES");
