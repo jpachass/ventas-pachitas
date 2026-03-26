@@ -606,22 +606,21 @@ window.exportarExcel = async () => {
         });
     });
 
-    // 🔥 ORDENAR POR FECHA
+    // 🔥 ORDENAR
     datos.sort((a,b)=> b.fecha.localeCompare(a.fecha));
 
-    // 🔥 FECHAS BASE
     let hoy = new Date().toLocaleString("sv-SE",{timeZone:"America/Lima"}).slice(0,10);
     let mes = hoy.slice(0,7);
 
     let totalHoy=0,totalMes=0,totalGeneral=0;
 
-    // 🔥 MAP DETALLE
+    // 📄 DETALLE
     let detalle = datos.map((v,i)=>{
 
-        let fechaFormateada = "";
+        let fechaFormateada="";
         if(v.fecha){
-            let f = new Date(v.fecha);
-            fechaFormateada = f.toLocaleString("es-PE",{
+            let f=new Date(v.fecha);
+            fechaFormateada=f.toLocaleString("es-PE",{
                 timeZone:"America/Lima",
                 day:"2-digit",
                 month:"2-digit",
@@ -636,57 +635,69 @@ window.exportarExcel = async () => {
         if(v.fecha.slice(0,7)===mes) totalMes+=v.total;
 
         return {
-            ITEM: i+1,
-            CLIENTE: v.nombre,
-            CELULAR: v.celular,
-            DIRECCIÓN: v.direccion,
-            MARCA: v.marca,
-            VÁLVULA: v.valvula,
-            CANTIDAD: v.cantidad,
-            PRECIO: "S/. "+v.precio.toFixed(2),
-            PAGO: v.pago,
-            DELIVERY: v.delivery,
-            FECHA: fechaFormateada,
-            TOTAL: "S/. "+v.total.toFixed(2)
+            ITEM:i+1,
+            CLIENTE:v.nombre,
+            CELULAR:v.celular,
+            DIRECCIÓN:v.direccion,
+            MARCA:v.marca,
+            VÁLVULA:v.valvula,
+            CANTIDAD:v.cantidad,
+            PRECIO:v.precio,
+            PAGO:v.pago,
+            DELIVERY:v.delivery,
+            FECHA:fechaFormateada,
+            TOTAL:v.total
         };
     });
 
-    // 🔥 RESUMEN
+    // 📊 RESUMEN
     let resumen = [
-        {TIPO:"TOTAL HOY", MONTO:"S/. "+totalHoy.toFixed(2)},
-        {TIPO:"TOTAL MES", MONTO:"S/. "+totalMes.toFixed(2)},
-        {TIPO:"TOTAL GENERAL", MONTO:"S/. "+totalGeneral.toFixed(2)}
+        {INDICADOR:"TOTAL HOY", VALOR:totalHoy},
+        {INDICADOR:"TOTAL MES", VALOR:totalMes},
+        {INDICADOR:"TOTAL GENERAL", VALOR:totalGeneral}
     ];
 
-    // 🔥 TOP CLIENTES
-    let clientesMap = {};
+    // 🏆 TOP CLIENTES
+    let clientesMap={};
 
     datos.forEach(v=>{
-        if(!clientesMap[v.nombre]){
-            clientesMap[v.nombre]=0;
-        }
-        clientesMap[v.nombre]+=v.total;
+        clientesMap[v.nombre]=(clientesMap[v.nombre]||0)+v.total;
     });
 
     let topClientes = Object.keys(clientesMap)
-        .map(nombre=>({
-            CLIENTE:nombre,
-            TOTAL:clientesMap[nombre]
-        }))
-        .sort((a,b)=>b.TOTAL-a.TOTAL)
-        .map((v,i)=>({
-            RANK:i+1,
-            CLIENTE:v.CLIENTE,
-            TOTAL:"S/. "+v.TOTAL.toFixed(2)
-        }));
+    .map(n=>({CLIENTE:n,TOTAL:clientesMap[n]}))
+    .sort((a,b)=>b.TOTAL-a.TOTAL)
+    .map((v,i)=>({RANK:i+1,CLIENTE:v.CLIENTE,TOTAL:v.TOTAL}));
 
-    // 🔥 CREAR EXCEL
+    // 📈 DASHBOARD (estructura)
+    let dashboard = [
+        {KPI:"VENTAS HOY", VALOR:totalHoy},
+        {KPI:"VENTAS MES", VALOR:totalMes},
+        {KPI:"VENTAS TOTAL", VALOR:totalGeneral},
+        {},
+        {KPI:"TOP CLIENTE", VALOR:topClientes[0]?.CLIENTE || "-"},
+        {KPI:"MONTO TOP", VALOR:topClientes[0]?.TOTAL || 0}
+    ];
+
+    // 📦 CREAR EXCEL
     const wb = XLSX.utils.book_new();
 
     const wsDetalle = XLSX.utils.json_to_sheet(detalle);
     const wsResumen = XLSX.utils.json_to_sheet(resumen);
     const wsTop = XLSX.utils.json_to_sheet(topClientes);
+    const wsDashboard = XLSX.utils.json_to_sheet(dashboard);
 
+    // 🔥 FORMATOS MONEDA
+    const range = XLSX.utils.decode_range(wsDetalle['!ref']);
+    for(let R = 1; R <= range.e.r; ++R){
+        let cellTotal = wsDetalle[XLSX.utils.encode_cell({r:R,c:11})];
+        if(cellTotal) cellTotal.z = '"S/." #,##0.00';
+
+        let cellPrecio = wsDetalle[XLSX.utils.encode_cell({r:R,c:7})];
+        if(cellPrecio) cellPrecio.z = '"S/." #,##0.00';
+    }
+
+    // 🔥 ANCHOS
     wsDetalle["!cols"] = [
         {wch:6},{wch:20},{wch:12},{wch:25},{wch:12},
         {wch:12},{wch:10},{wch:12},{wch:12},{wch:10},{wch:18},{wch:12}
@@ -695,8 +706,9 @@ window.exportarExcel = async () => {
     XLSX.utils.book_append_sheet(wb, wsDetalle, "DETALLE");
     XLSX.utils.book_append_sheet(wb, wsResumen, "RESUMEN");
     XLSX.utils.book_append_sheet(wb, wsTop, "TOP CLIENTES");
+    XLSX.utils.book_append_sheet(wb, wsDashboard, "DASHBOARD");
 
-    XLSX.writeFile(wb, "Ventas_Pachitas_PRO.xlsx");
+    XLSX.writeFile(wb, "Ventas_Pachitas_Dashboard.xlsx");
 };
 </script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
