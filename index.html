@@ -670,15 +670,24 @@ window.exportarExcel = async () => {
     .map((v,i)=>({RANK:i+1,CLIENTE:v.CLIENTE,TOTAL:v.TOTAL}));
 
     // 📈 DASHBOARD (estructura)
-    let dashboard = [
-        {KPI:"VENTAS HOY", VALOR:totalHoy},
-        {KPI:"VENTAS MES", VALOR:totalMes},
-        {KPI:"VENTAS TOTAL", VALOR:totalGeneral},
-        {},
-        {KPI:"TOP CLIENTE", VALOR:topClientes[0]?.CLIENTE || "-"},
-        {KPI:"MONTO TOP", VALOR:topClientes[0]?.TOTAL || 0}
-    ];
+// 📈 DASHBOARD PRO EMPRESA
+let dashboard = [
+    {SECCION:"📊 INDICADORES"},
+    {KPI:"VENTAS HOY", VALOR:totalHoy},
+    {KPI:"VENTAS MES", VALOR:totalMes},
+    {KPI:"VENTAS TOTAL", VALOR:totalGeneral},
+    {},
+    {SECCION:"🏆 TOP CLIENTES"},
+    {CLIENTE:"NOMBRE", TOTAL:"MONTO"}
+];
 
+// 🔥 AGREGAR TOP 5 AUTOMÁTICO
+topClientes.slice(0,5).forEach(c=>{
+    dashboard.push({
+        CLIENTE:c.CLIENTE,
+        TOTAL:c.TOTAL
+    });
+});
     // 📦 CREAR EXCEL
     const wb = XLSX.utils.book_new();
 
@@ -687,6 +696,11 @@ window.exportarExcel = async () => {
     const wsTop = XLSX.utils.json_to_sheet(topClientes);
     const wsDashboard = XLSX.utils.json_to_sheet(dashboard);
 
+// 🔥 ANCHOS DASHBOARD
+wsDashboard["!cols"] = [
+    {wch:25},
+    {wch:20}
+];
     // 🔥 FORMATOS MONEDA
     const range = XLSX.utils.decode_range(wsDetalle['!ref']);
     for(let R = 1; R <= range.e.r; ++R){
