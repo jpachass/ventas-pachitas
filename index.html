@@ -151,6 +151,13 @@ button{
 .hoy{border-top:4px solid #2ecc71;}
 .mes{border-top:4px solid #3498db;}
 .totalb{border-top:4px solid #f1c40f;}
+/* 🔥 AGREGA ESTO AL FINAL */
+#ruletaCanvas{
+    display:block;
+    margin:0 auto;
+    background:white;
+    border-radius:50%;
+}
 </style>
 </head>
 
@@ -201,6 +208,11 @@ button{
 <div id="total">S/. 0.00</div>
 
 <button class="btn-main" onclick="guardarVenta()">💾 GRABAR VENTA</button>
+<button class="btn-sec" id="btnRuleta" onclick="abrirRuleta()">🎡 RULETA PROMO</button>
+
+<div id="estadoRuleta" style="text-align:center;margin-top:8px;color:#999;">
+🚫 YA USÓ RULETA
+</div>
 
 </div>
 
@@ -232,6 +244,7 @@ button{
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
 import { getFirestore, collection, addDoc, getDocs } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import { updateDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyA8MGBeJEo-eDyu0iHayj9WIQPZHx7UhMA",
@@ -246,6 +259,12 @@ const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
 let clientes=[];
+
+/* 🔥 PEGA AQUÍ */
+let anguloActual = 0;
+let girando = false;
+let descuentoActual = 0;
+let DIAS_BLOQUEO_RULETA = 60;
 
 let clicks=0;
 titulo.onclick=()=>{
@@ -283,12 +302,21 @@ nDireccion.oninput = ()=>{
     nDireccion.value = nDireccion.value.toUpperCase();
 };
     function calcularTotal(){
+
     let cant = Number(cantidad.value) || 0;
     let prec = Number(precio.value) || 0;
 
     let totalCalc = cant * prec;
+    
+    // 🔥 PROTECCIÓN
+    let desc = Number(descuentoActual) || 0;
 
-    total.innerText = "S/. " + totalCalc.toFixed(2);
+    // 🔥 APLICAR DESCUENTO (CORREGIDO)
+    let totalFinal = totalCalc - desc;
+
+    if(totalFinal < 0) totalFinal = 0;
+
+    total.innerText = "S/. " + totalFinal.toFixed(2);
 }
 /* BUSCADOR CLIENTE */
 buscarCliente.oninput=function(){
@@ -307,13 +335,63 @@ buscarCliente.oninput=function(){
         let div=document.createElement("div");
         div.className="item";
         div.innerHTML=`${c.nombre} - ${c.celular}`;
-        div.onclick=()=>{
-            nombre.value=c.nombre;
-            celular.value=c.celular;
-            direccion.value=c.direccion;
-            buscarCliente.value="";
-            lista.style.display="none";
-        };
+    
+    div.onclick=async ()=>{
+
+    nombre.value=c.nombre;
+    celular.value=c.celular;
+    direccion.value=c.direccion;
+
+	// 🔥 AQUÍ VA
+   	await actualizarEstadoRuleta(c.celular);
+
+	const btnRuleta = document.getElementById('btnRuleta');
+	const estadoRuleta = document.getElementById('estadoRuleta');
+
+	// 🔥 VALIDACIÓN RULETA
+let estado = await puedeGirarRuleta(c.celular);
+
+if(!estado.puede){
+
+    btnRuleta.disabled = true;
+    btnRuleta.style.background = "#999";
+
+    // 🔥 TEXTO DINÁMICO PRO
+    btnRuleta.innerText = "⏳ DISPONIBLE EN " + estado.diasRestantes + " DÍAS";
+
+}else{
+
+    btnRuleta.disabled = false;
+    btnRuleta.style.background = "#3498db";
+    btnRuleta.innerText = "🎡 RULETA PROMO";
+}
+
+	// 🔥 BLOQUEO DE RULETA SI YA JUGÓ
+	let yaUso = await yaUsoRuletaAlgunaVez(c.celular);
+
+	if(yaUso){
+    	btnRuleta.disabled = true;
+    	btnRuleta.style.background = "#999";
+	btnRuleta.innerText = "🚫 YA USÓ RULETA"; // 👈 AQUÍ VA
+	}else{
+   	btnRuleta.disabled = false;
+   	btnRuleta.style.background = "#3498db";
+	btnRuleta.innerText = "🎡 RULETA PROMO"; // 👈 AQUÍ VA
+	}
+
+    // 🔥 BUSCAR DESCUENTO
+    descuentoActual = await obtenerPremioDisponible(c.celular) || 0;
+
+    if(descuentoActual > 0){
+        alert("🎁 ESTE CLIENTE TIENE UN DESCUENTO DE S/ " + descuentoActual + ".0");
+    }
+    calcularTotal();
+    buscarCliente.value="";
+    lista.style.display="none";
+
+    calcularTotal(); 
+
+};
         lista.appendChild(div);
     });
 };
@@ -321,10 +399,12 @@ buscarCliente.oninput=function(){
 /* MODAL */
 window.abrirModal=()=>{
     modal.style.display="flex";
-    setTimeout(()=>{
-        nNombre.focus();
-        nNombre.select();
-    }, 100);
+setTimeout(()=>{
+    requestAnimationFrame(()=>{
+        dibujarRuleta();
+    });
+}, 200);
+
 };
 window.cerrarModal=()=>modal.style.display="none";
 
@@ -429,7 +509,11 @@ window.guardarVenta=async ()=>{
     if(!delivery.value) return alert("Seleccione delivery");
 
     // 🔥 CALCULAR TOTAL SEGURO
-    let totalCalc = (Number(cantidad.value)||0) * (Number(precio.value)||0);
+	let subtotal = (Number(cantidad.value)||0) * (Number(precio.value)||0);
+
+	let totalCalc = subtotal - descuentoActual;
+
+	if(totalCalc < 0) totalCalc = 0;
 
     // 🔴 VALIDAR TOTAL
     if(totalCalc <= 0){
@@ -449,17 +533,380 @@ window.guardarVenta=async ()=>{
         pago:pago.value,
         delivery:delivery.value,
         total:totalCalc,
+	descuento: descuentoActual,
         fecha: new Date().toLocaleString("sv-SE", { timeZone: "America/Lima" })
     });
-
+    await marcarPremioUsado(celular.value);
     alert("VENTA GRABADO EXITOSAMENTE");
 
     // 🔥 LIMPIAR CAMPOS
     document.querySelectorAll("input").forEach(i=>i.value="");
     document.querySelectorAll("select").forEach(s=>s.value="");
     total.innerText="S/. 0.00";
+    descuentoActual = 0;
 };
+window.abrirRuleta = () => {
 
+    if(!nombre.value){
+        alert("Primero selecciona un cliente");
+        return;
+    }
+    // 🔥 AQUÍ VA
+    actualizarEstadoRuleta(celular.value);
+
+    rNombre.value = nombre.value;
+    rCelular.value = celular.value;
+
+    modalRuleta.style.display = "flex";
+
+    // 🔥 RESET
+    anguloActual = 0;
+
+    // 🔥 DOBLE INTENTO (GARANTIZA RENDER)
+    setTimeout(()=>{
+        dibujarRuleta();
+        setTimeout(()=>dibujarRuleta(), 50);
+    }, 100);
+};   
+    window.cerrarRuleta = () => {
+    modalRuleta.style.display = "none";
+};
+const opcionesRuleta = ["S/2.00","S/2.50","S/3.00","S/2.00","S/2.50","S/3.00"];
+const coloresRuleta = ["#ff4d4d","#66cc66","#ffd11a","#ff4d4d","#66cc66","#ffd11a"];
+
+
+function dibujarRuleta(){
+
+    const canvas = document.getElementById("ruletaCanvas");
+
+    if(!canvas){
+        console.error("❌ No existe canvas");
+        return;
+    }
+
+    // 🔥 FORZAR TAMAÑO REAL (CLAVE)
+    	canvas.width = 300;
+	canvas.height = 300;
+	canvas.style.width = "300px";
+	canvas.style.height = "300px";
+
+    const ctx = canvas.getContext("2d");
+
+    if(!ctx){
+        console.error("❌ No hay contexto 2D");
+        return;
+    }
+
+    const opciones = ["S/2.00","S/2.50","S/3.00","S/2.00","S/2.50","S/3.00"];
+    const colores = ["#ff4d4d","#66cc66","#ffd11a","#ff4d4d","#66cc66","#ffd11a"];
+
+    const c = canvas.width / 2;
+    const r = c - 5;
+    const ang = 2 * Math.PI / opciones.length;
+
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+
+    for(let i=0;i<opciones.length;i++){
+
+        ctx.beginPath();
+        ctx.moveTo(c,c);
+        ctx.arc(c,c,r,anguloActual + i*ang,anguloActual + (i+1)*ang);
+        ctx.fillStyle = colores[i];
+        ctx.fill();
+
+        ctx.save();
+        ctx.translate(c,c);
+        ctx.rotate(anguloActual + i*ang + ang/2);
+        ctx.fillStyle="black";
+        ctx.font="14px Arial";
+        ctx.textAlign="right";
+        ctx.fillText(opciones[i], r-10,5);
+        ctx.restore();
+    }
+}
+window.girarRuleta = async () => { 
+
+    if(girando) return;
+
+    let celularCliente = rCelular.value;
+
+    if(!celularCliente){
+        alert("Cliente inválido");
+        return;
+    }
+
+ let puede = await puedeGirarRuleta(celularCliente);
+
+if(!puede){
+    alert("⛔ ESTE CLIENTE PODRÁ GIRAR DESPUÉS DE 60 DÍAS");
+    return;
+}
+
+    girando = true;
+
+    let vueltas = Math.random()*5 + 5;
+    let duracion = 3500;
+    let inicio = null;
+
+    function animar(t){
+
+        if(!inicio) inicio = t;
+
+        let progreso = t - inicio;
+
+        let ease = 1 - Math.pow(1 - progreso/duracion, 3);
+        let velocidad = (vueltas * 2*Math.PI) * (1 - ease);
+
+        anguloActual += velocidad * 0.02;
+
+        dibujarRuleta();
+
+        if(progreso < duracion){
+            requestAnimationFrame(animar);
+        } else {
+            terminarRuleta();
+        }
+    }
+
+    requestAnimationFrame(animar);
+};
+function terminarRuleta(){
+
+    girando = false;
+
+    let ang = 2*Math.PI/opcionesRuleta.length;
+
+    let anguloFinal = (anguloActual + Math.PI/2) % (2*Math.PI);
+
+    let index = Math.floor((2*Math.PI - anguloFinal)/ang) % opcionesRuleta.length;
+
+    let premio = opcionesRuleta[index];
+
+    alert("🎉 " + rNombre.value + " GANÓ " + premio + " DE DESCUENTO");
+
+    // 🔥 GUARDAR EN FIREBASE
+    guardarPremioRuleta(premio);
+    
+    // 🔥 AQUÍ VA (MUY IMPORTANTE)
+    actualizarEstadoRuleta(rCelular.value);
+}
+async function guardarPremioRuleta(premio){
+
+    try{
+
+        await addDoc(collection(db,"ruleta"),{
+            nombre: rNombre.value,
+            celular: rCelular.value,
+            premio: premio,
+	    usado: false, // 🔥 NUEVO
+            fecha: new Date().toLocaleString("sv-SE", { timeZone: "America/Lima" })
+        });
+
+        console.log("✅ Premio guardado");
+
+    }catch(error){
+        console.error("❌ Error guardando premio:", error);
+    }
+}
+async function yaGiroHoy(celular){
+
+    const snap = await getDocs(collection(db,"ruleta"));
+
+    let hoy = new Date().toLocaleString("sv-SE", { timeZone: "America/Lima" }).slice(0,10);
+
+    let yaGiro = false;
+
+    snap.forEach(doc=>{
+        let d = doc.data();
+
+        let fecha = d.fecha || "";
+
+        if(
+            d.celular === celular &&
+            fecha.slice(0,10) === hoy
+        ){
+            yaGiro = true;
+        }
+    });
+
+    return yaGiro;
+}
+async function yaUsoRuletaAlgunaVez(celular){
+
+    const snap = await getDocs(collection(db,"ruleta"));
+
+    let usado = false;
+
+    snap.forEach(doc=>{
+        let d = doc.data();
+
+        if(d.celular === celular){
+            usado = true;
+        }
+    });
+
+    return usado;
+}
+async function puedeGirarRuleta(celular){
+
+    const snap = await getDocs(collection(db,"ruleta"));
+
+    let ultimaFecha = null;
+
+    snap.forEach(doc=>{
+        let d = doc.data();
+
+        if(d.celular !== celular) return;
+
+        let fecha = d.fecha || "";
+
+        if(!fecha) return;
+
+        // 🔥 FIX FECHA
+        let fechaObj = new Date(fecha.replace(" ", "T"));
+
+        if(isNaN(fechaObj)) return;
+
+        if(!ultimaFecha || fechaObj > ultimaFecha){
+            ultimaFecha = fechaObj;
+        }
+    });
+
+    // 🔥 NUNCA GIRÓ
+    if(!ultimaFecha){
+        return { puede: true, diasRestantes: 0 };
+    }
+
+    let hoy = new Date();
+
+    let diffDias = (hoy - ultimaFecha) / (1000*60*60*24);
+
+    let diasRestantes = Math.ceil(DIAS_BLOQUEO_RULETA - diffDias);
+
+    if(diffDias >= DIAS_BLOQUEO_RULETA){
+        return { puede: true, diasRestantes: 0 };
+    }
+
+    return { puede: false, diasRestantes: diasRestantes };
+}
+async function actualizarEstadoRuleta(celular){
+
+    if(!celular) return;
+
+   let estado = await puedeGirarRuleta(celular);
+
+if(!estado.puede){
+
+    btnRuleta.disabled = true;
+    btnRuleta.style.background = "#999";
+    // 🔥 AQUÍ VA
+    estadoRuleta.style.color = "#e74c3c";
+
+    let fechaDisponible = new Date();
+    fechaDisponible.setDate(fechaDisponible.getDate() + estado.diasRestantes);
+
+    let fechaTexto = fechaDisponible.toLocaleDateString("es-PE",{
+        day:"2-digit",
+        month:"2-digit"
+    });
+
+    let textoDias = estado.diasRestantes === 1 ? "DÍA" : "DÍAS";
+
+    // 🔥 TEXTO ABAJO
+    estadoRuleta.innerText = "⏳ DISPONIBLE EL " + fechaTexto + " (" + estado.diasRestantes + " " + textoDias + ")";
+
+}else{
+
+    btnRuleta.disabled = false;
+    btnRuleta.style.background = "#3498db";
+
+    // 🔥 LIMPIAR TEXTO
+    estadoRuleta.innerText = "";
+    // 🔥 RESET COLOR
+    estadoRuleta.style.color = "#999";
+}
+}
+async function obtenerPremioDisponible(celular){
+
+    const snap = await getDocs(collection(db,"ruleta"));
+
+    let premio = 0;
+    let ultimaFecha = null;
+
+    snap.forEach(doc=>{
+        let d = doc.data();
+
+        if(d.celular !== celular) return;
+
+        // 🔥 IGNORAR SI YA FUE USADO
+        if(d.usado === true) return;
+
+        let fecha = new Date(d.fecha || "");
+
+        if(!ultimaFecha || fecha > ultimaFecha){
+            ultimaFecha = fecha;
+
+            premio = Number((d.premio || "").replace("S/",""));
+        }
+    });
+
+    return premio;
+}
+async function obtenerEstadoCuponCliente(celular){
+
+    const snap = await getDocs(collection(db,"ruleta"));
+
+    let ultimo = null;
+
+    snap.forEach(doc=>{
+        let d = doc.data();
+
+        if(d.celular !== celular) return;
+
+        let fecha = new Date(d.fecha || "");
+
+        if(!ultimo || fecha > new Date(ultimo.fecha)){
+            ultimo = d;
+        }
+    });
+
+    // ❌ NO TIENE CUPÓN
+    if(!ultimo){
+        return { pendiente: null, usado: null };
+    }
+
+    // 🔥 SI YA FUE USADO
+    if(ultimo.usado === true){
+        return {
+            pendiente: null,
+            usado: "S/ " + Number((ultimo.premio || "").replace("S/","")).toFixed(2)
+        };
+    }
+
+    // 🔥 SI AÚN NO LO USA
+    return {
+        pendiente: "S/ " + Number((ultimo.premio || "").replace("S/","")).toFixed(2),
+        usado: null
+    };
+}
+async function marcarPremioUsado(celular){
+
+    const snap = await getDocs(collection(db,"ruleta"));
+
+    let hoy = new Date().toLocaleString("sv-SE", { timeZone: "America/Lima" }).slice(0,10);
+
+    snap.forEach(async docu=>{
+        let d = docu.data();
+
+        if(
+            d.celular === celular &&
+            (d.fecha || "").slice(0,10) === hoy &&
+            d.usado === false
+        ){
+            await updateDoc(docu.ref, { usado: true }); // 🔥 MARCAR USADO
+        }
+    });
+}
 /* ADMIN */
 async function abrirAdmin(){
 
@@ -497,8 +944,9 @@ async function abrirAdmin(){
 
         let html="";
 
-        docs.forEach((doc,i)=>{
+        for (let i = 0; i < docs.length; i++) {
 
+    	    let doc = docs[i];
             let v=doc.data()||{};
 
             let nombreV=(v.nombre||"").toUpperCase();
@@ -506,6 +954,7 @@ async function abrirAdmin(){
             let monto=Number(v.total)||0;
             let cantidadV = Number(v.cantidad) || 0;
             let direccionV = (v.direccion || "").toUpperCase();
+	    let estadoCupon = await obtenerEstadoCuponCliente(celularV);
             // 🔥 FECHA SEGURA
             let fechaISO="";
 
@@ -542,9 +991,17 @@ data-fecha="${fechaISO}">
     <div class="subtexto">💲 Precio Unit.: S/. ${Number(v.precio||0).toFixed(2)}</div>
     <div class="subtexto">🛒 Cantidad: ${cantidadV}</div>
     <div class="total">💰 Total S/. ${monto.toFixed(2)}</div>
-
+${!v.descuento && estadoCupon.pendiente ? 
+`<div class="subtexto" style="color:#f1c40f;">
+🎁 Cupón pendiente para próxima compra: ${estadoCupon.pendiente}
+</div>` 
+: ""}${v.descuento && v.descuento > 0 ? 
+`<div class="subtexto" style="color:#1B4F72;">
+✅ Cliente usó descuento de S/. ${Number(v.descuento).toFixed(2)}
+</div>` 
+: ""}
 </div>`;
-        });
+        } // 🔥 AQUÍ CIERRA EL FOR
 
         contenidoAdmin.innerHTML=`
         <div class="resumen">
@@ -764,5 +1221,23 @@ for(let R = 1; R <= rangeDash.e.r; ++R){
 };
 </script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<!-- 🎡 MODAL RULETA -->
+<div class="modal" id="modalRuleta">
+<div class="modal-content" style="text-align:center">
+
+<h3>🎡 RULETA PACHITAS</h3>
+
+<input id="rNombre" readonly placeholder="NOMBRE">
+<input id="rCelular" readonly placeholder="CELULAR">
+<div style="font-size:40px;">🔻</div>
+<canvas id="ruletaCanvas" width="300" height="300"
+style="background:white;border-radius:50%;margin-top:10px;"></canvas>
+
+<br>
+<button class="btn-main" onclick="girarRuleta()">GIRAR</button>
+<button onclick="cerrarRuleta()">CERRAR</button>
+
+</div>
+</div>
 </body>
 </html>
