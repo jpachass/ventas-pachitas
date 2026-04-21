@@ -534,6 +534,7 @@ window.guardarVenta=async ()=>{
         delivery:delivery.value,
         total:totalCalc,
 	descuento: descuentoActual,
+	usoRuleta: descuentoActual > 0,
         fecha: new Date().toLocaleString("sv-SE", { timeZone: "America/Lima" })
     });
     await marcarPremioUsado(celular.value);
@@ -682,7 +683,7 @@ function terminarRuleta(){
 
     let premio = opcionesRuleta[index];
 
-    alert("🎉 FELICIDADES" + rNombre.value + " GANASTE " + premio + " DE DESCUENTO EN TU PRÓXIMA COMPRA 🎉");
+    alert("🎉 FELICIDADES " + rNombre.value + "," + " GANASTE " + premio + " DE DESCUENTO EN TU PRÓXIMA COMPRA 🎉");
 
     // 🔥 GUARDAR EN FIREBASE
     guardarPremioRuleta(premio);
@@ -699,7 +700,8 @@ async function guardarPremioRuleta(premio){
             celular: rCelular.value,
             premio: premio,
 	    usado: false, // 🔥 NUEVO
-            fecha: new Date().toLocaleString("sv-SE", { timeZone: "America/Lima" })
+            fecha: new Date().toLocaleString("sv-SE", { timeZone: "America/Lima" }),
+	    fechaISO: new Date().toISOString()
         });
 
         console.log("✅ Premio guardado");
@@ -707,6 +709,30 @@ async function guardarPremioRuleta(premio){
     }catch(error){
         console.error("❌ Error guardando premio:", error);
     }
+}
+async function verificarGiroEnEstaVenta(celular, fechaVenta){
+
+    if(!celular || !fechaVenta) return false;
+
+    const snap = await getDocs(collection(db,"ruleta"));
+
+    let fechaVentaDia = (fechaVenta || "").slice(0,10); // ✅ DEFINIDO
+
+    let giro = false;
+
+    snap.forEach(doc=>{
+        let d = doc.data(); // ✅ d existe aquí
+
+        if(d.celular !== celular) return;
+
+        let fechaRuleta = (d.fechaISO || d.fecha || "").slice(0,10);
+
+        if(fechaRuleta === fechaVentaDia){
+            giro = true;
+        }
+    });
+
+    return giro;
 }
 async function yaGiroHoy(celular){
 
@@ -889,6 +915,33 @@ async function obtenerEstadoCuponCliente(celular){
         usado: null
     };
 }
+async function verificarRuletaEnVenta(celular, fechaVenta){
+
+    if(!celular || !fechaVenta) return false;
+
+    const snap = await getDocs(collection(db,"ruleta"));
+
+    let fechaVentaDia = fechaVenta.slice(0,10);
+
+    let giro = false;
+
+    snap.forEach(doc=>{
+        let d = doc.data();
+
+        if(!d.fecha) return;
+
+        let fechaRuleta = d.fecha.slice(0,10);
+
+        if(
+            d.celular === celular &&
+            fechaRuleta === fechaVentaDia
+        ){
+            giro = true;
+        }
+    });
+
+    return giro;
+}
 async function marcarPremioUsado(celular){
 
     const snap = await getDocs(collection(db,"ruleta"));
@@ -954,7 +1007,7 @@ async function abrirAdmin(){
             let monto=Number(v.total)||0;
             let cantidadV = Number(v.cantidad) || 0;
             let direccionV = (v.direccion || "").toUpperCase();
-	    let estadoCupon = await obtenerEstadoCuponCliente(celularV);
+	    
             // 🔥 FECHA SEGURA
             let fechaISO="";
 
@@ -964,6 +1017,8 @@ async function abrirAdmin(){
             else if(v.fecha?.seconds){
                 fechaISO=new Date(v.fecha.seconds*1000).toISOString();
             }
+	    let estadoCupon = await obtenerEstadoCuponCliente(celularV);
+            let giroRuleta = await verificarGiroEnEstaVenta(celularV, fechaISO);
 
             let fechaMostrar = fechaISO
                 ? new Date(fechaISO).toLocaleString()
@@ -991,6 +1046,11 @@ data-fecha="${fechaISO}">
     <div class="subtexto">💲 Precio Unit.: S/. ${Number(v.precio||0).toFixed(2)}</div>
     <div class="subtexto">🛒 Cantidad: ${cantidadV}</div>
     <div class="total">💰 Total S/. ${monto.toFixed(2)}</div>
+${giroRuleta ? 
+`<div class="subtexto" style="color:#f39c12;">
+🎡 Ruleta: ✔
+</div>` 
+: ""}
 ${!v.descuento && estadoCupon.pendiente ? 
 `<div class="subtexto" style="color:#f1c40f;">
 🎁 Cupón pendiente para próxima compra: ${estadoCupon.pendiente}
