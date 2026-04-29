@@ -716,18 +716,18 @@ async function verificarGiroEnEstaVenta(celular, fechaVenta){
 
     const snap = await getDocs(collection(db,"ruleta"));
 
-    let fechaVentaDia = (fechaVenta || "").slice(0,10); // ✅ DEFINIDO
-
     let giro = false;
 
+    let fechaVentaDia = (fechaVenta || "").slice(0,10);
+
     snap.forEach(doc=>{
-        let d = doc.data(); // ✅ d existe aquí
+        let d = doc.data();
 
         if(d.celular !== celular) return;
 
-        let fechaRuleta = (d.fechaISO || d.fecha || "").slice(0,10);
+        let fechaRuletaDia = (d.fecha || "").slice(0,10);
 
-        if(fechaRuleta === fechaVentaDia){
+        if(fechaRuletaDia === fechaVentaDia){
             giro = true;
         }
     });
@@ -997,38 +997,51 @@ async function abrirAdmin(){
 
         let html="";
 
-        for (let i = 0; i < docs.length; i++) {
+       for (let i = 0; i < docs.length; i++) {
 
-    	    let doc = docs[i];
-            let v=doc.data()||{};
+    let doc = docs[i];
+    let v=doc.data()||{};
 
-            let nombreV=(v.nombre||"").toUpperCase();
-            let celularV=String(v.celular||"");
-            let monto=Number(v.total)||0;
-            let cantidadV = Number(v.cantidad) || 0;
-            let direccionV = (v.direccion || "").toUpperCase();
-	    
-            // 🔥 FECHA SEGURA
-            let fechaISO="";
+    let nombreV=(v.nombre||"").toUpperCase();
+    let celularV=String(v.celular||"");
+    let monto=Number(v.total)||0;
+    let cantidadV = Number(v.cantidad) || 0;
+    let direccionV = (v.direccion || "").toUpperCase();
 
-            if(typeof v.fecha==="string"){
-                fechaISO=v.fecha;
-            }
-            else if(v.fecha?.seconds){
-                fechaISO=new Date(v.fecha.seconds*1000).toISOString();
-            }
-	    let estadoCupon = await obtenerEstadoCuponCliente(celularV);
-            let giroRuleta = await verificarGiroEnEstaVenta(celularV, fechaISO);
+    // 🔥 FECHA SEGURA
+    let fechaISO="";
 
-            let fechaMostrar = fechaISO
-                ? new Date(fechaISO).toLocaleString()
-                : "SIN FECHA";
+    if(typeof v.fecha==="string"){
+        fechaISO=v.fecha;
+    }
+    else if(v.fecha?.seconds){
+        fechaISO=new Date(v.fecha.seconds*1000).toISOString();
+    }
 
-            // 🔥 📦 ACUMULADORES
-            totalGeneral+=monto;
+    let estadoCupon = await obtenerEstadoCuponCliente(celularV);
 
-            if(fechaISO.slice(0,10)===hoy) totalHoy+=monto;
-            if(fechaISO.slice(0,7)===mes) totalMes+=monto;
+    // 🔥 🔥 FIX RULETA (AQUÍ ESTÁ LA MAGIA)
+    let giroRuleta = false;
+
+    if(v.ruletaID){
+        giroRuleta = true;
+    }else{
+        try{
+            giroRuleta = await verificarGiroEnEstaVenta(celularV, fechaISO);
+        }catch(e){
+            console.warn("error ruleta respaldo", e);
+        }
+    }
+
+    let fechaMostrar = fechaISO
+        ? new Date(fechaISO).toLocaleString()
+        : "SIN FECHA";
+
+    // 🔥 📦 ACUMULADORES
+    totalGeneral+=monto;
+
+    if(fechaISO.slice(0,10)===hoy) totalHoy+=monto;
+    if(fechaISO.slice(0,7)===mes) totalMes+=monto;
 
 html+=`
 <div class="card-venta ${i==0?'card-top':''}" 
