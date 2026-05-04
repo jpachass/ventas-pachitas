@@ -734,6 +734,58 @@ async function verificarGiroEnEstaVenta(celular, fechaVenta){
 
     return giro;
 }
+window.repararHistorialRuleta = async function(){
+
+    const snapVentas = await getDocs(collection(db,"ventas"));
+    const snapRuleta = await getDocs(collection(db,"ruleta"));
+
+    let ruletas = [];
+
+    // 🔥 NORMALIZAR FECHAS RUETA
+    snapRuleta.forEach(doc=>{
+        let d = doc.data();
+
+        let fecha = new Date((d.fecha || "").replace(" ", "T"));
+
+        ruletas.push({
+            id: doc.id,
+            celular: d.celular,
+            fecha: fecha
+        });
+    });
+
+    for (let doc of snapVentas.docs){
+
+        let v = doc.data();
+
+        if(v.ruletaID) continue;
+
+        let fechaVenta = new Date((v.fecha || "").replace(" ", "T"));
+
+        // 🔥 BUSCAR MATCH POR MISMO DÍA (NO STRING)
+        let match = ruletas.find(r => {
+
+            if(r.celular !== v.celular) return false;
+
+            let diff = Math.abs(r.fecha - fechaVenta);
+
+            // 👉 tolerancia de 5 minutos
+            return diff < (5 * 60 * 1000);
+        });
+
+        if(match){
+            await updateDoc(doc.ref, {
+                ruletaID: match.id
+            });
+
+            console.log("✔ Reparado:", v.nombre);
+        } else {
+            console.warn("❌ No match:", v.nombre, v.fecha);
+        }
+    }
+
+    console.log("🔥 HISTORIAL REPARADO PRO");
+}
 async function yaGiroHoy(celular){
 
     const snap = await getDocs(collection(db,"ruleta"));
@@ -880,39 +932,51 @@ async function obtenerPremioDisponible(celular){
 }
 async function obtenerEstadoCuponCliente(celular){
 
-    const snap = await getDocs(collection(db,"ruleta"));
+    const snapRuleta = await getDocs(collection(db,"ruleta"));
+    const snapVentas = await getDocs(collection(db,"ventas"));
 
-    let ultimo = null;
+    let premios = [];
 
-    snap.forEach(doc=>{
+    // 🔥 1. OBTENER TODOS LOS PREMIOS DEL CLIENTE
+    snapRuleta.forEach(doc=>{
         let d = doc.data();
 
-        if(d.celular !== celular) return;
-
-        let fecha = new Date(d.fecha || "");
-
-        if(!ultimo || fecha > new Date(ultimo.fecha)){
-            ultimo = d;
+        if(d.celular === celular){
+            premios.push({
+                monto: Number((d.premio || "").replace("S/","")) || 0,
+                fecha: d.fecha || ""
+            });
         }
     });
 
-    // ❌ NO TIENE CUPÓN
-    if(!ultimo){
+    if(premios.length === 0){
         return { pendiente: null, usado: null };
     }
 
-    // 🔥 SI YA FUE USADO
-    if(ultimo.usado === true){
-        return {
-            pendiente: null,
-            usado: "S/ " + Number((ultimo.premio || "").replace("S/","")).toFixed(2)
-        };
-    }
+    // 🔥 2. ORDENAR POR FECHA (ÚLTIMO PRIMERO)
+    premios.sort((a,b)=> b.fecha.localeCompare(a.fecha));
 
-    // 🔥 SI AÚN NO LO USA
+    let ultimoPremio = premios[0];
+
+    let usado = false;
+
+    // 🔥 3. VALIDAR SI ESE PREMIO YA FUE USADO EN UNA VENTA POSTERIOR
+    snapVentas.forEach(doc=>{
+        let v = doc.data();
+
+        if(v.celular !== celular) return;
+
+        if(
+            Number(v.descuento) === ultimoPremio.monto &&
+            v.fecha >= ultimoPremio.fecha
+        ){
+            usado = true;
+        }
+    });
+
     return {
-        pendiente: "S/ " + Number((ultimo.premio || "").replace("S/","")).toFixed(2),
-        usado: null
+        pendiente: usado ? null : ultimoPremio.monto,
+        usado: usado ? ultimoPremio.monto : null
     };
 }
 async function verificarRuletaEnVenta(celular, fechaVenta){
@@ -1064,9 +1128,9 @@ ${giroRuleta ?
 🎡 Ruleta: ✔
 </div>` 
 : ""}
-${!v.descuento && estadoCupon.pendiente ? 
+${estadoCupon.pendiente ? 
 `<div class="subtexto" style="color:#f1c40f;">
-🎁 Cupón pendiente para próxima compra: ${estadoCupon.pendiente}
+🎁 Cupón pendiente para próxima compra: S/. ${Number(estadoCupon.pendiente).toFixed(2)}
 </div>` 
 : ""}${v.descuento && v.descuento > 0 ? 
 `<div class="subtexto" style="color:#FF2D95;">
