@@ -163,9 +163,41 @@ button{
 
 <body>
 
-<div class="header" id="titulo">🔥 VENTAS PACHITAS 🔥</div>
+<div class="header" id="titulo">
+🔥 VENTAS PACHITAS 🔥
 
-<div class="card"> 
+<div style="margin-top:10px;display:flex;gap:10px;justify-content:center;">
+
+<button onclick="mostrarVentas()"
+style="
+width:140px;
+height:40px;
+background:#27ae60;
+color:white;
+border:none;
+border-radius:10px;
+font-weight:bold;
+">
+💰 VENTAS
+</button>
+
+<button onclick="mostrarStock()"
+style="
+width:140px;
+height:40px;
+background:#f39c12;
+color:white;
+border:none;
+border-radius:10px;
+font-weight:bold;
+">
+📦 STOCK
+</button>
+
+</div>
+</div>
+
+<div class="card" id="panelVentas">
 
 <input id="buscarCliente" placeholder="🔍 BUSCAR CLIENTE">
 <div id="lista" class="sugerencias"></div>
@@ -225,6 +257,16 @@ font-size:18px;
 </div>
 
 </div>
+<!-- PANEL STOCK -->
+<div class="card" id="panelStock" style="display:none;">
+
+<h2 style="text-align:center;color:#2ecc71;">
+📦 STOCK ACTUAL
+</h2>
+
+<div id="contenidoStock"></div>
+
+</div>
 
 <!-- MODAL -->
 <div class="modal" id="modal">
@@ -248,7 +290,7 @@ font-size:18px;
 <input id="buscarAdmin" placeholder="BUSCAR NOMBRE / CELULAR / FECHA">
 <!--<button onclick="cerrarAdmin()">Cerrar</button>-->
 <div id="contenidoAdmin"></div>
-<div id="panelStock" style="margin-top:20px;"></div>
+
 </div>
 
 <script type="module">
@@ -318,6 +360,23 @@ titulo.onclick=()=>{
 };
 
 window.cerrarAdmin=()=>adminPanel.style.display="none";
+// 🔥 CAMBIO DE PANELES
+
+window.mostrarStock = () => {
+
+    panelVentas.style.display = "none";
+
+    panelStock.style.display = "block";
+
+    cargarPanelStock();
+};
+
+window.mostrarVentas = () => {
+
+    panelVentas.style.display = "block";
+
+    panelStock.style.display = "none";
+};
 
 async function cargarClientes(){
     const snap = await getDocs(collection(db,"clientes"));
@@ -1191,86 +1250,97 @@ async function marcarPremioUsado(celular){
 /* ADMIN */
 async function cargarPanelStock(){
 
-    const panel = document.getElementById("panelStock");
+    const contenedor =
+        document.getElementById("contenidoStock");
 
-    panel.innerHTML = "CARGANDO STOCK...";
+    if(!contenedor){
+
+        console.error("❌ No existe contenidoStock");
+
+        return;
+    }
+
+    contenedor.innerHTML =
+        "CARGANDO STOCK...";
 
     try{
 
-        const snap = await getDocs(collection(db,"stock"));
+        const snap =
+            await getDocs(collection(db,"stock"));
 
-        let html = `
-        <div style="
-            background:#111;
-            padding:15px;
-            border-radius:15px;
-            margin-bottom:20px;
-        ">
-        <h2 style="color:#2ecc71;">
-        📦 STOCK ACTUAL
-        </h2>
-        `;
+        let html = "";
 
         snap.forEach(docu=>{
 
             let d = docu.data();
 
-            let stock = Number(d.stock || 0);
+            let stock =
+                Number(d.stock || 0);
 
             let color = "#2ecc71";
 
-            if(stock <= 10) color = "#f1c40f";
-            if(stock <= 5) color = "#e74c3c";
+            if(stock <= 10)
+                color = "#f1c40f";
+
+            if(stock <= 5)
+                color = "#e74c3c";
 
             html += `
             <div style="
                 background:#222;
-                margin-top:10px;
-                padding:12px;
-                border-radius:12px;
+                margin-top:12px;
+                padding:15px;
+                border-radius:15px;
             ">
 
                 <div style="
-                    font-size:18px;
+                    font-size:20px;
                     font-weight:bold;
                     color:white;
                 ">
-                    ${d.marca} ${d.valvula}
+                    ${d.marca} - ${d.valvula}
                 </div>
 
                 <div style="
-                    margin-top:5px;
+                    margin-top:8px;
                     color:${color};
-                    font-size:20px;
+                    font-size:24px;
                     font-weight:bold;
                 ">
-                    📦 ${stock} cilindros
+                    📦 ${stock}
                 </div>
 
                 <div style="
-                    margin-top:10px;
                     display:flex;
                     gap:10px;
+                    margin-top:12px;
                 ">
 
                     <input
                         type="number"
                         id="add_${docu.id}"
-                        placeholder="Cantidad"
+                        placeholder="0"
                         style="
-                            flex:1;
-                            height:40px;
+                            width:110px;
+                            height:55px;
+                            border-radius:12px;
+                            border:none;
+                            text-align:center;
+                            font-size:24px;
+                            font-weight:bold;
+                            flex:none;
                         "
                     >
 
                     <button
                         onclick="agregarStock('${docu.id}')"
                         style="
+                            flex:1;
                             background:#27ae60;
                             color:white;
                             border:none;
-                            border-radius:10px;
-                            padding:10px;
+                            border-radius:12px;
+                            font-size:18px;
                         "
                     >
                         ➕ AGREGAR
@@ -1282,15 +1352,14 @@ async function cargarPanelStock(){
             `;
         });
 
-        html += `</div>`;
-
-        panel.innerHTML = html;
+        contenedor.innerHTML = html;
 
     }catch(error){
 
         console.error(error);
 
-        panel.innerHTML = "❌ ERROR CARGANDO STOCK";
+        contenedor.innerHTML =
+            "❌ ERROR CARGANDO STOCK";
     }
 }
 window.agregarStock = async function(id){
