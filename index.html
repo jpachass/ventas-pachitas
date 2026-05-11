@@ -1128,11 +1128,11 @@ ${giroRuleta ?
 🎡 Ruleta: ✔
 </div>` 
 : ""}
-${estadoCupon.pendiente ? 
-`<div class="subtexto" style="color:#f1c40f;">
-🎁 Cupón pendiente para próxima compra: S/. ${Number(estadoCupon.pendiente).toFixed(2)}
-</div>` 
-: ""}${v.descuento && v.descuento > 0 ? 
+${giroRuleta && estadoCupon.pendiente > 0 ? `
+<div class="subtexto" style="color:gold;">
+🎁 Cupón pendiente para próxima compra: S/. ${estadoCupon.pendiente.toFixed(2)}
+</div>
+` : ""} ${v.descuento && v.descuento > 0 ? 
 `<div class="subtexto" style="color:#FF2D95;">
 ✅ Cliente usó descuento de S/. ${Number(v.descuento).toFixed(2)}
 </div>` 
