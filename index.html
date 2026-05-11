@@ -248,6 +248,7 @@ font-size:18px;
 <input id="buscarAdmin" placeholder="BUSCAR NOMBRE / CELULAR / FECHA">
 <!--<button onclick="cerrarAdmin()">Cerrar</button>-->
 <div id="contenidoAdmin"></div>
+<div id="panelStock" style="margin-top:20px;"></div>
 </div>
 
 <script type="module">
@@ -1188,9 +1189,147 @@ async function marcarPremioUsado(celular){
     });
 }
 /* ADMIN */
+async function cargarPanelStock(){
+
+    const panel = document.getElementById("panelStock");
+
+    panel.innerHTML = "CARGANDO STOCK...";
+
+    try{
+
+        const snap = await getDocs(collection(db,"stock"));
+
+        let html = `
+        <div style="
+            background:#111;
+            padding:15px;
+            border-radius:15px;
+            margin-bottom:20px;
+        ">
+        <h2 style="color:#2ecc71;">
+        📦 STOCK ACTUAL
+        </h2>
+        `;
+
+        snap.forEach(docu=>{
+
+            let d = docu.data();
+
+            let stock = Number(d.stock || 0);
+
+            let color = "#2ecc71";
+
+            if(stock <= 10) color = "#f1c40f";
+            if(stock <= 5) color = "#e74c3c";
+
+            html += `
+            <div style="
+                background:#222;
+                margin-top:10px;
+                padding:12px;
+                border-radius:12px;
+            ">
+
+                <div style="
+                    font-size:18px;
+                    font-weight:bold;
+                    color:white;
+                ">
+                    ${d.marca} ${d.valvula}
+                </div>
+
+                <div style="
+                    margin-top:5px;
+                    color:${color};
+                    font-size:20px;
+                    font-weight:bold;
+                ">
+                    📦 ${stock} cilindros
+                </div>
+
+                <div style="
+                    margin-top:10px;
+                    display:flex;
+                    gap:10px;
+                ">
+
+                    <input
+                        type="number"
+                        id="add_${docu.id}"
+                        placeholder="Cantidad"
+                        style="
+                            flex:1;
+                            height:40px;
+                        "
+                    >
+
+                    <button
+                        onclick="agregarStock('${docu.id}')"
+                        style="
+                            background:#27ae60;
+                            color:white;
+                            border:none;
+                            border-radius:10px;
+                            padding:10px;
+                        "
+                    >
+                        ➕ AGREGAR
+                    </button>
+
+                </div>
+
+            </div>
+            `;
+        });
+
+        html += `</div>`;
+
+        panel.innerHTML = html;
+
+    }catch(error){
+
+        console.error(error);
+
+        panel.innerHTML = "❌ ERROR CARGANDO STOCK";
+    }
+}
+window.agregarStock = async function(id){
+
+    let input = document.getElementById("add_" + id);
+
+    let cantidad = Number(input.value);
+
+    if(!cantidad || cantidad <= 0){
+
+        alert("Cantidad inválida");
+
+        return;
+    }
+
+    try{
+
+        await updateDoc(
+            doc(db,"stock",id),
+            {
+                stock: increment(cantidad)
+            }
+        );
+
+        alert("✅ STOCK ACTUALIZADO");
+
+        cargarPanelStock();
+
+    }catch(error){
+
+        console.error(error);
+
+        alert("❌ ERROR ACTUALIZANDO STOCK");
+    }
+}
 async function abrirAdmin(){
 
     adminPanel.style.display="block";
+    cargarPanelStock();
     contenidoAdmin.innerHTML="CARGANDO...";
 
     try{
