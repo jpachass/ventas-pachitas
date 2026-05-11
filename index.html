@@ -522,21 +522,37 @@ window.guardarVenta=async ()=>{
     }
 
     // 🔥 GUARDAR EN FIREBASE
-    await addDoc(collection(db,"ventas"),{
-        nombre:nombre.value,
-        celular:celular.value,
-        direccion:direccion.value,
-        marca:marca.value,
-        valvula:valvula.value,
-        cantidad:Number(cantidad.value),
-        precio:Number(precio.value),
-        pago:pago.value,
-        delivery:delivery.value,
-        total:totalCalc,
-	descuento: descuentoActual,
-	usoRuleta: descuentoActual > 0,
-        fecha: new Date().toLocaleString("sv-SE", { timeZone: "America/Lima" })
-    });
+   let datosVenta = {
+
+    nombre:nombre.value,
+    celular:celular.value,
+    direccion:direccion.value,
+    marca:marca.value,
+    valvula:valvula.value,
+    cantidad:Number(cantidad.value),
+    precio:Number(precio.value),
+    pago:pago.value,
+    delivery:delivery.value,
+    total:totalCalc,
+    descuento: descuentoActual,
+    usoRuleta: descuentoActual > 0,
+    fecha: new Date().toLocaleString("sv-SE", {
+        timeZone: "America/Lima"
+    })
+};
+
+// 🔥 SOLO SI GIRÓ RULETA
+if(giroRuleta){
+
+    datosVenta.ruletaID = crypto.randomUUID();
+}
+
+// 🔥 GUARDAR
+await addDoc(collection(db,"ventas"), datosVenta);
+
+await marcarPremioUsado(celular.value);
+
+alert("VENTA GRABADO EXITOSAMENTE");
     await marcarPremioUsado(celular.value);
     alert("VENTA GRABADO EXITOSAMENTE");
 
@@ -979,6 +995,65 @@ async function obtenerEstadoCuponCliente(celular){
         usado: usado ? ultimoPremio.monto : null
     };
 }
+function obtenerEstadoCuponClienteFAST(
+    celular,
+    ruletasCache,
+    ventasCache
+){
+
+    let ultimoPremio = 0;
+    let fechaUltimo = null;
+
+    // 🔥 BUSCAR ÚLTIMA RULETA
+    ruletasCache.forEach(r=>{
+
+        if(r.celular !== celular) return;
+
+        let fecha = new Date(r.fecha || 0);
+
+        if(!fechaUltimo || fecha > fechaUltimo){
+
+            fechaUltimo = fecha;
+
+            ultimoPremio =
+                Number((r.premio || "")
+                .replace("S/","")) || 0;
+        }
+    });
+
+    // ❌ NO TIENE CUPÓN
+    if(!ultimoPremio){
+
+        return {
+            pendiente: null,
+            usado: null
+        };
+    }
+
+    let usado = false;
+
+    // 🔥 BUSCAR SI YA LO USÓ
+    ventasCache.forEach(v=>{
+
+        if(v.celular !== celular) return;
+
+        if(Number(v.descuento) === ultimoPremio){
+
+            usado = true;
+        }
+    });
+
+    return {
+
+        pendiente: usado
+            ? null
+            : ultimoPremio,
+
+        usado: usado
+            ? ultimoPremio
+            : null
+    };
+}
 async function verificarRuletaEnVenta(celular, fechaVenta){
 
     if(!celular || !fechaVenta) return false;
@@ -1033,6 +1108,12 @@ async function abrirAdmin(){
     try{
 
         const snap = await getDocs(collection(db,"ventas"));
+	// 🚀 CACHE VENTAS
+	const ventasCache = [];
+
+	snap.forEach(doc=>{
+    	ventasCache.push(doc.data());
+	});
 
         if(!snap || snap.docs.length===0){
             contenidoAdmin.innerHTML="⚠️ NO HAY VENTAS";
@@ -1040,6 +1121,14 @@ async function abrirAdmin(){
         }
 
         let docs = snap.docs;
+	// 🚀 CACHE RULETAS (CARGA UNA SOLA VEZ)
+	const snapRuleta = await getDocs(collection(db,"ruleta"));
+
+	const ruletasCache = [];
+
+	snapRuleta.forEach(doc=>{
+    	ruletasCache.push(doc.data());
+	});
 
         let totalHoy=0,totalMes=0,totalGeneral=0;
         let hoy = new Date().toLocaleString("sv-SE", { timeZone: "America/Lima" }).slice(0,10);
@@ -1082,20 +1171,15 @@ async function abrirAdmin(){
         fechaISO=new Date(v.fecha.seconds*1000).toISOString();
     }
 
-    let estadoCupon = await obtenerEstadoCuponCliente(celularV);
+    let estadoCupon =
+    obtenerEstadoCuponClienteFAST(
+        celularV,
+        ruletasCache,
+        ventasCache
+    );
 
-    // 🔥 🔥 FIX RULETA (AQUÍ ESTÁ LA MAGIA)
-    let giroRuleta = false;
-
-    if(v.ruletaID){
-        giroRuleta = true;
-    }else{
-        try{
-            giroRuleta = await verificarGiroEnEstaVenta(celularV, fechaISO);
-        }catch(e){
-            console.warn("error ruleta respaldo", e);
-        }
-    }
+// 🚀 RULETA REAL
+let giroRuleta = v.ruletaID ? true : false;
 
     let fechaMostrar = fechaISO
         ? new Date(fechaISO).toLocaleString()
@@ -1128,11 +1212,12 @@ ${giroRuleta ?
 🎡 Ruleta: ✔
 </div>` 
 : ""}
-${giroRuleta && estadoCupon.pendiente > 0 ? `
+${giroRuleta && estadoCupon?.pendiente ? `
 <div class="subtexto" style="color:gold;">
-🎁 Cupón pendiente para próxima compra: S/. ${estadoCupon.pendiente.toFixed(2)}
+🎁 Cupón pendiente para próxima compra:
+S/. ${estadoCupon.pendiente.toFixed(2)}
 </div>
-` : ""} ${v.descuento && v.descuento > 0 ? 
+` : ""}${v.descuento && v.descuento > 0 ? 
 `<div class="subtexto" style="color:#FF2D95;">
 ✅ Cliente usó descuento de S/. ${Number(v.descuento).toFixed(2)}
 </div>` 
