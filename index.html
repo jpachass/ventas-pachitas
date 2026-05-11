@@ -181,7 +181,6 @@ button{
 <option>SOL GAS</option>
 <option>Z GAS</option>
 <option>MAS GAS</option>
-<option>AZUL GAS</option>
 </select>
 
 <select id="valvula">
@@ -189,6 +188,17 @@ button{
 <option>NORMAL</option>
 <option>PREMIUM</option>
 </select>
+
+<div id="stockInfo"
+style="
+margin-top:8px;
+font-weight:bold;
+color:black;
+text-align:center;
+font-size:18px;
+">
+📦 STOCK: --
+</div>
 
 <input id="cantidad" placeholder="CANTIDAD">
 <input id="precio" placeholder="PRECIO">
@@ -243,8 +253,17 @@ button{
 <script type="module">
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-import { getFirestore, collection, addDoc, getDocs } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
-import { updateDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import {
+    getFirestore,
+    collection,
+    addDoc,
+    getDocs,
+    doc,
+    getDoc,
+    updateDoc,
+    increment
+}
+from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyA8MGBeJEo-eDyu0iHayj9WIQPZHx7UhMA",
@@ -259,6 +278,30 @@ const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
 let clientes=[];
+async function obtenerStock(marca,valvula){
+
+    try{
+
+        let id =
+            marca.replace(/\s/g,"_") +
+            "_" +
+            valvula;
+
+        const ref = doc(db,"stock",id);
+
+        const snap = await getDoc(ref);
+
+        if(!snap.exists()) return 0;
+
+        return Number(snap.data().stock || 0);
+
+    }catch(error){
+
+        console.error("Error stock:", error);
+
+        return 0;
+    }
+}
 
 /* 🔥 PEGA AQUÍ */
 let anguloActual = 0;
@@ -290,6 +333,25 @@ async function cargarClientes(){
 await cargarClientes();
 cantidad.oninput = calcularTotal;
 precio.oninput = calcularTotal;
+marca.onchange = actualizarStockVisual;
+valvula.onchange = actualizarStockVisual;
+
+async function actualizarStockVisual(){
+
+    if(!marca.value || !valvula.value){
+
+        stockInfo.innerText = "📦 STOCK: --";
+        return;
+    }
+
+    let stock = await obtenerStock(
+        marca.value,
+        valvula.value
+    );
+
+    stockInfo.innerText =
+        "📦 STOCK DISPONIBLE: " + stock;
+}
 nNombre.oninput = ()=>{
     nNombre.value = nNombre.value.toUpperCase().replace(/[^A-Z\s]/g,'');
 };
@@ -542,19 +604,45 @@ window.guardarVenta=async ()=>{
 };
 
 // 🔥 SOLO SI GIRÓ RULETA
-if(giroRuleta){
+if(descuentoActual > 0){
 
     datosVenta.ruletaID = crypto.randomUUID();
 }
 
 // 🔥 GUARDAR
+// 🔥 VALIDAR STOCK
+let stockActual = await obtenerStock(
+    marca.value,
+    valvula.value
+);
+
+if(stockActual < Number(cantidad.value)){
+
+    alert("❌ STOCK INSUFICIENTE");
+
+    return;
+}
 await addDoc(collection(db,"ventas"), datosVenta);
+// 🔥 DESCONTAR STOCK
+let idStock =
+    marca.value.replace(/\s/g,"_") +
+    "_" +
+    valvula.value;
+
+await updateDoc(
+    doc(db,"stock",idStock),
+    {
+        stock: increment(
+            -Number(cantidad.value)
+        )
+    }
+);
+
+// 🔥 REFRESCAR STOCK
+actualizarStockVisual();
 
 await marcarPremioUsado(celular.value);
-
 alert("VENTA GRABADO EXITOSAMENTE");
-    await marcarPremioUsado(celular.value);
-    alert("VENTA GRABADO EXITOSAMENTE");
 
     // 🔥 LIMPIAR CAMPOS
     document.querySelectorAll("input").forEach(i=>i.value="");
