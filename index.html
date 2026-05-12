@@ -249,7 +249,11 @@ font-size:18px;
 
 <div id="total">S/. 0.00</div>
 
-<button class="btn-main" onclick="guardarVenta()">💾 GRABAR VENTA</button>
+<button id="btnGuardarVenta"
+class="btn-main"
+onclick="guardarVenta()">
+💾 GRABAR VENTA
+</button>
 <button class="btn-sec" id="btnRuleta" onclick="abrirRuleta()">🎡 RULETA PROMO</button>
 
 <div id="estadoRuleta" style="text-align:center;margin-top:8px;color:#999;">
@@ -398,19 +402,58 @@ valvula.onchange = actualizarStockVisual;
 
 async function actualizarStockVisual(){
 
+    const btnGuardar =
+        document.getElementById("btnGuardarVenta");
+
     if(!marca.value || !valvula.value){
 
-        stockInfo.innerText = "📦 STOCK: --";
-        return;
-    }
+    stockInfo.innerText = "📦 STOCK: --";
 
+    // 🔥 NO BLOQUEAR AQUÍ
+    btnGuardar.disabled = false;
+    btnGuardar.style.background = "#27ae60";
+    btnGuardar.style.cursor = "pointer";
+    btnGuardar.innerText = "💾 GRABAR VENTA";
+
+    return;
+}
     let stock = await obtenerStock(
         marca.value,
         valvula.value
     );
 
-    stockInfo.innerText =
+    // ❌ SIN STOCK
+    if(stock <= 0){
+
+        stockInfo.innerHTML = "❌ SIN STOCK";
+        stockInfo.style.color = "#ff0000";
+
+        btnGuardar.disabled = true;
+        btnGuardar.style.background = "#999";
+        btnGuardar.style.cursor = "not-allowed";
+        btnGuardar.innerText = "❌ SIN STOCK";
+
+        return;
+    }
+
+    // ✅ CON STOCK
+    stockInfo.innerHTML =
         "📦 STOCK DISPONIBLE: " + stock;
+
+    stockInfo.style.color = "#2ecc71";
+
+    if(stock <= 10){
+        stockInfo.style.color = "#f1c40f";
+    }
+
+    if(stock <= 5){
+        stockInfo.style.color = "#ff0000";
+    }
+
+    btnGuardar.disabled = false;
+    btnGuardar.style.background = "#27ae60";
+    btnGuardar.style.cursor = "pointer";
+    btnGuardar.innerText = "💾 GRABAR VENTA";
 }
 nNombre.oninput = ()=>{
     nNombre.value = nNombre.value.toUpperCase().replace(/[^A-Z\s]/g,'');
@@ -463,7 +506,6 @@ buscarCliente.oninput=function(){
     nombre.value=c.nombre;
     celular.value=c.celular;
     direccion.value=c.direccion;
-
 	// 🔥 AQUÍ VA
    	await actualizarEstadoRuleta(c.celular);
 
@@ -599,7 +641,18 @@ window.guardarCliente=async ()=>{
 
 /* GUARDAR VENTA */
 window.guardarVenta=async ()=>{
+// 🔥 VALIDAR STOCK BLOQUEADO
+let stockBloqueado = await obtenerStock(
+    marca.value,
+    valvula.value
+);
 
+if(stockBloqueado <= 0){
+
+    alert("❌ SIN STOCK DISPONIBLE");
+
+    return;
+}
     // 🔴 VALIDAR CLIENTE
     if(!nombre.value) return alert("Seleccione cliente");
 
@@ -1277,13 +1330,26 @@ async function cargarPanelStock(){
             let stock =
                 Number(d.stock || 0);
 
-            let color = "#2ecc71";
+           let color = "#2ecc71";
+let alerta = "✅ STOCK NORMAL";
 
-            if(stock <= 10)
-                color = "#f1c40f";
+if(stock <= 10){
 
-            if(stock <= 5)
-                color = "#e74c3c";
+    color = "#f1c40f";
+    alerta = "⚠️ STOCK BAJO";
+}
+
+if(stock <= 5){
+
+    color = "#e74c3c";
+    alerta = "🚨 STOCK CRÍTICO";
+}
+
+if(stock <= 0){
+
+    color = "#ff0000";
+    alerta = "❌ SIN STOCK";
+}
 
             html += `
             <div style="
@@ -1301,15 +1367,23 @@ async function cargarPanelStock(){
                     ${d.marca} - ${d.valvula}
                 </div>
 
-                <div style="
-                    margin-top:8px;
-                    color:${color};
-                    font-size:24px;
-                    font-weight:bold;
-                ">
-                    📦 ${stock}
-                </div>
+               <div style="
+    margin-top:8px;
+    color:${color};
+    font-size:24px;
+    font-weight:bold;
+">
+    📦 ${stock}
+</div>
 
+<div style="
+    margin-top:5px;
+    color:${color};
+    font-weight:bold;
+    font-size:15px;
+">
+    ${alerta}
+</div>
                 <div style="
                     display:flex;
                     gap:10px;
