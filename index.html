@@ -529,20 +529,6 @@ if(!estado.puede){
     btnRuleta.style.background = "#3498db";
     btnRuleta.innerText = "🎡 RULETA PROMO";
 }
-
-	// 🔥 BLOQUEO DE RULETA SI YA JUGÓ
-	let yaUso = await yaUsoRuletaAlgunaVez(c.celular);
-
-	if(yaUso){
-    	btnRuleta.disabled = true;
-    	btnRuleta.style.background = "#999";
-	btnRuleta.innerText = "🚫 YA USÓ RULETA"; // 👈 AQUÍ VA
-	}else{
-   	btnRuleta.disabled = false;
-   	btnRuleta.style.background = "#3498db";
-	btnRuleta.innerText = "🎡 RULETA PROMO"; // 👈 AQUÍ VA
-	}
-
     // 🔥 BUSCAR DESCUENTO
     descuentoActual = await obtenerPremioDisponible(c.celular) || 0;
 
