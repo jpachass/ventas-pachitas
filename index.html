@@ -748,6 +748,15 @@ alert("VENTA GRABADO EXITOSAMENTE");
     document.querySelectorAll("select").forEach(s=>s.value="");
     total.innerText="S/. 0.00";
     descuentoActual = 0;
+
+	// 🔥 LIMPIAR INDICADOR DE STOCK
+stockInfo.innerHTML = "📦 STOCK: --";
+stockInfo.style.color = "black";
+
+// 🔥 RESTAURAR BOTÓN
+btnGuardarVenta.disabled = false;
+btnGuardarVenta.innerText = "💾 GRABAR VENTA";
+btnGuardarVenta.style.background = "#27ae60";
 };
 window.abrirRuleta = () => {
 
