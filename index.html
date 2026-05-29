@@ -207,6 +207,15 @@ font-weight:bold;
 <input id="nombre" readonly placeholder="NOMBRE">
 <input id="celular" readonly placeholder="CELULAR">
 <input id="direccion" readonly placeholder="DIRECCIÓN">
+<div id="historialCliente"
+style="
+margin-top:10px;
+padding:10px;
+border-radius:10px;
+background:#f5f5f5;
+display:none;
+">
+</div>
 
 <select id="marca">
 <option value="">MARCA</option>
@@ -288,15 +297,20 @@ onclick="guardarVenta()">
 <!-- PANEL ADMIN -->
 <div id="adminPanel">
 <h3>REPORTES 📊</h3>
+<button
+onclick="abrirDashboard()"
+style="
+background:#9b59b6;
+color:white;
+margin-bottom:10px;
+">
+📊 DASHBOARD EJECUTIVO
+</button>
 <button onclick="exportarExcel()" style="background:#27ae60;color:white;margin-bottom:10px;">
 📊 EXPORTAR EXCEL
 </button>
 <input id="buscarAdmin" placeholder="BUSCAR NOMBRE / CELULAR / FECHA">
-<!--<button onclick="cerrarAdmin()">Cerrar</button>-->
 <div id="contenidoAdmin"></div>
-
-</div>
-
 <script type="module">
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
@@ -483,6 +497,66 @@ nDireccion.oninput = ()=>{
 
     total.innerText = "S/. " + totalFinal.toFixed(2);
 }
+async function cargarHistorialCliente(celularCliente){
+
+    const historial =
+        document.getElementById("historialCliente");
+
+    historial.style.display = "none";
+
+    const snap =
+        await getDocs(collection(db,"ventas"));
+
+    let ultimaVenta = null;
+
+    snap.forEach(docu=>{
+
+        let v = docu.data();
+
+        if(v.celular !== celularCliente)
+            return;
+
+        if(
+            !ultimaVenta ||
+            v.fecha > ultimaVenta.fecha
+        ){
+            ultimaVenta = v;
+        }
+    });
+
+    if(!ultimaVenta) return;
+
+    historial.innerHTML = `
+        <div style="font-weight:bold;color:#3498db;">
+            📋 ÚLTIMA COMPRA
+        </div>
+
+        <div>
+            📅 ${ultimaVenta.fecha}
+        </div>
+
+        <div>
+            🏷️ ${ultimaVenta.marca}
+        </div>
+
+        <div>
+            🔧 ${ultimaVenta.valvula}
+        </div>
+
+        <div>
+            📦 Cantidad: ${ultimaVenta.cantidad}
+        </div>
+
+        <div>
+            💰 Total: S/. ${Number(
+                ultimaVenta.total
+            ).toFixed(2)}
+        </div>
+    `;
+
+    historial.style.display = "block";
+}
+
 /* BUSCADOR CLIENTE */
 buscarCliente.oninput=function(){
     this.value=this.value.toUpperCase().replace(/[^A-Z0-9\s]/g,'');
@@ -506,6 +580,9 @@ buscarCliente.oninput=function(){
     nombre.value=c.nombre;
     celular.value=c.celular;
     direccion.value=c.direccion;
+    await cargarHistorialCliente(
+    c.celular
+);
 	// 🔥 AQUÍ VA
    	await actualizarEstadoRuleta(c.celular);
 
@@ -749,7 +826,10 @@ alert("VENTA GRABADO EXITOSAMENTE");
     total.innerText="S/. 0.00";
     descuentoActual = 0;
 
-	// 🔥 LIMPIAR INDICADOR DE STOCK
+historialCliente.style.display = "none";
+historialCliente.innerHTML = "";
+
+   // 🔥 LIMPIAR INDICADOR DE STOCK
 stockInfo.innerHTML = "📦 STOCK: --";
 stockInfo.style.color = "black";
 
@@ -1473,6 +1553,7 @@ async function abrirAdmin(){
     try{
 
         const snap = await getDocs(collection(db,"ventas"));
+	generarDashboard(snap.docs);
 	// 🚀 CACHE VENTAS
 	const ventasCache = [];
 
@@ -1624,6 +1705,99 @@ buscarAdmin.oninput=function(){
 
         card.style.display= ok ? "block":"none";
     });
+};
+function generarDashboard(docs){
+
+    let ventasPorDia = {};
+    let ventasPorMarca = {};
+    let ventasPorPago = {};
+
+    docs.forEach(docu=>{
+
+        let v = docu.data();
+
+        let total = Number(v.total) || 0;
+
+        let fecha = (v.fecha || "").slice(0,10);
+
+        // VENTAS POR DÍA
+        ventasPorDia[fecha] =
+            (ventasPorDia[fecha] || 0) + total;
+
+        // MARCAS
+        ventasPorMarca[v.marca] =
+            (ventasPorMarca[v.marca] || 0) + total;
+
+        // PAGOS
+        ventasPorPago[v.pago] =
+            (ventasPorPago[v.pago] || 0) + total;
+    });
+
+    // DESTRUIR GRÁFICOS ANTERIORES
+    if(window.chartDia) window.chartDia.destroy();
+    if(window.chartMarca) window.chartMarca.destroy();
+    if(window.chartPago) window.chartPago.destroy();
+
+    // 📈 VENTAS POR DÍA
+    window.chartDia = new Chart(
+        document.getElementById("graficoVentasDia"),
+        {
+            type:"line",
+            data:{
+                labels:Object.keys(ventasPorDia),
+                datasets:[{
+                    label:"Ventas por Día",
+                    data:Object.values(ventasPorDia),
+                    borderWidth:3,
+                    tension:.3
+                }]
+            }
+        }
+    );
+
+    // 🏷️ VENTAS POR MARCA
+    window.chartMarca = new Chart(
+        document.getElementById("graficoMarcas"),
+        {
+            type:"bar",
+            data:{
+                labels:Object.keys(ventasPorMarca),
+                datasets:[{
+                    label:"Ventas por Marca",
+                    data:Object.values(ventasPorMarca),
+                    borderWidth:2
+                }]
+            }
+        }
+    );
+
+    // 💳 MÉTODOS DE PAGO
+    window.chartPago = new Chart(
+        document.getElementById("graficoPagos"),
+        {
+            type:"doughnut",
+            data:{
+                labels:Object.keys(ventasPorPago),
+                datasets:[{
+                    data:Object.values(ventasPorPago)
+                }]
+            }
+        }
+    );
+}
+window.abrirDashboard = async () => {
+
+    dashboardPanel.style.display = "block";
+
+    const snap =
+        await getDocs(collection(db,"ventas"));
+
+    generarDashboard(snap.docs);
+};
+
+window.cerrarDashboard = () => {
+
+    dashboardPanel.style.display = "none";
 };
 window.exportarExcel = async () => {
 
@@ -1808,6 +1982,7 @@ for(let R = 1; R <= rangeDash.e.r; ++R){
 };
 </script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <!-- 🎡 MODAL RULETA -->
 <div class="modal" id="modalRuleta">
 <div class="modal-content" style="text-align:center">
@@ -1825,6 +2000,49 @@ style="background:white;border-radius:50%;margin-top:10px;"></canvas>
 <button onclick="cerrarRuleta()">CERRAR</button>
 
 </div>
+</div>
+<!-- DASHBOARD EJECUTIVO -->
+<div id="dashboardPanel"
+style="
+display:none;
+position:fixed;
+top:0;
+left:0;
+width:100%;
+height:100%;
+background:#111;
+color:white;
+overflow:auto;
+padding:15px;
+z-index:9999;
+">
+
+<h2 style="text-align:center;">
+📊 DASHBOARD EJECUTIVO
+</h2>
+
+<button
+onclick="cerrarDashboard()"
+style="
+background:#e74c3c;
+color:white;
+margin-bottom:15px;
+">
+⬅ VOLVER
+</button>
+
+<div class="card">
+    <canvas id="graficoVentasDia"></canvas>
+</div>
+
+<div class="card">
+    <canvas id="graficoMarcas"></canvas>
+</div>
+
+<div class="card">
+    <canvas id="graficoPagos"></canvas>
+</div>
+
 </div>
 </body>
 </html>
