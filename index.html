@@ -1739,22 +1739,27 @@ function generarDashboard(docs){
     if(window.chartPago) window.chartPago.destroy();
 
     // 📈 VENTAS POR DÍA
-    window.chartDia = new Chart(
-        document.getElementById("graficoVentasDia"),
-        {
-            type:"line",
-            data:{
-                labels:Object.keys(ventasPorDia),
-                datasets:[{
-                    label:"Ventas por Día",
-                    data:Object.values(ventasPorDia),
-                    borderWidth:3,
-                    tension:.3
-                }]
-            }
-        }
-    );
+ const fechasOrdenadas =
+    Object.keys(ventasPorDia)
+    .sort((a,b)=> new Date(a) - new Date(b));
 
+window.chartDia = new Chart(
+    document.getElementById("graficoVentasDia"),
+    {
+        type:"line",
+        data:{
+            labels: fechasOrdenadas,
+            datasets:[{
+                label:"Ventas por Día",
+                data: fechasOrdenadas.map(
+                    f => ventasPorDia[f]
+                ),
+                borderWidth:3,
+                tension:.3
+            }]
+        }
+    }
+);
     // 🏷️ VENTAS POR MARCA
     window.chartMarca = new Chart(
         document.getElementById("graficoMarcas"),
