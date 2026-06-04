@@ -77,14 +77,21 @@ button{
 
 .modal{
     position:fixed;
-    top:0;left:0;
+    top:0;
+    left:0;
+    z-index:10000;
     width:100%;height:100%;
     background:rgba(0,0,0,0.6);
     display:none;
     justify-content:center;
     align-items:center;
+    z-index:999999;
 }
-
+.modal-content{
+    position:relative;
+    z-index:1000000;
+}
+}
 .modal-content{
     background:white;
     padding:20px;
@@ -311,6 +318,7 @@ margin-bottom:10px;
 </button>
 <input id="buscarAdmin" placeholder="BUSCAR NOMBRE / CELULAR / FECHA">
 <div id="contenidoAdmin"></div>
+	</div>
 <script type="module">
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
