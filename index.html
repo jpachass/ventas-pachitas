@@ -87,11 +87,13 @@ button{
     align-items:center;
     z-index:999999;
 }
+
 .modal-content{
     position:relative;
     z-index:1000000;
 }
 }
+
 .modal-content{
     background:white;
     padding:20px;
@@ -318,7 +320,7 @@ margin-bottom:10px;
 </button>
 <input id="buscarAdmin" placeholder="BUSCAR NOMBRE / CELULAR / FECHA">
 <div id="contenidoAdmin"></div>
-	</div>
+</div>
 <script type="module">
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
@@ -385,7 +387,12 @@ titulo.onclick=()=>{
     setTimeout(()=>clicks=0,1000);
 };
 
-window.cerrarAdmin=()=>adminPanel.style.display="none";
+window.cerrarAdmin = () => {
+
+    adminPanel.style.display = "none";
+
+    dashboardPanel.style.display = "none";
+};
 // 🔥 CAMBIO DE PANELES
 
 window.mostrarStock = () => {
@@ -632,15 +639,6 @@ if(!estado.puede){
 };
 
 /* MODAL */
-window.abrirModal=()=>{
-    modal.style.display="flex";
-setTimeout(()=>{
-    requestAnimationFrame(()=>{
-        dibujarRuleta();
-    });
-}, 200);
-
-};
 window.cerrarModal=()=>modal.style.display="none";
 
 /* GUARDAR CLIENTE */
@@ -848,28 +846,39 @@ btnGuardarVenta.style.background = "#27ae60";
 };
 window.abrirRuleta = () => {
 
+    console.log("PASO 1");
+
     if(!nombre.value){
         alert("Primero selecciona un cliente");
         return;
     }
-    // 🔥 AQUÍ VA
+
+    console.log("PASO 2");
+
     actualizarEstadoRuleta(celular.value);
+
+    console.log("PASO 3");
 
     rNombre.value = nombre.value;
     rCelular.value = celular.value;
 
+    console.log("PASO 4");
+
     modalRuleta.style.display = "flex";
 
-    // 🔥 RESET
-    anguloActual = 0;
+    console.log("PASO 5");
 
-    // 🔥 DOBLE INTENTO (GARANTIZA RENDER)
-    setTimeout(()=>{
-        dibujarRuleta();
-        setTimeout(()=>dibujarRuleta(), 50);
-    }, 100);
-};   
-    window.cerrarRuleta = () => {
+    const canvas = document.getElementById("ruletaCanvas");
+
+    canvas.width = 300;
+    canvas.height = 300;
+
+    dibujarRuleta();
+
+    console.log("PASO 6");
+};
+
+window.cerrarRuleta = () => {
     modalRuleta.style.display = "none";
 };
 const opcionesRuleta = ["S/2.00","S/2.50","S/3.00","S/2.00","S/2.50","S/3.00"];
@@ -936,13 +945,18 @@ window.girarRuleta = async () => {
         return;
     }
 
- let puede = await puedeGirarRuleta(celularCliente);
+let estado = await puedeGirarRuleta(celularCliente);
 
-if(!puede){
-    alert("⛔ ESTE CLIENTE PODRÁ GIRAR DESPUÉS DE 60 DÍAS");
+if(!estado.puede){
+
+    alert(
+        "⛔ ESTE CLIENTE PODRÁ GIRAR EN " +
+        estado.diasRestantes +
+        " DÍAS"
+    );
+
     return;
 }
-
     girando = true;
 
     let vueltas = Math.random()*5 + 5;
@@ -1719,15 +1733,40 @@ function generarDashboard(docs){
     let ventasPorDia = {};
     let ventasPorMarca = {};
     let ventasPorPago = {};
+    let totalHoy = 0;
+    let totalMes = 0;
+    let totalBalones = 0;
+    let totalCupones = 0;
+
+   let clientesUnicos = new Set();
+
+let hoy = new Date()
+.toLocaleString("sv-SE",{timeZone:"America/Lima"})
+.slice(0,10);
+
+let mes = hoy.slice(0,7);
 
     docs.forEach(docu=>{
-
-        let v = docu.data();
+ let v = docu.data();
 
         let total = Number(v.total) || 0;
 
         let fecha = (v.fecha || "").slice(0,10);
 
+clientesUnicos.add(v.celular || "");
+
+totalBalones += Number(v.cantidad ?? 0);
+
+if(Number(v.descuento ?? 0) > 0){
+    totalCupones++;
+}
+if(fecha.slice(0,10) === hoy){
+    totalHoy += total;
+}
+
+if(fecha.slice(0,7) === mes){
+    totalMes += total;
+}
         // VENTAS POR DÍA
         ventasPorDia[fecha] =
             (ventasPorDia[fecha] || 0) + total;
@@ -1740,7 +1779,20 @@ function generarDashboard(docs){
         ventasPorPago[v.pago] =
             (ventasPorPago[v.pago] || 0) + total;
     });
+document.getElementById("kpiHoy").innerText =
+    "S/. " + totalHoy.toFixed(2);
 
+document.getElementById("kpiMes").innerText =
+    "S/. " + totalMes.toFixed(2);
+
+document.getElementById("kpiClientes").innerText =
+    clientesUnicos.size;
+
+document.getElementById("kpiBalones").innerText =
+    totalBalones;
+
+document.getElementById("kpiCupones").innerText =
+    totalCupones;
     // DESTRUIR GRÁFICOS ANTERIORES
     if(window.chartDia) window.chartDia.destroy();
     if(window.chartMarca) window.chartMarca.destroy();
@@ -2043,6 +2095,34 @@ margin-bottom:15px;
 ">
 ⬅ VOLVER
 </button>
+<div class="resumen" style="margin-bottom:20px;">
+
+    <div class="box hoy">
+        <h4>💰 HOY</h4>
+        <p id="kpiHoy">S/. 0</p>
+    </div>
+
+    <div class="box mes">
+        <h4>📅 MES</h4>
+        <p id="kpiMes">S/. 0</p>
+    </div>
+
+    <div class="box totalb">
+        <h4>👥 CLIENTES</h4>
+        <p id="kpiClientes">0</p>
+    </div>
+
+    <div class="box hoy">
+        <h4>📦 BALONES</h4>
+        <p id="kpiBalones">0</p>
+    </div>
+
+    <div class="box mes">
+        <h4>🎁 CUPONES</h4>
+        <p id="kpiCupones">0</p>
+    </div>
+
+</div>
 
 <div class="card">
     <canvas id="graficoVentasDia"></canvas>
