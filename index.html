@@ -1745,8 +1745,8 @@ function generarDashboard(
     let totalHoy = 0;
     let totalMes = 0;
     let totalBalones = 0;
-    let totalCupones = 0;
-let totalCuponesEntregados = 0;
+    let total = 0;
+let totalEntregados = 0;
 
    let clientesUnicos = new Set();
 let totalClientesRegistrados =
@@ -1761,7 +1761,7 @@ let mes = hoy.slice(0,7);
     docs.forEach(docu=>{
  let v = docu.data();
 if(v.ruletaID){
-    totalCuponesEntregados++;
+    totalEntregados++;
 }
 
         let total = Number(v.total) || 0;
@@ -1773,7 +1773,7 @@ clientesUnicos.add(v.celular || "");
 totalBalones += Number(v.cantidad ?? 0);
 
 if(Number(v.descuento ?? 0) > 0){
-    totalCupones++;
+    total++;
 }
 if(fecha.slice(0,10) === hoy){
     totalHoy += total;
@@ -1811,11 +1811,11 @@ document.getElementById(
 document.getElementById("kpiBalones").innerText =
     totalBalones;
 
-document.getElementById("kpiCupones").innerText =
-    totalCupones;
+document.getElementById("kpi").innerText =
+    total;
 document.getElementById(
-    "kpiCuponesEntregados"
-).innerText = totalCuponesEntregados;
+    "kpiEntregados"
+).innerText = totalEntregados;
     // DESTRUIR GRÁFICOS ANTERIORES
     if(window.chartDia) window.chartDia.destroy();
     if(window.chartMarca) window.chartMarca.destroy();
@@ -2146,7 +2146,7 @@ margin-bottom:15px;
 </div>
 
     <div class="box hoy">
-        <h4>📦 BALONES VENDIDOS</h4>
+        <h4>📦 BALONES </h4>
         <p id="kpiBalones">0</p>
     </div>
 
@@ -2155,7 +2155,7 @@ margin-bottom:15px;
         <p id="kpiCupones">0</p>
     </div>
 <div class="box hoy">
-    <h4>🎟 CUPONES ENTREGADOS</h4>
+    <h4>🎟  ENTREGADOS</h4>
     <p id="kpiCuponesEntregados">0</p>
 </div>
 
