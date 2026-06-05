@@ -1575,7 +1575,14 @@ async function abrirAdmin(){
     try{
 
         const snap = await getDocs(collection(db,"ventas"));
-	generarDashboard(snap.docs);
+
+const snapClientes =
+    await getDocs(collection(db,"clientes"));
+
+generarDashboard(
+    snap.docs,
+    snapClientes.docs
+);
 	// 🚀 CACHE VENTAS
 	const ventasCache = [];
 
@@ -1728,8 +1735,10 @@ buscarAdmin.oninput=function(){
         card.style.display= ok ? "block":"none";
     });
 };
-function generarDashboard(docs){
-
+function generarDashboard(
+    docs,
+    clientesDocs
+){
     let ventasPorDia = {};
     let ventasPorMarca = {};
     let ventasPorPago = {};
@@ -1737,8 +1746,11 @@ function generarDashboard(docs){
     let totalMes = 0;
     let totalBalones = 0;
     let totalCupones = 0;
+let totalCuponesEntregados = 0;
 
    let clientesUnicos = new Set();
+let totalClientesRegistrados =
+    clientesDocs.length;
 
 let hoy = new Date()
 .toLocaleString("sv-SE",{timeZone:"America/Lima"})
@@ -1748,6 +1760,9 @@ let mes = hoy.slice(0,7);
 
     docs.forEach(docu=>{
  let v = docu.data();
+if(v.ruletaID){
+    totalCuponesEntregados++;
+}
 
         let total = Number(v.total) || 0;
 
@@ -1785,14 +1800,22 @@ document.getElementById("kpiHoy").innerText =
 document.getElementById("kpiMes").innerText =
     "S/. " + totalMes.toFixed(2);
 
-document.getElementById("kpiClientes").innerText =
-    clientesUnicos.size;
+document.getElementById(
+    "kpiClientesCompradores"
+).innerText = clientesUnicos.size;
+
+document.getElementById(
+    "kpiClientesRegistrados"
+).innerText = totalClientesRegistrados;
 
 document.getElementById("kpiBalones").innerText =
     totalBalones;
 
 document.getElementById("kpiCupones").innerText =
     totalCupones;
+document.getElementById(
+    "kpiCuponesEntregados"
+).innerText = totalCuponesEntregados;
     // DESTRUIR GRÁFICOS ANTERIORES
     if(window.chartDia) window.chartDia.destroy();
     if(window.chartMarca) window.chartMarca.destroy();
@@ -1854,12 +1877,17 @@ window.abrirDashboard = async () => {
 
     dashboardPanel.style.display = "block";
 
-    const snap =
+    const snapVentas =
         await getDocs(collection(db,"ventas"));
 
-    generarDashboard(snap.docs);
-};
+    const snapClientes =
+        await getDocs(collection(db,"clientes"));
 
+    generarDashboard(
+        snapVentas.docs,
+        snapClientes.docs
+    );
+};
 window.cerrarDashboard = () => {
 
     dashboardPanel.style.display = "none";
@@ -2108,9 +2136,14 @@ margin-bottom:15px;
     </div>
 
     <div class="box totalb">
-        <h4>👥 CLIENTES</h4>
-        <p id="kpiClientes">0</p>
-    </div>
+    <h4>👤 REGISTRADOS</h4>
+    <p id="kpiClientesRegistrados">0</p>
+</div>
+
+<div class="box totalb">
+    <h4>👥 COMPRADORES</h4>
+    <p id="kpiClientesCompradores">0</p>
+</div>
 
     <div class="box hoy">
         <h4>📦 BALONES</h4>
@@ -2118,9 +2151,13 @@ margin-bottom:15px;
     </div>
 
     <div class="box mes">
-        <h4>🎁 CUPONES</h4>
+        <h4>🎁 CUPONES USADOS</h4>
         <p id="kpiCupones">0</p>
     </div>
+<div class="box hoy">
+    <h4>🎟 ENTREGADOS</h4>
+    <p id="kpiCuponesEntregados">0</p>
+</div>
 
 </div>
 
