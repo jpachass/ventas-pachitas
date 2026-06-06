@@ -91,10 +91,6 @@ button{
 .modal-content{
     position:relative;
     z-index:1000000;
-}
-}
-
-.modal-content{
     background:white;
     padding:20px;
     border-radius:15px;
@@ -639,6 +635,24 @@ if(!estado.puede){
 };
 
 /* MODAL */
+/* ABRIR MODAL */
+window.abrirModal = () => {
+
+    document.getElementById("modal").style.display = "flex";
+
+    // limpiar campos
+    document.getElementById("nNombre").value = "";
+    document.getElementById("nCelular").value = "";
+    document.getElementById("nDireccion").value = "";
+
+    // enfocar nombre
+    document.getElementById("nNombre").focus();
+};
+
+/* CERRAR MODAL */
+window.cerrarModal = () => {
+    document.getElementById("modal").style.display = "none";
+};
 window.cerrarModal=()=>modal.style.display="none";
 
 /* GUARDAR CLIENTE */
