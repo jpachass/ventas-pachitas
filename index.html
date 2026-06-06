@@ -1700,15 +1700,7 @@ S/. ${estadoCupon.pendiente.toFixed(2)}
 </div>`;
         } // 🔥 AQUÍ CIERRA EL FOR
 
-        contenidoAdmin.innerHTML=`
-        <div class="resumen">
-            <div class="box hoy"><h4>HOY</h4><p>S/. ${totalHoy.toFixed(2)}</p></div>
-            <div class="box mes"><h4>MES</h4><p>S/. ${totalMes.toFixed(2)}</p></div>
-            <div class="box totalb"><h4>TOTAL</h4><p>S/. ${totalGeneral.toFixed(2)}</p></div>
-        </div>
-
-        ${html}
-        `;
+contenidoAdmin.innerHTML = html;
 
     }catch(error){
         console.error("🔥 ERROR REAL:", error);
@@ -1744,6 +1736,7 @@ function generarDashboard(
     let ventasPorPago = {};
     let totalHoy = 0;
     let totalMes = 0;
+let totalGeneral = 0;
     let totalBalones = 0;
     let totalCupones = 0;
 let totalCuponesEntregados = 0;
@@ -1765,6 +1758,7 @@ if(v.ruletaID){
 }
 
         let total = Number(v.total) || 0;
+totalGeneral += total;
 
         let fecha = (v.fecha || "").slice(0,10);
 
@@ -1795,10 +1789,20 @@ if(fecha.slice(0,7) === mes){
             (ventasPorPago[v.pago] || 0) + total;
     });
 document.getElementById("kpiHoy").innerText =
-    "S/. " + totalHoy.toFixed(2);
-
+    "S/. " + Number(totalHoy).toLocaleString("en-US",{
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2
+    });
 document.getElementById("kpiMes").innerText =
-    "S/. " + totalMes.toFixed(2);
+       "S/. " + Number(totalMes).toLocaleString("en-US",{
+        minimumFractionDigits:2,
+        maximumFractionDigits:2
+    });
+document.getElementById("kpiTotalGeneral").innerText =
+       "S/. " + Number(totalGeneral).toLocaleString("en-US",{
+        minimumFractionDigits:2,
+        maximumFractionDigits:2
+    });
 
 document.getElementById(
     "kpiClientesCompradores"
@@ -2134,6 +2138,10 @@ margin-bottom:15px;
         <h4>📅 MES</h4>
         <p id="kpiMes">S/. 0</p>
     </div>
+<div class="box totalb">
+    <h4>💰 TOTAL GENERAL</h4>
+    <p id="kpiTotalGeneral">S/. 0</p>
+</div>
 
     <div class="box totalb">
     <h4>👤 REGISTRADOS</h4>
