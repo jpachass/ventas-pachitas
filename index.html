@@ -1772,11 +1772,13 @@ buscarAdmin.oninput=function(){
         card.style.display= ok ? "block":"none";
     });
 };
+window.ventasPorDiaGlobal = {};
 function generarDashboard(
     docs,
     clientesDocs
 ){
     let ventasPorDia = {};
+    window.ventasPorDiaGlobal = ventasPorDia;
     let ventasPorMes = {};
     let ventasPorMarca = {};
     let ventasPorValvula = {};
@@ -1882,28 +1884,10 @@ if(window.chartMarca) window.chartMarca.destroy();
 if(window.chartValvula) window.chartValvula.destroy();
 if(window.chartPago) window.chartPago.destroy();
 
-    // 📈 VENTAS POR DÍA
- const fechasOrdenadas =
-    Object.keys(ventasPorDia)
-    .sort((a,b)=> new Date(a) - new Date(b));
-
-window.chartDia = new Chart(
-    document.getElementById("graficoVentasDia"),
-    {
-        type:"line",
-        data:{
-            labels: fechasOrdenadas,
-            datasets:[{
-                label:"Ventas por Día",
-                data: fechasOrdenadas.map(
-                    f => ventasPorDia[f]
-                ),
-                borderWidth:3,
-                tension:.3
-            }]
-        }
-    }
-);
+// 📈 VENTAS POR DÍA
+setTimeout(() => {
+    actualizarGraficoDias();
+}, 100);
 window.chartMes = new Chart(
     document.getElementById("graficoMeses"),
     {
@@ -1924,27 +1908,35 @@ window.chartMes = new Chart(
             responsive:true,
             plugins:{
                 legend:{
-                    display:true
+                    display:false
                 }
             }
         }
     }
 );
-    // 🏷️ 
-    window.chartMarca = new Chart(
-        document.getElementById("graficoMarcas"),
-        {
-            type:"bar",
-            data:{
-                labels:Object.keys(ventasPorMarca),
-                datasets:[{
-					label:"Ventas por Marca",
-                    data:Object.values(ventasPorMarca),
-                    borderWidth:2
-                }]
+    // 🏷️ VENTAS POR MARCA
+window.chartMarca = new Chart(
+    document.getElementById("graficoMarcas"),
+    {
+        type:"bar",
+        data:{
+            labels:Object.keys(ventasPorMarca),
+            datasets:[{
+                label:"Ventas por Marca",
+                data:Object.values(ventasPorMarca),
+                borderWidth:2
+            }]
+        },
+        options:{
+            responsive:true,
+            plugins:{
+                legend:{
+                    display:false
+                }
             }
         }
-    );
+    }
+);
 window.chartValvula = new Chart(
     document.getElementById("graficoValvulas"),
     {
@@ -1979,7 +1971,72 @@ window.chartValvula = new Chart(
         }
     );
 }
-window.abrirDashboard = async () => {
+window.actualizarGraficoDias = function(){
+
+    const canvas =
+        document.getElementById("graficoVentasDia");
+
+    if(!canvas) return;
+
+    const dias = Number(
+        document.getElementById("filtroGraficoDias")
+        ?.value || 30
+    );
+
+    let fechas = Object.keys(
+        window.ventasPorDiaGlobal || {}
+    ).sort((a,b)=> new Date(a) - new Date(b));
+
+    if(dias !== 9999){
+        fechas = fechas.slice(-dias);
+    }
+
+    // 🔥 Destruir gráfico anterior correctamente
+    if(window.chartDia){
+        window.chartDia.destroy();
+        window.chartDia = null;
+    }
+
+    window.chartDia = new Chart(
+        canvas.getContext("2d"),
+        {
+            type:"line",
+            data:{
+    labels: fechas.map(f => {
+
+    const d = new Date(f + "T00:00:00");
+
+    return d.toLocaleDateString("es-PE",{
+        day:"2-digit",
+        month:"short"
+    });
+
+}),
+    datasets:[{
+                    label:"Ventas por Día",
+                    data: fechas.map(
+                        f => window.ventasPorDiaGlobal[f]
+                    ),
+                    borderWidth:3,
+                    tension:0.3,
+                    fill:false
+                }]
+            },
+            options:{
+                responsive:true,
+                maintainAspectRatio:false, // 🔥 importante
+                animation:false,           // 🔥 evita recreaciones pesadas
+
+                plugins:{
+                    legend:{
+                        display:false
+                    }
+                }
+            }
+        }
+    );
+
+};window.abrirDashboard = async () => {
 
     dashboardPanel.style.display = "block";
 
@@ -2271,9 +2328,33 @@ margin-bottom:15px;
 
 </div>
 
-<!-- 📈 VENTAS POR DÍA -->
 <div class="card">
+
+    <div style="
+        display:flex;
+        justify-content:flex-end;
+        margin-bottom:10px;
+    ">
+        <select id="filtroGraficoDias"
+        onchange="actualizarGraficoDias()"
+        style="
+            padding:8px;
+            border-radius:8px;
+        ">
+            <option value="30">Últimos 30 días</option>
+            <option value="90">Últimos 90 días</option>
+            <option value="180">Últimos 6 meses</option>
+            <option value="9999">Todo</option>
+        </select>
+    </div>
+
+    <div style="
+height:350px;
+position:relative;
+">
     <canvas id="graficoVentasDia"></canvas>
+</div>
+
 </div>
 
 <!-- 📅 VENTAS POR MES -->
