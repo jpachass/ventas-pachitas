@@ -1236,29 +1236,37 @@ async function obtenerPremioDisponible(celular){
 
     const snap = await getDocs(collection(db,"ruleta"));
 
-    let premio = 0;
-    let ultimaFecha = null;
+    let ultimoPremio = null;
 
-    snap.forEach(doc=>{
-        let d = doc.data();
+    snap.forEach(docu=>{
+
+        let d = docu.data();
 
         if(d.celular !== celular) return;
 
-        // 🔥 IGNORAR SI YA FUE USADO
         if(d.usado === true) return;
 
-        let fecha = new Date(d.fecha || "");
+        let fecha = new Date(
+            (d.fecha || "").replace(" ","T")
+        );
 
-        if(!ultimaFecha || fecha > ultimaFecha){
-            ultimaFecha = fecha;
-
-            premio = Number((d.premio || "").replace("S/",""));
+        if(
+            !ultimoPremio ||
+            fecha > ultimoPremio.fecha
+        ){
+            ultimoPremio = d;
         }
     });
 
-    return premio;
-}
-async function obtenerEstadoCuponCliente(celular){
+    if(!ultimoPremio){
+        return 0;
+    }
+
+    return Number(
+        (ultimoPremio.premio || "")
+        .replace("S/","")
+    ) || 0;
+}async function obtenerEstadoCuponCliente(celular){
 
     const snapRuleta = await getDocs(collection(db,"ruleta"));
     const snapVentas = await getDocs(collection(db,"ventas"));
@@ -1397,19 +1405,42 @@ async function marcarPremioUsado(celular){
 
     const snap = await getDocs(collection(db,"ruleta"));
 
-    let hoy = new Date().toLocaleString("sv-SE", { timeZone: "America/Lima" }).slice(0,10);
+    let ultimoPremio = null;
 
-    snap.forEach(async docu=>{
+    snap.forEach(docu=>{
+
         let d = docu.data();
 
+        if(d.celular !== celular) return;
+
+        if(d.usado === true) return;
+
+        let fecha = new Date(
+            (d.fecha || "").replace(" ","T")
+        );
+
         if(
-            d.celular === celular &&
-            (d.fecha || "").slice(0,10) === hoy &&
-            d.usado === false
+            !ultimoPremio ||
+            fecha > ultimoPremio.fecha
         ){
-            await updateDoc(docu.ref, { usado: true }); // 🔥 MARCAR USADO
+            ultimoPremio = {
+                ref: docu.ref,
+                fecha: fecha
+            };
         }
     });
+
+    if(ultimoPremio){
+
+        await updateDoc(
+            ultimoPremio.ref,
+            {
+                usado: true
+            }
+        );
+
+        console.log("✅ Cupón marcado como usado");
+    }
 }
 /* ADMIN */
 async function cargarPanelStock(){
@@ -1746,14 +1777,16 @@ function generarDashboard(
     clientesDocs
 ){
     let ventasPorDia = {};
+    let ventasPorMes = {};
     let ventasPorMarca = {};
+    let ventasPorValvula = {};
     let ventasPorPago = {};
     let totalHoy = 0;
     let totalMes = 0;
-let totalGeneral = 0;
+    let totalGeneral = 0;
     let totalBalones = 0;
     let totalCupones = 0;
-let totalCuponesEntregados = 0;
+    let totalCuponesEntregados = 0;
 
    let clientesUnicos = new Set();
 let totalClientesRegistrados =
@@ -1775,6 +1808,14 @@ if(v.ruletaID){
 totalGeneral += total;
 
         let fecha = (v.fecha || "").slice(0,10);
+let mesVenta = fecha.slice(0,7);
+
+ventasPorMes[mesVenta] =
+    (ventasPorMes[mesVenta] || 0) + total;
+
+ventasPorValvula[v.valvula || "SIN DATO"] =
+    (ventasPorValvula[v.valvula || "SIN DATO"] || 0)
+    + total;
 
 clientesUnicos.add(v.celular || "");
 
@@ -1835,9 +1876,11 @@ document.getElementById(
     "kpiCuponesEntregados"
 ).innerText = totalCuponesEntregados;
     // DESTRUIR GRÁFICOS ANTERIORES
-    if(window.chartDia) window.chartDia.destroy();
-    if(window.chartMarca) window.chartMarca.destroy();
-    if(window.chartPago) window.chartPago.destroy();
+if(window.chartDia) window.chartDia.destroy();
+if(window.chartMes) window.chartMes.destroy();
+if(window.chartMarca) window.chartMarca.destroy();
+if(window.chartValvula) window.chartValvula.destroy();
+if(window.chartPago) window.chartPago.destroy();
 
     // 📈 VENTAS POR DÍA
  const fechasOrdenadas =
@@ -1861,6 +1904,32 @@ window.chartDia = new Chart(
         }
     }
 );
+window.chartMes = new Chart(
+    document.getElementById("graficoMeses"),
+    {
+        type:"line",
+        data:{
+            labels:Object.keys(ventasPorMes).sort(),
+            datasets:[{
+                label:"Ventas por Mes",
+                data:Object.keys(ventasPorMes)
+                    .sort()
+                    .map(m => ventasPorMes[m]),
+                borderWidth:4,
+                tension:0.3,
+                fill:false
+            }]
+        },
+        options:{
+            responsive:true,
+            plugins:{
+                legend:{
+                    display:true
+                }
+            }
+        }
+    }
+);
     // 🏷️ VENTAS POR MARCA
     window.chartMarca = new Chart(
         document.getElementById("graficoMarcas"),
@@ -1876,7 +1945,26 @@ window.chartDia = new Chart(
             }
         }
     );
-
+window.chartValvula = new Chart(
+    document.getElementById("graficoValvulas"),
+    {
+        type:"doughnut",
+        data:{
+            labels:Object.keys(ventasPorValvula),
+            datasets:[{
+                data:Object.values(ventasPorValvula)
+            }]
+        },
+        options:{
+            responsive:true,
+            plugins:{
+                legend:{
+                    position:"bottom"
+                }
+            }
+        }
+    }
+);
     // 💳 MÉTODOS DE PAGO
     window.chartPago = new Chart(
         document.getElementById("graficoPagos"),
@@ -2183,18 +2271,42 @@ margin-bottom:15px;
 
 </div>
 
+<!-- 📈 VENTAS POR DÍA -->
 <div class="card">
     <canvas id="graficoVentasDia"></canvas>
 </div>
 
+<!-- 📅 VENTAS POR MES -->
 <div class="card">
+    <h3 style="text-align:center;color:black;">
+        📅 Ventas por Mes
+    </h3>
+    <canvas id="graficoMeses"></canvas>
+</div>
+
+<!-- 🏷️ VENTAS POR MARCA -->
+<div class="card">
+    <h3 style="text-align:center;color:black;">
+        🏷️ Ventas por Marca
+    </h3>
     <canvas id="graficoMarcas"></canvas>
 </div>
 
+<!-- 🔧 VÁLVULAS -->
 <div class="card">
-    <canvas id="graficoPagos"></canvas>
+    <h3 style="text-align:center;color:black;">
+        🔧 Ventas por Tipo de Válvula
+    </h3>
+    <canvas id="graficoValvulas"></canvas>
 </div>
 
+<!-- 💳 PAGOS -->
+<div class="card">
+    <h3 style="text-align:center;color:black;">
+        💳 Métodos de Pago
+    </h3>
+    <canvas id="graficoPagos"></canvas>
+</div>
 </div>
 </body>
 </html>
