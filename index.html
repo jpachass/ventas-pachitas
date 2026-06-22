@@ -243,19 +243,6 @@ color:black;
 text-align:center;
 font-size:18px;
 ">
-<input
-id="costoUnitario"
-type="number"
-step="0.01"
-placeholder="Costo unitario S/."
-oninput="calcularTotalCompra()">
-
-<input
-id="totalCompra"
-type="number"
-placeholder="Total compra"
-readonly>
-
 📦 STOCK: --
 </div>
 
@@ -813,10 +800,9 @@ if(stockBloqueado <= 0){
 };
 
 // 🔥 SOLO SI GIRÓ RULETA
-if(descuentoActual > 0 && window.ruletaActualId){
+if(descuentoActual > 0){
 
-    datosVenta.ruletaID = window.ruletaActualId;
-
+    datosVenta.ruletaID = crypto.randomUUID();
 }
 
 // 🔥 GUARDAR
@@ -833,52 +819,6 @@ if(stockActual < Number(cantidad.value)){
     return;
 }
 await addDoc(collection(db,"ventas"), datosVenta);
-if(descuentoActual > 0 && window.ruletaActualId){
-
-    await updateDoc(
-        doc(db,"ruleta",window.ruletaActualId),
-        {
-            usado:true,
-            fechaUso:new Date().toLocaleString(
-                "sv-SE",
-                {timeZone:"America/Lima"}
-            )
-        }
-    );
-
-    window.ruletaActualId=null;
-
-}
-// 🔥 SI UTILIZÓ CUPÓN, MARCARLO COMO USADO
-
-if(descuentoActual > 0){
-
-    const q = query(
-        collection(db,"ruleta"),
-        where("celular","==",celular.value),
-        where("usado","==",false)
-    );
-
-    const snapRuleta = await getDocs(q);
-
-    if(!snapRuleta.empty){
-
-        const cuponDoc = snapRuleta.docs[0];
-
-        await updateDoc(
-            doc(db,"ruleta",cuponDoc.id),
-            {
-                usado:true,
-                fechaUso:new Date().toLocaleString(
-                    "sv-SE",
-                    {timeZone:"America/Lima"}
-                )
-            }
-        );
-
-    }
-
-}
 // 🔥 DESCONTAR STOCK
 let idStock =
     marca.value.replace(/\s/g,"_") +
@@ -951,18 +891,7 @@ window.abrirRuleta = () => {
 
     console.log("PASO 6");
 };
-window.calcularTotalCompra = function(){
 
-    let cantidad =
-        Number(document.getElementById("cantidadStock").value) || 0;
-
-    let costo =
-        Number(document.getElementById("costoUnitario").value) || 0;
-
-    document.getElementById("totalCompra").value =
-        (cantidad * costo).toFixed(2);
-
-};
 window.cerrarRuleta = () => {
     modalRuleta.style.display = "none";
 };
@@ -1094,21 +1023,14 @@ async function guardarPremioRuleta(premio){
 
     try{
 
-const nuevoCupon = await addDoc(
-    collection(db,"ruleta"),
-    {
-        nombre:rNombre.value,
-        celular:rCelular.value,
-        descuento:premio,
-        usado:false,
-        fecha:new Date().toLocaleString(
-            "sv-SE",
-            {timeZone:"America/Lima"}
-        )
-    }
-);
-
-window.ruletaActualId = nuevoCupon.id;
+        await addDoc(collection(db,"ruleta"),{
+            nombre: rNombre.value,
+            celular: rCelular.value,
+            premio: premio,
+	    usado: false, // 🔥 NUEVO
+            fecha: new Date().toLocaleString("sv-SE", { timeZone: "America/Lima" }),
+	    fechaISO: new Date().toISOString()
+        });
 
         console.log("✅ Premio guardado");
 
@@ -1523,146 +1445,118 @@ async function marcarPremioUsado(celular){
 /* ADMIN */
 async function cargarPanelStock(){
 
-    const contenedor = document.getElementById("contenidoStock");
+    const contenedor =
+        document.getElementById("contenidoStock");
 
     if(!contenedor){
+
         console.error("❌ No existe contenidoStock");
+
         return;
     }
 
-    contenedor.innerHTML = "CARGANDO STOCK...";
+    contenedor.innerHTML =
+        "CARGANDO STOCK...";
 
     try{
 
-        const snap = await getDocs(collection(db,"stock"));
+        const snap =
+            await getDocs(collection(db,"stock"));
 
         let html = "";
 
         snap.forEach(docu=>{
 
-            const d = docu.data();
+            let d = docu.data();
 
-            const stock = Number(d.stock || 0);
+            let stock =
+                Number(d.stock || 0);
 
-            let color = "#2ecc71";
-            let alerta = "✅ STOCK NORMAL";
+           let color = "#2ecc71";
+let alerta = "✅ STOCK NORMAL";
 
-            if(stock <= 10){
-                color = "#f1c40f";
-                alerta = "⚠️ STOCK BAJO";
-            }
+if(stock <= 10){
 
-            if(stock <= 5){
-                color = "#e74c3c";
-                alerta = "🚨 STOCK CRÍTICO";
-            }
+    color = "#f1c40f";
+    alerta = "⚠️ STOCK BAJO";
+}
 
-            if(stock <= 0){
-                color = "#ff0000";
-                alerta = "❌ SIN STOCK";
-            }
+if(stock <= 5){
+
+    color = "#e74c3c";
+    alerta = "🚨 STOCK CRÍTICO";
+}
+
+if(stock <= 0){
+
+    color = "#ff0000";
+    alerta = "❌ SIN STOCK";
+}
 
             html += `
-
             <div style="
                 background:#222;
-                margin-top:15px;
-                padding:18px;
+                margin-top:12px;
+                padding:15px;
                 border-radius:15px;
             ">
 
                 <div style="
-                    font-size:24px;
-                    color:white;
+                    font-size:20px;
                     font-weight:bold;
+                    color:white;
                 ">
                     ${d.marca} - ${d.valvula}
                 </div>
 
-                <div style="
-                    margin-top:10px;
-                    color:${color};
-                    font-size:28px;
-                    font-weight:bold;
-                ">
-                    📦 ${stock}
-                </div>
+               <div style="
+    margin-top:8px;
+    color:${color};
+    font-size:24px;
+    font-weight:bold;
+">
+    📦 ${stock}
+</div>
 
-                <div style="
-                    margin-top:5px;
-                    color:${color};
-                    font-size:16px;
-                    font-weight:bold;
-                ">
-                    ${alerta}
-                </div>
-
+<div style="
+    margin-top:5px;
+    color:${color};
+    font-weight:bold;
+    font-size:15px;
+">
+    ${alerta}
+</div>
                 <div style="
                     display:flex;
                     gap:10px;
-                    flex-wrap:wrap;
-                    align-items:center;
-                    margin-top:18px;
+                    margin-top:12px;
                 ">
 
                     <input
                         type="number"
                         id="add_${docu.id}"
-                        placeholder="Cantidad"
-                        oninput="calcularCompraStock('${docu.id}')"
+                        placeholder="0"
                         style="
-                            width:120px;
+                            width:110px;
                             height:55px;
-                            border:none;
                             border-radius:12px;
-                            text-align:center;
-                            font-size:18px;
-                            font-weight:bold;
-                        "
-                    >
-
-                    <input
-                        type="number"
-                        step="0.01"
-                        id="costo_${docu.id}"
-                        placeholder="Costo S/."
-                        oninput="calcularCompraStock('${docu.id}')"
-                        style="
-                            width:140px;
-                            height:55px;
                             border:none;
-                            border-radius:12px;
                             text-align:center;
-                            font-size:18px;
+                            font-size:24px;
                             font-weight:bold;
+                            flex:none;
                         "
                     >
-
-                    <div
-                        id="total_${docu.id}"
-                        style="
-                            min-width:180px;
-                            color:#2ecc71;
-                            font-size:20px;
-                            font-weight:bold;
-                        "
-                    >
-                        💰 Total: S/. 0.00
-                    </div>
 
                     <button
                         onclick="agregarStock('${docu.id}')"
                         style="
                             flex:1;
-                            min-width:220px;
-                            height:56px;
                             background:#27ae60;
                             color:white;
                             border:none;
                             border-radius:12px;
-                            font-size:22px;
-                            font-weight:bold;
-                            cursor:pointer;
+                            font-size:18px;
                         "
                     >
                         ➕ AGREGAR
@@ -1671,9 +1565,7 @@ async function cargarPanelStock(){
                 </div>
 
             </div>
-
             `;
-
         });
 
         contenedor.innerHTML = html;
@@ -1682,55 +1574,20 @@ async function cargarPanelStock(){
 
         console.error(error);
 
-        contenedor.innerHTML = "❌ ERROR CARGANDO STOCK";
-
+        contenedor.innerHTML =
+            "❌ ERROR CARGANDO STOCK";
     }
-
-}
-window.calcularCompraStock = function(id){
-
-    const cantidad =
-        Number(document.getElementById("add_" + id).value) || 0;
-
-    const costo =
-        Number(document.getElementById("costo_" + id).value) || 0;
-
-    const total = cantidad * costo;
-
-    document.getElementById("total_" + id).innerHTML =
-        "💰 Total: S/. " + total.toFixed(2);
-
-}
-window.calcularCompraStock=function(id){
-
-    let cantidad=
-        Number(document.getElementById("add_"+id).value)||0;
-
-    let costo=
-        Number(document.getElementById("costo_"+id).value)||0;
-
-    document.getElementById("total_"+id).innerHTML=
-        "💰 Total: S/. "+
-        (cantidad*costo).toFixed(2);
-
 }
 window.agregarStock = async function(id){
 
-    let cantidad =
-        Number(document.getElementById("add_" + id).value);
+    let input = document.getElementById("add_" + id);
 
-    let costo =
-        Number(document.getElementById("costo_" + id).value);
+    let cantidad = Number(input.value);
 
     if(!cantidad || cantidad <= 0){
 
-        alert("Ingrese una cantidad válida");
-        return;
-    }
+        alert("Cantidad inválida");
 
-    if(!costo || costo <= 0){
-
-        alert("Ingrese un costo válido");
         return;
     }
 
@@ -1743,21 +1600,7 @@ window.agregarStock = async function(id){
             }
         );
 
-        await addDoc(
-            collection(db,"comprasStock"),
-            {
-                stockId:id,
-                cantidad:cantidad,
-                costoUnitario:costo,
-                total:cantidad*costo,
-                fecha:new Date().toLocaleString(
-                    "sv-SE",
-                    {timeZone:"America/Lima"}
-                )
-            }
-        );
-
-        alert("✅ Compra registrada");
+        alert("✅ STOCK ACTUALIZADO");
 
         cargarPanelStock();
 
@@ -1765,25 +1608,8 @@ window.agregarStock = async function(id){
 
         console.error(error);
 
-        alert("❌ Error registrando compra");
+        alert("❌ ERROR ACTUALIZANDO STOCK");
     }
-
-}
-window.calcularCompraStock = function(id){
-
-    let cantidad =
-        Number(document.getElementById("add_" + id).value) || 0;
-
-    let costo =
-        Number(document.getElementById("costo_" + id).value) || 0;
-
-    let total = cantidad * costo;
-
-    document.getElementById(
-        "total_" + id
-    ).innerHTML =
-        "💰 Total: S/. " + total.toFixed(2);
-
 }
 async function abrirAdmin(){
 
