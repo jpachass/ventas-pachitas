@@ -246,8 +246,23 @@ font-size:18px;
 📦 STOCK: --
 </div>
 
-<input id="cantidad" placeholder="CANTIDAD">
-<input id="precio" placeholder="PRECIO">
+<input
+    id="cantidad"
+    type="number"
+    min="1"
+    step="1"
+    inputmode="numeric"
+    placeholder="CANTIDAD"
+>
+
+<input
+    id="precio"
+    type="number"
+    min="0"
+    step="0.01"
+    inputmode="decimal"
+    placeholder="PRECIO S/."
+>
 
 <select id="pago">
 <option value="">PAGO</option>
@@ -420,8 +435,42 @@ async function cargarClientes(){
     });
 }
 await cargarClientes();
-cantidad.oninput = calcularTotal;
-precio.oninput = calcularTotal;
+const cantidad = document.getElementById("cantidad");
+const precio = document.getElementById("precio");
+cantidad.oninput = () => {
+
+    cantidad.value =
+        cantidad.value.replace(/\D/g,'');
+
+    calcularTotal();
+
+};
+
+precio.oninput = () => {
+
+    let valor = precio.value;
+
+    valor = valor.replace(
+        /[^0-9.]/g,
+        ''
+    );
+
+    let partes = valor.split('.');
+
+    if(partes.length > 2){
+
+        valor =
+            partes[0] +
+            "." +
+            partes.slice(1).join('');
+
+    }
+
+    precio.value = valor;
+
+    calcularTotal();
+
+};
 marca.onchange = actualizarStockVisual;
 valvula.onchange = actualizarStockVisual;
 
@@ -748,20 +797,32 @@ if(stockBloqueado <= 0){
         return;
     }
 
-    if(Number(cantidad.value) <= 0){
-        alert("Cantidad inválida");
-        return;
-    }
+if(
+    !Number.isInteger(
+        Number(cantidad.value)
+    ) ||
+    Number(cantidad.value) <= 0
+){
+    alert(
+        "Ingrese una cantidad válida"
+    );
+    return;
+}
 
     if(!precio.value){
         alert("Ingrese precio");
         return;
     }
 
-    if(Number(precio.value) <= 0){
-        alert("Precio inválido");
-        return;
-    }
+    if(
+    isNaN(Number(precio.value)) ||
+    Number(precio.value) <= 0
+){
+    alert(
+        "Ingrese un precio válido"
+    );
+    return;
+}
 
     if(!pago.value) return alert("Seleccione método de pago");
     if(!delivery.value) return alert("Seleccione delivery");
@@ -838,7 +899,7 @@ await updateDoc(
 actualizarStockVisual();
 
 await marcarPremioUsado(celular.value);
-alert("✅ VENTA GRABADO EXITOSAMENTE");
+alert("VENTA GRABADO EXITOSAMENTE");
 
     // 🔥 LIMPIAR CAMPOS
     document.querySelectorAll("input").forEach(i=>i.value="");
