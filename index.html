@@ -163,6 +163,434 @@ button{
     background:white;
     border-radius:50%;
 }
+
+.cardInventario{
+
+    background:#ffffff;
+
+    border-radius:16px;
+
+    padding:18px;
+
+    margin:18px 0;
+
+    box-shadow:0 6px 18px rgba(0,0,0,.12);
+
+}
+
+.tituloInventario{
+
+    display:flex;
+
+    justify-content:space-between;
+
+    align-items:center;
+
+    font-size:22px;
+
+    font-weight:bold;
+
+    color:#ff6f00;
+
+    margin-bottom:18px;
+
+}
+
+.filaInv{
+
+    display:flex;
+
+    justify-content:space-between;
+
+    margin:10px 0;
+
+    font-size:18px;
+
+}
+
+.accionesInv{
+
+    display:flex;
+
+    gap:12px;
+
+    margin-top:20px;
+
+}
+
+.accionesInv button{
+
+    flex:1;
+
+    height:46px;
+
+    border:none;
+
+    border-radius:10px;
+
+    cursor:pointer;
+
+    font-size:16px;
+
+    font-weight:bold;
+
+}
+/*==========================
+    INVENTARIO v2.0
+===========================*/
+
+#contenidoStock{
+
+    display:grid;
+
+    grid-template-columns:1fr;
+
+    gap:18px;
+
+    margin-top:20px;
+
+}
+
+.cardStock{
+
+    background:#fff;
+
+    border-radius:18px;
+
+    padding:18px;
+
+    box-shadow:0 6px 18px rgba(0,0,0,.10);
+
+    display:flex;
+
+    flex-direction:column;
+
+    gap:14px;
+
+    transition:.25s;
+
+    border:1px solid #eee;
+
+}
+.stockHeader{
+
+    display:flex;
+
+    justify-content:space-between;
+
+    align-items:center;
+
+}
+
+.stockMarca{
+
+    font-size:28px;
+
+    color:#ff6b00;
+
+    font-weight:bold;
+
+}
+
+.stockValvula{
+
+    background:#ff6b00;
+
+    color:#fff;
+
+    padding:6px 14px;
+
+    border-radius:30px;
+
+    font-size:14px;
+
+    font-weight:bold;
+
+}
+
+.stockCantidad{
+
+    text-align:center;
+
+}
+
+.stockNumero{
+
+    font-size:60px;
+
+    color:#2ecc71;
+
+    font-weight:bold;
+
+    line-height:1;
+
+}
+
+.stockTexto{
+
+    color:#777;
+
+    font-size:14px;
+
+    text-transform:uppercase;
+
+    letter-spacing:1px;
+
+}
+
+.stockGrid{
+
+    display:grid;
+
+    grid-template-columns:1fr 1fr;
+
+    gap:10px;
+
+}
+
+.stockInfo{
+
+    background:#fafafa;
+
+    border-radius:12px;
+
+    padding:10px;
+
+}
+
+.stockInfoTitulo{
+
+    font-size:12px;
+
+    color:#777;
+
+}
+
+.stockInfoValor{
+
+    margin-top:5px;
+
+    font-size:24px;
+
+    font-weight:bold;
+
+    color:#222;
+
+}
+
+.stockEstado{
+
+    text-align:center;
+
+    padding:8px;
+
+    border-radius:25px;
+
+    font-weight:bold;
+
+    color:white;
+
+}
+
+.estadoNormal{
+
+    background:#2ecc71;
+
+}
+
+.estadoBajo{
+
+    background:#f39c12;
+
+}
+
+.estadoCritico{
+
+    background:#e74c3c;
+
+}
+
+.stockBotones{
+
+    display:grid;
+
+    grid-template-columns:1fr 1fr;
+
+    gap:10px;
+
+}
+.cardStock:hover{
+
+    transform:translateY(-3px);
+
+    box-shadow:0 12px 24px rgba(0,0,0,.15);
+
+}
+.tituloInventario{
+
+    display:flex;
+
+    justify-content:space-between;
+
+    align-items:center;
+
+    margin-bottom:18px;
+
+}
+
+.nombreMarca{
+
+    font-size:24px;
+
+    font-weight:bold;
+
+    color:#ff6f00;
+
+}
+
+.tipoValvula{
+
+    background:#ff6f00;
+
+    color:white;
+
+    padding:6px 14px;
+
+    border-radius:30px;
+
+    font-size:14px;
+
+    font-weight:bold;
+
+}
+
+.stockGrande{
+
+    text-align:center;
+
+    margin:15px 0;
+
+}
+
+.stockNumero{
+
+    font-size:42px;
+
+    font-weight:bold;
+
+    color:#2ecc71;
+
+}
+
+.stockTexto{
+
+    font-size:15px;
+
+    color:#777;
+
+}
+
+.infoInventario{
+
+    display:grid;
+
+    grid-template-columns:1fr 1fr;
+
+    gap:14px;
+
+    margin-top:15px;
+
+}
+
+.itemInfo{
+
+    background:#f8f8f8;
+
+    border-radius:12px;
+
+    padding:12px;
+
+}
+
+.itemTitulo{
+
+    font-size:13px;
+
+    color:#888;
+
+    margin-bottom:6px;
+
+}
+
+.itemValor{
+
+    font-size:18px;
+
+    font-weight:bold;
+
+    color:#222;
+
+}
+
+.accionesInventario{
+
+    display:flex;
+
+    gap:10px;
+
+    margin-top:18px;
+
+}
+
+.btnHistorial{
+
+    flex:1;
+
+    border:none;
+
+    background:#3498db;
+
+    color:white;
+
+    height:44px;
+
+    border-radius:10px;
+
+    font-weight:bold;
+
+    cursor:pointer;
+
+}
+
+.btnAgregar{
+
+    flex:1;
+
+    border:none;
+
+    background:#27ae60;
+
+    color:white;
+
+    height:44px;
+
+    border-radius:10px;
+
+    font-weight:bold;
+
+    cursor:pointer;
+
+}
+
+@media(min-width:900px){
+
+#contenidoStock{
+
+grid-template-columns:
+repeat(auto-fit,minmax(360px,1fr));
+
+}
+}
 </style>
 </head>
 
@@ -246,23 +674,8 @@ font-size:18px;
 📦 STOCK: --
 </div>
 
-<input
-    id="cantidad"
-    type="number"
-    min="1"
-    step="1"
-    inputmode="numeric"
-    placeholder="CANTIDAD"
->
-
-<input
-    id="precio"
-    type="number"
-    min="0"
-    step="0.01"
-    inputmode="decimal"
-    placeholder="PRECIO S/."
->
+<input id="cantidad" placeholder="CANTIDAD">
+<input id="precio" placeholder="PRECIO">
 
 <select id="pago">
 <option value="">PAGO</option>
@@ -294,9 +707,100 @@ onclick="guardarVenta()">
 <div class="card" id="panelStock" style="display:none;">
 
 <h2 style="text-align:center;color:#2ecc71;">
-📦 STOCK ACTUAL
+📦 INGRESO DE STOCK
 </h2>
 
+<input
+id="proveedorStock"
+placeholder="PROVEEDOR">
+
+<select id="marcaStock">
+    <option value="">MARCA</option>
+    <option>SOL GAS</option>
+    <option>Z GAS</option>
+    <option>MAS GAS</option>
+</select>
+
+<select id="valvulaStock">
+    <option value="">VÁLVULA</option>
+    <option>NORMAL</option>
+    <option>PREMIUM</option>
+</select>
+
+<input
+id="cantidadStock"
+type="number"
+placeholder="CANTIDAD">
+
+<input
+id="costoUnitarioStock"
+type="number"
+step="0.01"
+placeholder="COSTO UNITARIO S/.">
+
+<div
+id="totalCompraStock"
+style="
+margin:15px 0;
+font-size:24px;
+font-weight:bold;
+color:#27ae60;
+text-align:center;
+">
+S/. 0.00
+</div>
+
+<input
+id="observacionStock"
+placeholder="OBSERVACIÓN (OPCIONAL)">
+
+<button
+class="btn-main"
+onclick="registrarCompraStock()">
+💾 REGISTRAR COMPRA
+</button>
+
+<hr style="
+margin:30px 0;
+border:1px solid #ddd;
+">
+
+<h2 style="text-align:center;color:#2ecc71;">
+</h2>
+<div id="resumenInventario">
+
+    <div class="cardInventario">
+
+        <div style="text-align:center;">
+
+            <div style="
+                font-size:28px;
+                font-weight:bold;
+                color:#27ae60;
+            ">
+
+                📦 INVENTARIO GENERAL
+
+            </div>
+
+            <div
+                id="resumenGeneral"
+                style="
+                    margin-top:12px;
+                    font-size:20px;
+                ">
+
+                Calculando...
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+<div id="contenidoStock"></div>
 <div id="contenidoStock"></div>
 
 </div>
@@ -421,6 +925,31 @@ window.mostrarVentas = () => {
 
     panelStock.style.display = "none";
 };
+window.mostrarVentas = () => {
+
+    panelVentas.style.display = "block";
+
+    panelStock.style.display = "none";
+
+};
+
+//==================================================
+// FUNCIONES TEMPORALES DEL INVENTARIO
+//==================================================
+
+window.verHistorialStock = function(stockId){
+
+    alert("Historial del producto: " + stockId);
+
+};
+
+window.abrirIngresoRapido = function(stockId){
+
+    alert("Ingreso rápido para: " + stockId);
+
+};
+
+//==================================================
 
 async function cargarClientes(){
     const snap = await getDocs(collection(db,"clientes"));
@@ -435,42 +964,8 @@ async function cargarClientes(){
     });
 }
 await cargarClientes();
-const cantidad = document.getElementById("cantidad");
-const precio = document.getElementById("precio");
-cantidad.oninput = () => {
-
-    cantidad.value =
-        cantidad.value.replace(/\D/g,'');
-
-    calcularTotal();
-
-};
-
-precio.oninput = () => {
-
-    let valor = precio.value;
-
-    valor = valor.replace(
-        /[^0-9.]/g,
-        ''
-    );
-
-    let partes = valor.split('.');
-
-    if(partes.length > 2){
-
-        valor =
-            partes[0] +
-            "." +
-            partes.slice(1).join('');
-
-    }
-
-    precio.value = valor;
-
-    calcularTotal();
-
-};
+cantidad.oninput = calcularTotal;
+precio.oninput = calcularTotal;
 marca.onchange = actualizarStockVisual;
 valvula.onchange = actualizarStockVisual;
 
@@ -563,6 +1058,7 @@ async function cargarHistorialCliente(celularCliente){
         document.getElementById("historialCliente");
 
     historial.style.display = "none";
+    historial.innerHTML = "";
 
     const snap =
         await getDocs(collection(db,"ventas"));
@@ -571,52 +1067,115 @@ async function cargarHistorialCliente(celularCliente){
 
     snap.forEach(docu=>{
 
-        let v = docu.data();
+        const v = docu.data();
 
         if(v.celular !== celularCliente)
             return;
 
         if(
             !ultimaVenta ||
-            v.fecha > ultimaVenta.fecha
+            (v.fecha || "") > (ultimaVenta.fecha || "")
         ){
             ultimaVenta = v;
         }
+
     });
 
-    if(!ultimaVenta) return;
+    if(!ultimaVenta){
+        return;
+    }
+
+    // ========= AUTOCOMPLETAR =========
+
+    marca.value =
+        ultimaVenta.marca || "";
+
+    valvula.value =
+        ultimaVenta.valvula || "";
+
+    await actualizarStockVisual();
+
+    calcularTotal();
+
+    // ========= FORMATO FECHA =========
+
+    let fechaBonita = "";
+
+    try{
+
+        const fecha =
+            new Date(
+                ultimaVenta.fecha.replace(" ","T")
+            );
+
+        fechaBonita =
+            fecha.toLocaleDateString(
+                "es-PE",
+                {
+                    weekday:"long",
+                    day:"numeric",
+                    month:"long"
+                }
+            ) +
+            " • " +
+            fecha.toLocaleTimeString(
+                "es-PE",
+                {
+                    hour:"2-digit",
+                    minute:"2-digit",
+                    second:"2-digit"
+                }
+            );
+
+    }catch{
+
+        fechaBonita = ultimaVenta.fecha;
+
+    }
 
     historial.innerHTML = `
-        <div style="font-weight:bold;color:#3498db;">
+
+        <div style="
+            font-size:18px;
+            font-weight:bold;
+            color:#3498db;
+            margin-bottom:10px;
+        ">
             📋 ÚLTIMA COMPRA
         </div>
 
-        <div>
-            📅 ${ultimaVenta.fecha}
+        <div style="margin:5px 0;">
+            📅 ${fechaBonita}
         </div>
 
-        <div>
+        <div style="margin:5px 0;">
             🏷️ ${ultimaVenta.marca}
         </div>
 
-        <div>
+        <div style="margin:5px 0;">
             🔧 ${ultimaVenta.valvula}
         </div>
 
-        <div>
-            📦 Cantidad: ${ultimaVenta.cantidad}
+        <div style="margin:5px 0;">
+            📦 Cantidad:
+            ${ultimaVenta.cantidad}
         </div>
 
-        <div>
-            💰 Total: S/. ${Number(
-                ultimaVenta.total
-            ).toFixed(2)}
+        <div style="
+            margin-top:8px;
+            font-size:18px;
+            color:#27ae60;
+            font-weight:bold;
+        ">
+            💰 Total:
+            S/. ${Number(ultimaVenta.total).toFixed(2)}
         </div>
+
     `;
 
     historial.style.display = "block";
-}
 
+}
 /* BUSCADOR CLIENTE */
 buscarCliente.oninput=function(){
     this.value=this.value.toUpperCase().replace(/[^A-Z0-9\s]/g,'');
@@ -640,9 +1199,21 @@ buscarCliente.oninput=function(){
     nombre.value=c.nombre;
     celular.value=c.celular;
     direccion.value=c.direccion;
+    const ultimaVenta =
     await cargarHistorialCliente(
-    c.celular
-);
+        c.celular
+    );
+if(ultimaVenta){
+
+    marca.value =
+        ultimaVenta.marca || "";
+
+    valvula.value =
+        ultimaVenta.valvula || "";
+
+    await actualizarStockVisual();
+
+}
 	// 🔥 AQUÍ VA
    	await actualizarEstadoRuleta(c.celular);
 
@@ -667,16 +1238,19 @@ if(!estado.puede){
     btnRuleta.innerText = "🎡 RULETA PROMO";
 }
     // 🔥 BUSCAR DESCUENTO
-    descuentoActual = await obtenerPremioDisponible(c.celular) || 0;
+    const cupon = await obtenerCuponActivo(c.celular);
+
+descuentoActual = cupon ? cupon.descuento : 0;
 
     if(descuentoActual > 0){
-        alert("🎁 ESTE CLIENTE TIENE UN DESCUENTO DE S/ " + descuentoActual + ".0");
+        alert(
+    "🎁 ESTE CLIENTE TIENE UN DESCUENTO DE S/. "
+    + descuentoActual.toFixed(2)
+);
     }
     calcularTotal();
     buscarCliente.value="";
     lista.style.display="none";
-
-    calcularTotal(); 
 
 };
         lista.appendChild(div);
@@ -797,32 +1371,20 @@ if(stockBloqueado <= 0){
         return;
     }
 
-if(
-    !Number.isInteger(
-        Number(cantidad.value)
-    ) ||
-    Number(cantidad.value) <= 0
-){
-    alert(
-        "Ingrese una cantidad válida"
-    );
-    return;
-}
+    if(Number(cantidad.value) <= 0){
+        alert("Cantidad inválida");
+        return;
+    }
 
     if(!precio.value){
         alert("Ingrese precio");
         return;
     }
 
-    if(
-    isNaN(Number(precio.value)) ||
-    Number(precio.value) <= 0
-){
-    alert(
-        "Ingrese un precio válido"
-    );
-    return;
-}
+    if(Number(precio.value) <= 0){
+        alert("Precio inválido");
+        return;
+    }
 
     if(!pago.value) return alert("Seleccione método de pago");
     if(!delivery.value) return alert("Seleccione delivery");
@@ -861,9 +1423,10 @@ if(
 };
 
 // 🔥 SOLO SI GIRÓ RULETA
-if(descuentoActual > 0){
+if(descuentoActual > 0 && window.ruletaActualId){
 
-    datosVenta.ruletaID = crypto.randomUUID();
+    datosVenta.ruletaID = window.ruletaActualId;
+
 }
 
 // 🔥 GUARDAR
@@ -880,6 +1443,52 @@ if(stockActual < Number(cantidad.value)){
     return;
 }
 await addDoc(collection(db,"ventas"), datosVenta);
+if(descuentoActual > 0 && window.ruletaActualId){
+
+    await updateDoc(
+        doc(db,"ruleta",window.ruletaActualId),
+        {
+            usado:true,
+            fechaUso:new Date().toLocaleString(
+                "sv-SE",
+                {timeZone:"America/Lima"}
+            )
+        }
+    );
+
+    window.ruletaActualId=null;
+
+}
+// 🔥 SI UTILIZÓ CUPÓN, MARCARLO COMO USADO
+
+if(descuentoActual > 0){
+
+    const q = query(
+        collection(db,"ruleta"),
+        where("celular","==",celular.value),
+        where("usado","==",false)
+    );
+
+    const snapRuleta = await getDocs(q);
+
+    if(!snapRuleta.empty){
+
+        const cuponDoc = snapRuleta.docs[0];
+
+        await updateDoc(
+            doc(db,"ruleta",cuponDoc.id),
+            {
+                usado:true,
+                fechaUso:new Date().toLocaleString(
+                    "sv-SE",
+                    {timeZone:"America/Lima"}
+                )
+            }
+        );
+
+    }
+
+}
 // 🔥 DESCONTAR STOCK
 let idStock =
     marca.value.replace(/\s/g,"_") +
@@ -897,9 +1506,7 @@ await updateDoc(
 
 // 🔥 REFRESCAR STOCK
 actualizarStockVisual();
-
-await marcarPremioUsado(celular.value);
-alert("✅VENTA GRABADO EXITOSAMENTE");
+alert("VENTA GRABADO EXITOSAMENTE");
 
     // 🔥 LIMPIAR CAMPOS
     document.querySelectorAll("input").forEach(i=>i.value="");
@@ -952,7 +1559,6 @@ window.abrirRuleta = () => {
 
     console.log("PASO 6");
 };
-
 window.cerrarRuleta = () => {
     modalRuleta.style.display = "none";
 };
@@ -1084,14 +1690,21 @@ async function guardarPremioRuleta(premio){
 
     try{
 
-        await addDoc(collection(db,"ruleta"),{
-            nombre: rNombre.value,
-            celular: rCelular.value,
-            premio: premio,
-	    usado: false, // 🔥 NUEVO
-            fecha: new Date().toLocaleString("sv-SE", { timeZone: "America/Lima" }),
-	    fechaISO: new Date().toISOString()
-        });
+const nuevoCupon = await addDoc(
+    collection(db,"ruleta"),
+    {
+        nombre:rNombre.value,
+        celular:rCelular.value,
+        descuento:premio,
+        usado:false,
+        fecha:new Date().toLocaleString(
+            "sv-SE",
+            {timeZone:"America/Lima"}
+        )
+    }
+);
+
+window.ruletaActualId = nuevoCupon.id;
 
         console.log("✅ Premio guardado");
 
@@ -1293,147 +1906,95 @@ if(!estado.puede){
     estadoRuleta.style.color = "#999";
 }
 }
-async function obtenerPremioDisponible(celular){
+async function obtenerCuponActivo(celular){
 
-    const snap = await getDocs(collection(db,"ruleta"));
+    if(!celular){
+        return null;
+    }
 
-    let ultimoPremio = null;
+    const snap = await getDocs(
+        collection(db,"ruleta")
+    );
+
+    let cupon = null;
 
     snap.forEach(docu=>{
 
-        let d = docu.data();
+        const d = docu.data();
 
-        if(d.celular !== celular) return;
+        // Solo del cliente
+        if(d.celular !== celular){
+            return;
+        }
 
-        if(d.usado === true) return;
+        // Ignorar cupones usados
+        if(d.usado === true){
+            return;
+        }
 
-        let fecha = new Date(
+        // Fecha segura
+        const fecha = new Date(
             (d.fecha || "").replace(" ","T")
         );
 
+        // Guardar el cupón más reciente
         if(
-            !ultimoPremio ||
-            fecha > ultimoPremio.fecha
+            !cupon ||
+            fecha > cupon.fecha
         ){
-            ultimoPremio = d;
+
+            cupon = {
+
+                id: docu.id,
+
+                descuento: Number(
+                    String(d.descuento || "0")
+                        .replace("S/","")
+                        .trim()
+                ) || 0,
+
+                fecha: fecha,
+
+                nombre: d.nombre || "",
+
+                celular: d.celular || ""
+
+            };
+
         }
+
     });
 
-    if(!ultimoPremio){
-        return 0;
-    }
+    return cupon;
 
-    return Number(
-        (ultimoPremio.premio || "")
-        .replace("S/","")
-    ) || 0;
-}async function obtenerEstadoCuponCliente(celular){
-
-    const snapRuleta = await getDocs(collection(db,"ruleta"));
-    const snapVentas = await getDocs(collection(db,"ventas"));
-
-    let premios = [];
-
-    // 🔥 1. OBTENER TODOS LOS PREMIOS DEL CLIENTE
-    snapRuleta.forEach(doc=>{
-        let d = doc.data();
-
-        if(d.celular === celular){
-            premios.push({
-                monto: Number((d.premio || "").replace("S/","")) || 0,
-                fecha: d.fecha || ""
-            });
-        }
-    });
-
-    if(premios.length === 0){
-        return { pendiente: null, usado: null };
-    }
-
-    // 🔥 2. ORDENAR POR FECHA (ÚLTIMO PRIMERO)
-    premios.sort((a,b)=> b.fecha.localeCompare(a.fecha));
-
-    let ultimoPremio = premios[0];
-
-    let usado = false;
-
-    // 🔥 3. VALIDAR SI ESE PREMIO YA FUE USADO EN UNA VENTA POSTERIOR
-    snapVentas.forEach(doc=>{
-        let v = doc.data();
-
-        if(v.celular !== celular) return;
-
-        if(
-            Number(v.descuento) === ultimoPremio.monto &&
-            v.fecha >= ultimoPremio.fecha
-        ){
-            usado = true;
-        }
-    });
-
-    return {
-        pendiente: usado ? null : ultimoPremio.monto,
-        usado: usado ? ultimoPremio.monto : null
-    };
 }
-function obtenerEstadoCuponClienteFAST(
-    celular,
-    ruletasCache,
-    ventasCache
-){
+async function consumirCupon(celular){
 
-    let ultimoPremio = 0;
-    let fechaUltimo = null;
+    const cupon = await obtenerCuponActivo(celular);
 
-    // 🔥 BUSCAR ÚLTIMA RULETA
-    ruletasCache.forEach(r=>{
+    if(!cupon) return false;
 
-        if(r.celular !== celular) return;
+    await updateDoc(
 
-        let fecha = new Date(r.fecha || 0);
+        doc(db,"ruleta",cupon.id),
 
-        if(!fechaUltimo || fecha > fechaUltimo){
+        {
 
-            fechaUltimo = fecha;
+            usado:true,
 
-            ultimoPremio =
-                Number((r.premio || "")
-                .replace("S/","")) || 0;
+            fechaUso:new Date().toLocaleString(
+                "sv-SE",
+                {
+                    timeZone:"America/Lima"
+                }
+            )
+
         }
-    });
 
-    // ❌ NO TIENE CUPÓN
-    if(!ultimoPremio){
+    );
 
-        return {
-            pendiente: null,
-            usado: null
-        };
-    }
+    return true;
 
-    let usado = false;
-
-    // 🔥 BUSCAR SI YA LO USÓ
-    ventasCache.forEach(v=>{
-
-        if(v.celular !== celular) return;
-
-        if(Number(v.descuento) === ultimoPremio){
-
-            usado = true;
-        }
-    });
-
-    return {
-
-        pendiente: usado
-            ? null
-            : ultimoPremio,
-
-        usado: usado
-            ? ultimoPremio
-            : null
-    };
 }
 async function verificarRuletaEnVenta(celular, fechaVenta){
 
@@ -1462,171 +2023,274 @@ async function verificarRuletaEnVenta(celular, fechaVenta){
 
     return giro;
 }
-async function marcarPremioUsado(celular){
-
-    const snap = await getDocs(collection(db,"ruleta"));
-
-    let ultimoPremio = null;
-
-    snap.forEach(docu=>{
-
-        let d = docu.data();
-
-        if(d.celular !== celular) return;
-
-        if(d.usado === true) return;
-
-        let fecha = new Date(
-            (d.fecha || "").replace(" ","T")
-        );
-
-        if(
-            !ultimoPremio ||
-            fecha > ultimoPremio.fecha
-        ){
-            ultimoPremio = {
-                ref: docu.ref,
-                fecha: fecha
-            };
-        }
-    });
-
-    if(ultimoPremio){
-
-        await updateDoc(
-            ultimoPremio.ref,
-            {
-                usado: true
-            }
-        );
-
-        console.log("✅ Cupón marcado como usado");
-    }
-}
 /* ADMIN */
 async function cargarPanelStock(){
 
-    const contenedor =
-        document.getElementById("contenidoStock");
+    const contenedor = document.getElementById("contenidoStock");
 
     if(!contenedor){
-
         console.error("❌ No existe contenidoStock");
-
         return;
     }
 
-    contenedor.innerHTML =
-        "CARGANDO STOCK...";
+    contenedor.innerHTML = "CARGANDO STOCK...";
 
     try{
 
-        const snap =
-            await getDocs(collection(db,"stock"));
+        const snap = await getDocs(collection(db,"stock"));
+//----------------------------------------------------
+// LEER COMPRAS DEL STOCK
+//----------------------------------------------------
+
+const comprasSnap = await getDocs(
+    collection(db,"comprasStock")
+);
+
+const compras = [];
+
+comprasSnap.forEach(doc => {
+
+    compras.push(doc.data());
+
+});
 
         let html = "";
 
         snap.forEach(docu=>{
 
-            let d = docu.data();
+    const d = docu.data();
 
-            let stock =
-                Number(d.stock || 0);
+    const id = docu.id;
 
-           let color = "#2ecc71";
-let alerta = "✅ STOCK NORMAL";
+    const marca = d.marca || "";
 
-if(stock <= 10){
+    const valvula = d.valvula || "";
 
-    color = "#f1c40f";
-    alerta = "⚠️ STOCK BAJO";
-}
+    const stock = Number(d.stock || 0);
+
+    //-------------------------------------------
+    // COMPRAS DEL PRODUCTO
+    //-------------------------------------------
+
+    const comprasProducto = compras.filter(c =>
+        c.stockId === id
+    );
+
+    //-------------------------------------------
+    // COSTO PROMEDIO
+    //-------------------------------------------
+
+    let costoPromedio = 0;
+
+    let totalCantidad = 0;
+
+    let totalCosto = 0;
+
+    comprasProducto.forEach(c=>{
+
+        totalCantidad += Number(c.cantidad || 0);
+
+        totalCosto +=
+            Number(c.cantidad || 0) *
+            Number(c.costoUnitario || 0);
+
+    });
+
+    if(totalCantidad > 0){
+
+        costoPromedio =
+            totalCosto / totalCantidad;
+
+    }
+
+    //-------------------------------------------
+    // VALOR INVENTARIO
+    //-------------------------------------------
+
+    const valorInventario =
+        stock * costoPromedio;
+
+    //-------------------------------------------
+    // ÚLTIMA COMPRA
+    //-------------------------------------------
+
+    let ultimaCompra = "Sin compras";
+
+    if(comprasProducto.length){
+
+        comprasProducto.sort((a,b)=>
+            b.fecha.localeCompare(a.fecha)
+        );
+
+        ultimaCompra =
+            comprasProducto[0].fecha;
+
+    }
+
+            let color = "#2ecc71";
+            let alerta = "✅ STOCK NORMAL";
+
+            if(stock <= 10){
+                color = "#f1c40f";
+                alerta = "⚠️ STOCK BAJO";
+            }
+
+            if(stock <= 5){
+                color = "#e74c3c";
+                alerta = "🚨 STOCK CRÍTICO";
+            }
+
+            if(stock <= 0){
+                color = "#ff0000";
+                alerta = "❌ SIN STOCK";
+            }
+let estado = "Normal";
+let claseEstado = "estadoNormal";
 
 if(stock <= 5){
 
-    color = "#e74c3c";
-    alerta = "🚨 STOCK CRÍTICO";
+    estado = "Bajo";
+    claseEstado = "estadoBajo";
+
 }
 
-if(stock <= 0){
+if(stock <= 2){
 
-    color = "#ff0000";
-    alerta = "❌ SIN STOCK";
+    estado = "Crítico";
+    claseEstado = "estadoCritico";
+
 }
+html += `
 
-            html += `
-            <div style="
-                background:#222;
-                margin-top:12px;
-                padding:15px;
-                border-radius:15px;
-            ">
+<div class="cardStock">
 
-                <div style="
-                    font-size:20px;
-                    font-weight:bold;
-                    color:white;
-                ">
-                    ${d.marca} - ${d.valvula}
-                </div>
+    <div class="stockHeader">
 
-               <div style="
-    margin-top:8px;
-    color:${color};
-    font-size:24px;
-    font-weight:bold;
-">
-    📦 ${stock}
-</div>
+        <div class="stockMarca">
 
-<div style="
-    margin-top:5px;
-    color:${color};
-    font-weight:bold;
-    font-size:15px;
-">
-    ${alerta}
-</div>
-                <div style="
-                    display:flex;
-                    gap:10px;
-                    margin-top:12px;
-                ">
+            🟧 ${marca}
 
-                    <input
-                        type="number"
-                        id="add_${docu.id}"
-                        placeholder="0"
-                        style="
-                            width:110px;
-                            height:55px;
-                            border-radius:12px;
-                            border:none;
-                            text-align:center;
-                            font-size:24px;
-                            font-weight:bold;
-                            flex:none;
-                        "
-                    >
+        </div>
 
-                    <button
-                        onclick="agregarStock('${docu.id}')"
-                        style="
-                            flex:1;
-                            background:#27ae60;
-                            color:white;
-                            border:none;
-                            border-radius:12px;
-                            font-size:18px;
-                        "
-                    >
-                        ➕ AGREGAR
-                    </button>
+        <div class="stockValvula">
 
-                </div>
+            ${valvula}
+
+        </div>
+
+    </div>
+
+    <div class="stockCantidad">
+
+        <div class="stockNumero">
+
+            ${stock}
+
+        </div>
+
+        <div class="stockTexto">
+
+            BALONES DISPONIBLES
+
+        </div>
+
+    </div>
+
+    <div class="stockGrid">
+
+        <div class="stockInfo">
+
+            <div class="stockInfoTitulo">
+
+                💲Costo promedio
 
             </div>
-            `;
+
+            <div class="stockInfoValor">
+
+                ${costoPromedio > 0
+    ? "S/. " + costoPromedio.toFixed(2)
+    : "--"}
+
+            </div>
+
+        </div>
+
+        <div class="stockInfo">
+
+            <div class="stockInfoTitulo">
+
+                💰Valor inventario
+
+            </div>
+
+            <div class="stockInfoValor">
+
+                ${valorInventario > 0
+    ? "S/. " + valorInventario.toFixed(2)
+    : "--"}
+
+            </div>
+
+        </div>
+
+        <div class="stockInfo">
+
+            <div class="stockInfoTitulo">
+
+                🕒Última compra
+
+            </div>
+
+            <div class="stockInfoValor">
+
+                ${ultimaCompra}
+
+            </div>
+
+        </div>
+
+        <div class="stockInfo">
+
+            <div class="stockInfoTitulo">
+
+                📦Estado
+
+            </div>
+
+            <div class="stockEstado ${claseEstado}">
+
+                ${estado}
+
+            </div>
+
+        </div>
+
+    </div>
+
+    <div class="stockBotones">
+
+        <button
+            class="btn-sec"
+            onclick="verHistorialStock('${id}')">
+
+            📜 Historial
+
+        </button>
+
+        <button
+            class="btn-main"
+            onclick="abrirIngresoRapido('${id}')">
+
+            ➕ Agregar
+
+        </button>
+
+    </div>
+
+</div>
+
+`;
         });
 
         contenedor.innerHTML = html;
@@ -1635,20 +2299,55 @@ if(stock <= 0){
 
         console.error(error);
 
-        contenedor.innerHTML =
-            "❌ ERROR CARGANDO STOCK";
+        contenedor.innerHTML = "❌ ERROR CARGANDO STOCK";
+
     }
+
+}
+window.calcularCompraStock = function(id){
+
+    const cantidad =
+        Number(document.getElementById("add_" + id).value) || 0;
+
+    const costo =
+        Number(document.getElementById("costo_" + id).value) || 0;
+
+    const total = cantidad * costo;
+
+    document.getElementById("total_" + id).innerHTML =
+        "💰 Total: S/. " + total.toFixed(2);
+
+}
+window.calcularCompraStock=function(id){
+
+    let cantidad=
+        Number(document.getElementById("add_"+id).value)||0;
+
+    let costo=
+        Number(document.getElementById("costo_"+id).value)||0;
+
+    document.getElementById("total_"+id).innerHTML=
+        "💰 Total: S/. "+
+        (cantidad*costo).toFixed(2);
+
 }
 window.agregarStock = async function(id){
 
-    let input = document.getElementById("add_" + id);
+    let cantidad =
+        Number(document.getElementById("add_" + id).value);
 
-    let cantidad = Number(input.value);
+    let costo =
+        Number(document.getElementById("costo_" + id).value);
 
     if(!cantidad || cantidad <= 0){
 
-        alert("Cantidad inválida");
+        alert("Ingrese una cantidad válida");
+        return;
+    }
 
+    if(!costo || costo <= 0){
+
+        alert("Ingrese un costo válido");
         return;
     }
 
@@ -1661,7 +2360,21 @@ window.agregarStock = async function(id){
             }
         );
 
-        alert("✅ STOCK ACTUALIZADO");
+        await addDoc(
+            collection(db,"comprasStock"),
+            {
+                stockId:id,
+                cantidad:cantidad,
+                costoUnitario:costo,
+                total:cantidad*costo,
+                fecha:new Date().toLocaleString(
+                    "sv-SE",
+                    {timeZone:"America/Lima"}
+                )
+            }
+        );
+
+        alert("✅ Compra registrada");
 
         cargarPanelStock();
 
@@ -1669,8 +2382,89 @@ window.agregarStock = async function(id){
 
         console.error(error);
 
-        alert("❌ ERROR ACTUALIZANDO STOCK");
+        alert("❌ Error registrando compra");
     }
+
+}
+window.calcularCompraStock = function(id){
+
+    let cantidad =
+        Number(document.getElementById("add_" + id).value) || 0;
+
+    let costo =
+        Number(document.getElementById("costo_" + id).value) || 0;
+
+    let total = cantidad * costo;
+
+    document.getElementById(
+        "total_" + id
+    ).innerHTML =
+        "💰 Total: S/. " + total.toFixed(2);
+
+}
+async function obtenerEstadoCuponClienteFAST(celular){
+
+    const snap = await getDocs(collection(db,"ruleta"));
+
+    let ultimoCupon = null;
+
+    snap.forEach(docu=>{
+
+        const d = docu.data();
+
+        if(d.celular !== celular) return;
+
+        const fecha = d.fecha || "";
+
+        if(
+            !ultimoCupon ||
+            fecha > ultimoCupon.fecha
+        ){
+
+            ultimoCupon = {
+
+                id: docu.id,
+
+                descuento:Number(
+                    String(
+                        d.descuento ||
+                        d.premio ||
+                        "0"
+                    ).replace("S/","")
+                ),
+
+                usado:d.usado === true,
+
+                fecha:fecha
+
+            };
+
+        }
+
+    });
+
+    if(!ultimoCupon){
+
+        return {
+
+            giro:false,
+            pendiente:0
+
+        };
+
+    }
+
+    return {
+
+        giro:true,
+
+        pendiente:
+            ultimoCupon.usado
+                ? 0
+                : ultimoCupon.descuento
+
+    };
+
 }
 async function abrirAdmin(){
 
@@ -1707,9 +2501,17 @@ generarDashboard(
 
 	const ruletasCache = [];
 
-	snapRuleta.forEach(doc=>{
-    	ruletasCache.push(doc.data());
-	});
+snapRuleta.forEach(doc=>{
+
+    ruletasCache.push({
+
+        id: doc.id,
+
+        ...doc.data()
+
+    });
+
+});
 
         let totalHoy=0,totalMes=0,totalGeneral=0;
         let hoy = new Date().toLocaleString("sv-SE", { timeZone: "America/Lima" }).slice(0,10);
@@ -1734,77 +2536,171 @@ generarDashboard(
        for (let i = 0; i < docs.length; i++) {
 
     let doc = docs[i];
-    let v=doc.data()||{};
+    let v = doc.data() || {};
 
-    let nombreV=(v.nombre||"").toUpperCase();
-    let celularV=String(v.celular||"");
-    let monto=Number(v.total)||0;
+    let nombreV = (v.nombre || "").toUpperCase();
+    let celularV = String(v.celular || "");
+    let monto = Number(v.total) || 0;
     let cantidadV = Number(v.cantidad) || 0;
     let direccionV = (v.direccion || "").toUpperCase();
 
     // 🔥 FECHA SEGURA
-    let fechaISO="";
+    let fechaISO = "";
 
-    if(typeof v.fecha==="string"){
-        fechaISO=v.fecha;
+    if(typeof v.fecha === "string"){
+        fechaISO = v.fecha;
     }
     else if(v.fecha?.seconds){
-        fechaISO=new Date(v.fecha.seconds*1000).toISOString();
+        fechaISO = new Date(v.fecha.seconds * 1000).toISOString();
     }
 
-    let estadoCupon =
-    obtenerEstadoCuponClienteFAST(
-        celularV,
-        ruletasCache,
-        ventasCache
+    //---------------------------------------------------
+    // ESTADO DE RULETA PARA ESTA VENTA
+    //---------------------------------------------------
+
+    let mostrarRuleta = false;
+    let mostrarPendiente = false;
+    let pendiente = 0;
+
+    if(v.ruletaID){
+
+    // ESTA SIEMPRE ES LA VENTA DONDE GIRÓ
+    mostrarRuleta = true;
+
+    const cupon = ruletasCache.find(r => r.id === v.ruletaID);
+
+    if(cupon){
+
+        // Sólo mostrar el cupón pendiente si aún no fue usado
+        if(cupon.usado === false){
+
+            mostrarPendiente = true;
+
+            pendiente =
+                Number(
+                    String(
+                        cupon.descuento || cupon.premio || 0
+                    )
+                    .replace("S/","")
+                    .trim()
+                ) || 0;
+
+        }
+
+    }
+
+}
+    //---------------------------------------------------
+
+  let fechaMostrar = "SIN FECHA";
+
+if(fechaISO){
+
+    // Convierte "2026-07-18 11:27:20" en fecha válida
+    const fecha = new Date(
+        fechaISO.replace(" ", "T")
     );
 
-// 🚀 RULETA REAL
-let giroRuleta = v.ruletaID ? true : false;
+    fechaMostrar = fecha.toLocaleDateString(
+        "es-PE",
+        {
+            weekday: "long",
+            day: "numeric",
+            month: "long"
+        }
+    );
 
-    let fechaMostrar = fechaISO
-        ? new Date(fechaISO).toLocaleString()
-        : "SIN FECHA";
+    fechaMostrar += " " +
+    fecha.toLocaleTimeString(
+        "es-PE",
+        {
+            hour: "2-digit",
+            minute: "2-digit",
+            second: "2-digit",
+            hour12: false
+        }
+    );
 
-    // 🔥 📦 ACUMULADORES
-    totalGeneral+=monto;
+    // Primera letra en mayúscula
+    fechaMostrar =
+        fechaMostrar.charAt(0).toUpperCase() +
+        fechaMostrar.slice(1);
 
-    if(fechaISO.slice(0,10)===hoy) totalHoy+=monto;
-    if(fechaISO.slice(0,7)===mes) totalMes+=monto;
+}
 
-html+=`
-<div class="card-venta ${i==0?'card-top':''}" 
-data-nombre="${nombreV}" 
-data-celular="${celularV}" 
-data-fecha="${fechaISO}"> 
+    totalGeneral += monto;
+
+    if(fechaISO.slice(0,10) === hoy)
+        totalHoy += monto;
+
+    if(fechaISO.slice(0,7) === mes)
+        totalMes += monto;
+
+    html += `
+<div class="card-venta ${i==0?'card-top':''}"
+data-nombre="${nombreV}"
+data-celular="${celularV}"
+data-fecha="${fechaISO}">
 
     <div class="titulo-nombre">👤 ${nombreV}</div>
+
     <div class="subtexto">📍 ${direccionV}</div>
-    <div class="subtexto">🏷️ ${v.marca||"-"}</div>
-    <div class="subtexto">🔧 ${v.valvula||"-"}</div>
-    <div class="subtexto">💳 ${v.pago||"-"}</div>
-    <div class="subtexto">🚚 ${v.delivery||"-"}</div>
+
+    <div class="subtexto">🏷️ ${v.marca || "-"}</div>
+
+    <div class="subtexto">🔧 ${v.valvula || "-"}</div>
+
+    <div class="subtexto">💳 ${v.pago || "-"}</div>
+
+    <div class="subtexto">🚚 ${v.delivery || "-"}</div>
+
     <div class="subtexto">📅 ${fechaMostrar}</div>
-    <div class="subtexto">💲 Precio Unit.: S/. ${Number(v.precio||0).toFixed(2)}</div>
-    <div class="subtexto">🛒 Cantidad: ${cantidadV}</div>
-    <div class="total">💰 Total S/. ${monto.toFixed(2)}</div>
-${giroRuleta ? 
-`<div class="subtexto" style="color:#f39c12;">
-🎡 Ruleta: ✔
-</div>` 
-: ""}
-${giroRuleta && estadoCupon?.pendiente ? `
-<div class="subtexto" style="color:gold;">
-🎁 Cupón pendiente para próxima compra:
-S/. ${estadoCupon.pendiente.toFixed(2)}
-</div>
-` : ""}${v.descuento && v.descuento > 0 ? 
-`<div class="subtexto" style="color:#FF2D95;">
-✅ Cliente usó descuento de S/. ${Number(v.descuento).toFixed(2)}
-</div>` 
-: ""}
+
+    <div class="subtexto">
+        💲 Precio Unit.: S/. ${Number(v.precio || 0).toFixed(2)}
+    </div>
+
+    <div class="subtexto">
+        🛒 Cantidad: ${cantidadV}
+    </div>
+
+    <div class="total">
+        💰 Total S/. ${monto.toFixed(2)}
+    </div>
+
+    ${mostrarRuleta ? `
+    <div class="subtexto" style="
+        color:#f39c12;
+        font-weight:bold;
+    ">
+        🎡 Ruleta: ✔
+    </div>
+    ` : ""}
+
+    ${mostrarPendiente ? `
+    <div class="subtexto" style="
+        color:#FFD700;
+        font-weight:bold;
+    ">
+        🎁 Cupón pendiente para próxima compra:
+        S/. ${pendiente.toFixed(2)}
+    </div>
+    ` : ""}
+
+    ${Number(v.descuento || 0) > 0 ? `
+    <div class="subtexto" style="
+        color:#FF2D95;
+        font-weight:bold;
+    ">
+        ✅ Cliente usó descuento de
+        S/. ${Number(v.descuento).toFixed(2)}
+    </div>
+    ` : ""}
+
 </div>`;
-        } // 🔥 AQUÍ CIERRA EL FOR
+
+}
+ // 🔥 AQUÍ CIERRA EL FOR
 
 contenidoAdmin.innerHTML = html;
 
