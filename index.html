@@ -2413,37 +2413,44 @@ console.table(combinaciones);
             // ÚLTIMA COMPRA
             //--------------------------------------------------
 
-            let ultimaCompra = "Sin compras";
+           //--------------------------------------------------
+// ÚLTIMA COMPRA
+//--------------------------------------------------
 
-            if (comprasProducto.length > 0) {
+let ultimaCompra = "Sin compras";
+let cantidadUltimaCompra = 0;
 
-                let ultima = comprasProducto[0];
+if (comprasProducto.length > 0) {
 
-                comprasProducto.forEach(c => {
+    let ultima = comprasProducto[0];
 
-                    if (c.fecha > ultima.fecha) {
+    comprasProducto.forEach(c => {
 
-                        ultima = c;
+        if (c.fecha > ultima.fecha) {
 
-                    }
+            ultima = c;
 
-                });
+        }
 
-                if (typeof formatearFechaBonita === "function") {
+    });
 
-                    ultimaCompra =
-                        formatearFechaBonita(
-                            ultima.fecha
-                        );
+    cantidadUltimaCompra =
+        Number(ultima.cantidad || 0);
 
-                } else {
+    if (typeof formatearFechaBonita === "function") {
 
-                    ultimaCompra = ultima.fecha;
+        ultimaCompra =
+            formatearFechaBonita(
+                ultima.fecha
+            );
 
-                }
+    } else {
 
-            }
+        ultimaCompra = ultima.fecha;
 
+    }
+
+}
             //--------------------------------------------------
             // ESTADO
             //--------------------------------------------------
@@ -2569,25 +2576,36 @@ html += `
 
         </div>
 
-        <!-- ÚLTIMA COMPRA -->
+       <!-- ÚLTIMA COMPRA -->
 
-        <div class="stockInfo">
+<div class="stockInfo">
 
-            <div class="stockInfoTitulo">
-                🕒 Última compra
-            </div>
+    <div class="stockInfoTitulo">
+        🕒 Última compra
+    </div>
 
-            <div class="stockInfoValor"
-                 style="
-                    font-size:12px;
-                    line-height:18px;
-                 ">
+    <div
+        class="stockInfoValor"
+        style="
+            font-size:12px;
+            line-height:18px;
+        ">
 
-                ${ultimaCompra}
+        ${ultimaCompra}
 
-            </div>
+        <br>
 
-        </div>
+        <span style="
+            color:#27ae60;
+            font-weight:bold;
+            font-size:15px;
+        ">
+            +${cantidadUltimaCompra} balones
+        </span>
+
+    </div>
+
+</div>
 
         <!-- ESTADO -->
 
