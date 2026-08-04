@@ -810,6 +810,38 @@ onclick="guardarVenta()">
     </div>
 
 </div>
+<!-- MODAL HISTORIAL -->
+<div
+    id="modalHistorialStock"
+    class="modal"
+    style="display:none;">
+
+    <div
+        class="modal-content"
+        style="max-width:700px;">
+
+        <h2
+        id="tituloHistorialStock"
+        style="
+        text-align:center;
+        color:#2ecc71;">
+        📜 HISTORIAL
+        </h2>
+
+        <div id="contenidoHistorialStock"></div>
+
+        <button
+        class="btn-sec"
+        style="width:100%;margin-top:20px;"
+        onclick="cerrarHistorialStock()">
+
+            Cerrar
+
+        </button>
+
+    </div>
+
+</div>
 <!-- MODAL -->
 <div class="modal" id="modal">
 <div class="modal-content">
@@ -1136,11 +1168,145 @@ window.registrarCompraStock = async function(){
     }
 
 }
+window.verHistorialStock = async function(stockId){
+
+    try{
+
+        const comprasSnap = await getDocs(
+            collection(db,"comprasStock")
+        );
+
+        let compras=[];
+
+        comprasSnap.forEach(doc=>{
+
+            let d=doc.data();
+
+            if(d.stockId===stockId){
+
+                compras.push(d);
+
+            }
+
+        });
+
+        compras.sort((a,b)=>
+            b.fecha.localeCompare(a.fecha)
+        );
+
+        let html=`
+
+<table
+style="
+width:100%;
+border-collapse:collapse;
+font-size:14px;
+">
+
+<tr style="background:#27ae60;color:white;">
+
+<th>Proveedor</th>
+<th>Fecha</th>
+<th>Cantidad</th>
+<th>Costo</th>
+<th>Total</th>
+
+</tr>
+
+`;
+
+        let totalCantidad=0;
+        let totalCompra=0;
+
+        compras.forEach(c=>{
+
+            totalCantidad+=Number(c.cantidad||0);
+
+            totalCompra+=Number(c.total||0);
+
+            html+=`
+
+<tr>
+
+<td>${c.proveedor}</td>
+
+<td>${formatearFechaBonita(c.fecha)}</td>
+
+<td style="text-align:center">
+${c.cantidad}
+</td>
+
+<td style="text-align:right">
+
+S/. ${Number(c.costoUnitario).toFixed(2)}
+
+</td>
+
+<td style="text-align:right">
+
+S/. ${Number(c.total).toFixed(2)}
+
+</td>
+
+</tr>
+
+`;
+
+        });
+
+        html+=`
+
+</table>
+
+<hr>
+
+<div style="font-size:18px;">
+
+<b>Total comprado:</b>
+
+${totalCantidad}
+
+<br><br>
+
+<b>Inversión total:</b>
+
+S/. ${totalCompra.toFixed(2)}
+
+</div>
+
+`;
+
+        document.getElementById(
+            "contenidoHistorialStock"
+        ).innerHTML=html;
+
+        document.getElementById(
+            "modalHistorialStock"
+        ).style.display="flex";
+
+    }
+
+    catch(e){
+
+        console.error(e);
+
+        alert("Error cargando historial");
+
+    }
+
+}
 window.cerrarIngresoRapido = function(){
 
     document.getElementById("modalIngresoStock").style.display = "none";
 
 };
+window.cerrarHistorialStock=function(){
+
+    document.getElementById(
+        "modalHistorialStock"
+    ).style.display="none";
+
+}
 async function cargarClientes(){
     const snap = await getDocs(collection(db,"clientes"));
     clientes=[];
