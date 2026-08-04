@@ -704,93 +704,31 @@ onclick="guardarVenta()">
 
 </div>
 <!-- PANEL STOCK -->
-<div class="card" id="panelStock" style="display:none;">
+<div id="panelStock" style="display:none;">
 
-<h2 style="text-align:center;color:#2ecc71;">
-📦 INGRESO DE STOCK
-</h2>
+    <!-- RESUMEN -->
+    <div id="resumenInventario">
 
-<input
-id="proveedorStock"
-placeholder="PROVEEDOR">
+        <div class="cardInventario">
 
-<select id="marcaStock">
-    <option value="">MARCA</option>
-    <option>SOL GAS</option>
-    <option>Z GAS</option>
-    <option>MAS GAS</option>
-</select>
+            <div style="text-align:center;">
 
-<select id="valvulaStock">
-    <option value="">VÁLVULA</option>
-    <option>NORMAL</option>
-    <option>PREMIUM</option>
-</select>
-
-<input
-id="cantidadStock"
-type="number"
-placeholder="CANTIDAD">
-
-<input
-id="costoUnitarioStock"
-type="number"
-step="0.01"
-placeholder="COSTO UNITARIO S/.">
-
-<div
-id="totalCompraStock"
-style="
-margin:15px 0;
-font-size:24px;
-font-weight:bold;
-color:#27ae60;
-text-align:center;
-">
-S/. 0.00
-</div>
-
-<input
-id="observacionStock"
-placeholder="OBSERVACIÓN (OPCIONAL)">
-
-<button
-class="btn-main"
-onclick="registrarCompraStock()">
-💾 REGISTRAR COMPRA
-</button>
-
-<hr style="
-margin:30px 0;
-border:1px solid #ddd;
-">
-
-<h2 style="text-align:center;color:#2ecc71;">
-</h2>
-<div id="resumenInventario">
-
-    <div class="cardInventario">
-
-        <div style="text-align:center;">
-
-            <div style="
-                font-size:28px;
-                font-weight:bold;
-                color:#27ae60;
-            ">
-
-                📦 INVENTARIO GENERAL
-
-            </div>
-
-            <div
-                id="resumenGeneral"
-                style="
-                    margin-top:12px;
-                    font-size:20px;
+                <div style="
+                    font-size:28px;
+                    font-weight:bold;
+                    color:#27ae60;
                 ">
+                    📦 INVENTARIO GENERAL
+                </div>
 
-                Calculando...
+                <div
+                    id="resumenGeneral"
+                    style="
+                        margin-top:12px;
+                        font-size:20px;
+                    ">
+                    Calculando...
+                </div>
 
             </div>
 
@@ -798,13 +736,80 @@ border:1px solid #ddd;
 
     </div>
 
+    <!-- TARJETAS -->
+    <div id="contenidoStock"></div>
 </div>
+<!-- MODAL INGRESO STOCK -->
+<div id="modalIngresoStock" class="modal" style="display:none;">
 
-<div id="contenidoStock"></div>
-<div id="contenidoStock"></div>
+    <div class="modal-content" style="max-width:500px;">
+
+        <h2 style="text-align:center;color:#2ecc71;">
+            📦 INGRESO DE STOCK
+        </h2>
+
+        <div id="tituloProductoStock"
+             style="
+                background:#fff8e8;
+                border:2px solid #ff9800;
+                border-radius:10px;
+                padding:12px;
+                margin:15px 0 20px;
+                text-align:center;
+                font-size:20px;
+                font-weight:bold;
+                color:#ff7a00;
+             ">
+        </div>
+
+        <input
+            id="cantidadStock"
+            type="number"
+            placeholder="CANTIDAD">
+
+        <input
+            id="costoUnitarioStock"
+            type="number"
+            step="0.01"
+            placeholder="COSTO UNITARIO S/.">
+
+        <div
+            id="totalCompraStock"
+            style="
+                margin:15px 0;
+                font-size:24px;
+                font-weight:bold;
+                color:#27ae60;
+                text-align:center;
+            ">
+            S/. 0.00
+        </div>
+
+        <input
+            id="observacionStock"
+            placeholder="OBSERVACIÓN (OPCIONAL)">
+
+        <div style="display:flex;gap:10px;margin-top:20px;">
+
+            <button
+                class="btn-sec"
+                style="flex:1"
+                onclick="cerrarIngresoRapido()">
+                Cancelar
+            </button>
+
+            <button
+                class="btn-main"
+                style="flex:1"
+                onclick="registrarCompraStock()">
+                💾 Registrar
+            </button>
+
+        </div>
+
+    </div>
 
 </div>
-
 <!-- MODAL -->
 <div class="modal" id="modal">
 <div class="modal-content">
@@ -894,6 +899,8 @@ let anguloActual = 0;
 let girando = false;
 let descuentoActual = 0;
 let DIAS_BLOQUEO_RULETA = 60;
+// 🔥 Producto seleccionado para ingresar stock
+let stockSeleccionado = "";
 
 let clicks=0;
 titulo.onclick=()=>{
@@ -945,12 +952,195 @@ window.verHistorialStock = function(stockId){
 
 window.abrirIngresoRapido = function(stockId){
 
-    alert("Ingreso rápido para: " + stockId);
+    stockSeleccionado = stockId;
+
+    const partes = stockId.split("_");
+
+    const marca =
+        partes[0] + " " + partes[1];
+
+    const valvula =
+        partes[2];
+
+    //----------------------------------------
+    // Mostrar producto seleccionado
+    //----------------------------------------
+   document.getElementById("tituloProductoStock").innerHTML =
+    "📦 " + marca + " - " + valvula;
+    //----------------------------------------
+    // Limpiar formulario
+    //----------------------------------------
+
+    document.getElementById("cantidadStock").value = "";
+
+    document.getElementById("costoUnitarioStock").value = "";
+
+    document.getElementById("observacionStock").value = "";
+
+    document.getElementById("totalCompraStock").innerHTML =
+        "S/. 0.00";
+cantidadStock.oninput = actualizarTotalCompra;
+
+costoUnitarioStock.oninput = actualizarTotalCompra;
+    //----------------------------------------
+    // Mostrar modal
+    //----------------------------------------
+
+    document.getElementById("modalIngresoStock").style.display =
+        "flex";
+
+    document.getElementById("cantidadStock").focus();
+
+}
+function actualizarTotalCompra(){
+
+    let cantidad =
+        Number(document.getElementById("cantidadStock").value) || 0;
+
+    let costo =
+        Number(document.getElementById("costoUnitarioStock").value) || 0;
+
+    document.getElementById("totalCompraStock").innerHTML =
+        "S/. " + (cantidad * costo).toFixed(2);
+
+}
+//==================================================
+window.registrarCompraStock = async function(){
+
+    if(!stockSeleccionado){
+        alert("No se seleccionó ningún producto.");
+        return;
+    }
+
+    //----------------------------------------
+    // OBTENER MARCA Y VÁLVULA DEL ID
+    //----------------------------------------
+
+    const partes = stockSeleccionado.split("_");
+
+    const marca =
+        partes[0] + " " + partes[1];
+
+    const valvula =
+        partes[2];
+
+    //----------------------------------------
+    // PROVEEDOR AUTOMÁTICO
+    //----------------------------------------
+
+    const proveedores = {
+
+        "SOL GAS":"SOLGAS",
+
+        "Z GAS":"ZETA GAS",
+
+        "MAS GAS":"MASGAS"
+
+    };
+
+    const proveedor =
+        proveedores[marca] || "GENERAL";
+
+    //----------------------------------------
+    // DATOS DEL FORMULARIO
+    //----------------------------------------
+
+    const cantidad =
+        Number(cantidadStock.value);
+
+    const costo =
+        Number(costoUnitarioStock.value);
+
+    const observacion =
+        observacionStock.value.trim();
+
+    //----------------------------------------
+    // VALIDACIONES
+    //----------------------------------------
+
+    if(cantidad <= 0){
+
+        alert("Ingrese una cantidad válida");
+
+        return;
+
+    }
+
+    if(costo <= 0){
+
+        alert("Ingrese un costo válido");
+
+        return;
+
+    }
+
+    //----------------------------------------
+    // ACTUALIZAR STOCK
+    //----------------------------------------
+
+    try{
+
+        await updateDoc(
+            doc(db,"stock",stockSeleccionado),
+            {
+                stock: increment(cantidad)
+            }
+        );
+
+        //----------------------------------------
+        // REGISTRAR COMPRA
+        //----------------------------------------
+
+        await addDoc(
+            collection(db,"comprasStock"),
+            {
+
+                stockId: stockSeleccionado,
+
+                proveedor: proveedor,
+
+                marca: marca,
+
+                valvula: valvula,
+
+                cantidad: cantidad,
+
+                costoUnitario: costo,
+
+                total: cantidad * costo,
+
+                observacion: observacion,
+
+                fecha: new Date().toLocaleString(
+                    "sv-SE",
+                    {
+                        timeZone:"America/Lima"
+                    }
+                )
+
+            }
+        );
+
+        alert("✅ Compra registrada");
+
+        cerrarIngresoRapido();
+
+        cargarPanelStock();
+
+    }catch(error){
+
+        console.error(error);
+
+        alert("❌ Error registrando compra");
+
+    }
+
+}
+window.cerrarIngresoRapido = function(){
+
+    document.getElementById("modalIngresoStock").style.display = "none";
 
 };
-
-//==================================================
-
 async function cargarClientes(){
     const snap = await getDocs(collection(db,"clientes"));
     clientes=[];
@@ -1052,6 +1242,43 @@ nDireccion.oninput = ()=>{
 
     total.innerText = "S/. " + totalFinal.toFixed(2);
 }
+function formatearFechaBonita(fechaTexto){
+
+    if(!fechaTexto) return "--";
+
+    try{
+
+        const fecha = new Date(
+            fechaTexto.replace(" ","T")
+        );
+
+        return fecha.toLocaleDateString(
+            "es-PE",
+            {
+                weekday:"long",
+                day:"numeric",
+                month:"long"
+            }
+        )
+        +
+        " • "
+        +
+        fecha.toLocaleTimeString(
+            "es-PE",
+            {
+                hour:"2-digit",
+                minute:"2-digit",
+                second:"2-digit"
+            }
+        );
+
+    }catch{
+
+        return fechaTexto;
+
+    }
+
+}
 async function cargarHistorialCliente(celularCliente){
 
     const historial =
@@ -1099,39 +1326,10 @@ async function cargarHistorialCliente(celularCliente){
 
     // ========= FORMATO FECHA =========
 
-    let fechaBonita = "";
-
-    try{
-
-        const fecha =
-            new Date(
-                ultimaVenta.fecha.replace(" ","T")
-            );
-
-        fechaBonita =
-            fecha.toLocaleDateString(
-                "es-PE",
-                {
-                    weekday:"long",
-                    day:"numeric",
-                    month:"long"
-                }
-            ) +
-            " • " +
-            fecha.toLocaleTimeString(
-                "es-PE",
-                {
-                    hour:"2-digit",
-                    minute:"2-digit",
-                    second:"2-digit"
-                }
-            );
-
-    }catch{
-
-        fechaBonita = ultimaVenta.fecha;
-
-    }
+    const fechaBonita =
+    formatearFechaBonita(
+        ultimaVenta.fecha
+    );
 
     historial.innerHTML = `
 
@@ -1401,7 +1599,13 @@ if(stockBloqueado <= 0){
         alert("Total inválido");
         return;
     }
+//--------------------------------------------------
+// CUPÓN ACTIVO DEL CLIENTE
+//--------------------------------------------------
 
+const cuponActivo = await obtenerCuponActivo(
+    celular.value
+);
     // 🔥 GUARDAR EN FIREBASE
    let datosVenta = {
 
@@ -1415,19 +1619,29 @@ if(stockBloqueado <= 0){
     pago:pago.value,
     delivery:delivery.value,
     total:totalCalc,
-    descuento: descuentoActual,
-    usoRuleta: descuentoActual > 0,
-    fecha: new Date().toLocaleString("sv-SE", {
-        timeZone: "America/Lima"
-    })
+
+    descuento:descuentoActual,
+
+    // ESTA VENTA GENERÓ UN CUPÓN
+    usoRuleta: window.ruletaActualId ? true : false,
+
+    // ID DEL CUPÓN GENERADO
+    ruletaID: window.ruletaActualId || null,
+
+    fecha:new Date().toLocaleString(
+        "sv-SE",
+        {
+            timeZone:"America/Lima"
+        }
+    )
+
 };
-
 // 🔥 SOLO SI GIRÓ RULETA
-if(descuentoActual > 0 && window.ruletaActualId){
+//if(descuentoActual > 0 && window.ruletaActualId){
 
-    datosVenta.ruletaID = window.ruletaActualId;
+  //  datosVenta.ruletaID = window.ruletaActualId;
 
-}
+//}
 
 // 🔥 GUARDAR
 // 🔥 VALIDAR STOCK
@@ -1443,52 +1657,33 @@ if(stockActual < Number(cantidad.value)){
     return;
 }
 await addDoc(collection(db,"ventas"), datosVenta);
-if(descuentoActual > 0 && window.ruletaActualId){
+//--------------------------------------------------
+// SI EL CLIENTE USÓ UN CUPÓN, MARCARLO COMO USADO
+//--------------------------------------------------
+
+if(descuentoActual > 0 && cuponActivo){
 
     await updateDoc(
-        doc(db,"ruleta",window.ruletaActualId),
+
+        doc(db,"ruleta",cuponActivo.id),
+
         {
+
             usado:true,
+
             fechaUso:new Date().toLocaleString(
                 "sv-SE",
-                {timeZone:"America/Lima"}
+                {
+                    timeZone:"America/Lima"
+                }
             )
-        }
-    );
 
-    window.ruletaActualId=null;
+        }
+
+    );
 
 }
 // 🔥 SI UTILIZÓ CUPÓN, MARCARLO COMO USADO
-
-if(descuentoActual > 0){
-
-    const q = query(
-        collection(db,"ruleta"),
-        where("celular","==",celular.value),
-        where("usado","==",false)
-    );
-
-    const snapRuleta = await getDocs(q);
-
-    if(!snapRuleta.empty){
-
-        const cuponDoc = snapRuleta.docs[0];
-
-        await updateDoc(
-            doc(db,"ruleta",cuponDoc.id),
-            {
-                usado:true,
-                fechaUso:new Date().toLocaleString(
-                    "sv-SE",
-                    {timeZone:"America/Lima"}
-                )
-            }
-        );
-
-    }
-
-}
 // 🔥 DESCONTAR STOCK
 let idStock =
     marca.value.replace(/\s/g,"_") +
@@ -1503,10 +1698,11 @@ await updateDoc(
         )
     }
 );
-
+// 🔥 LIMPIAR ID DE LA RULETA
+window.ruletaActualId = null;
 // 🔥 REFRESCAR STOCK
 actualizarStockVisual();
-alert("VENTA GRABADO EXITOSAMENTE");
+alert("✅ VENTA GRABADO EXITOSAMENTE");
 
     // 🔥 LIMPIAR CAMPOS
     document.querySelectorAll("input").forEach(i=>i.value="");
@@ -1703,7 +1899,6 @@ const nuevoCupon = await addDoc(
         )
     }
 );
-
 window.ruletaActualId = nuevoCupon.id;
 
         console.log("✅ Premio guardado");
@@ -1948,10 +2143,15 @@ async function obtenerCuponActivo(celular){
                 id: docu.id,
 
                 descuento: Number(
-                    String(d.descuento || "0")
-                        .replace("S/","")
-                        .trim()
-                ) || 0,
+    String(
+        d.descuento ??
+        d.premio ??
+        "0"
+    )
+    .replace("S/","")
+    .replace(",",".")
+    .trim()
+) || 0,
 
                 fecha: fecha,
 
@@ -2024,142 +2224,251 @@ async function verificarRuletaEnVenta(celular, fechaVenta){
     return giro;
 }
 /* ADMIN */
-async function cargarPanelStock(){
+async function cargarPanelStock() {
 
     const contenedor = document.getElementById("contenidoStock");
 
-    if(!contenedor){
-        console.error("❌ No existe contenidoStock");
-        return;
+    if (!contenedor) return;
+
+    contenedor.innerHTML = "Calculando inventario...";
+
+    try {
+
+        //--------------------------------------------------
+        // LEER STOCK
+        //--------------------------------------------------
+
+        const stockSnap = await getDocs(
+            collection(db, "stock")
+        );
+
+        //--------------------------------------------------
+        // LEER COMPRAS
+        //--------------------------------------------------
+
+        const comprasSnap = await getDocs(
+            collection(db, "comprasStock")
+        );
+
+        //--------------------------------------------------
+        // LEER VENTAS
+        //--------------------------------------------------
+
+        const ventasSnap = await getDocs(
+            collection(db, "ventas")
+        );
+const combinaciones = {};
+
+ventasSnap.forEach(doc=>{
+
+    const v = doc.data();
+
+    const clave =
+        `"${v.marca}" | "${v.valvula}"`;
+
+    if(!combinaciones[clave]){
+
+        combinaciones[clave] = 0;
+
     }
 
-    contenedor.innerHTML = "CARGANDO STOCK...";
-
-    try{
-
-        const snap = await getDocs(collection(db,"stock"));
-//----------------------------------------------------
-// LEER COMPRAS DEL STOCK
-//----------------------------------------------------
-
-const comprasSnap = await getDocs(
-    collection(db,"comprasStock")
-);
-
-const compras = [];
-
-comprasSnap.forEach(doc => {
-
-    compras.push(doc.data());
+    combinaciones[clave] += Number(v.cantidad || 0);
 
 });
 
+console.table(combinaciones);
+
+        //--------------------------------------------------
+        // CONVERTIR A ARRAYS
+        //--------------------------------------------------
+
+        const compras = [];
+
+        comprasSnap.forEach(doc => {
+
+            compras.push(doc.data());
+
+        });
+
+        const ventas = [];
+
+        ventasSnap.forEach(doc => {
+
+            ventas.push(doc.data());
+
+        });
+
+        //--------------------------------------------------
+        // GENERAR TARJETAS
+        //--------------------------------------------------
+
         let html = "";
 
-        snap.forEach(docu=>{
+        stockSnap.forEach(docu => {
 
-    const d = docu.data();
+            const id = docu.id;
 
-    const id = docu.id;
+            const d = docu.data();
 
-    const marca = d.marca || "";
+            const marca = d.marca || "";
 
-    const valvula = d.valvula || "";
+            const valvula = d.valvula || "";
 
-    const stock = Number(d.stock || 0);
+            const stock = Number(d.stock || 0);
 
-    //-------------------------------------------
-    // COMPRAS DEL PRODUCTO
-    //-------------------------------------------
+            //--------------------------------------------------
+            // COMPRAS DEL PRODUCTO
+            //--------------------------------------------------
 
-    const comprasProducto = compras.filter(c =>
-        c.stockId === id
-    );
+            const comprasProducto = compras.filter(c =>
 
-    //-------------------------------------------
-    // COSTO PROMEDIO
-    //-------------------------------------------
+                c.stockId === id
 
-    let costoPromedio = 0;
+            );
 
-    let totalCantidad = 0;
+            //--------------------------------------------------
+            // VENTAS DEL PRODUCTO
+            //--------------------------------------------------
 
-    let totalCosto = 0;
+            const ventasProducto = ventas.filter(v =>
 
-    comprasProducto.forEach(c=>{
+                v.marca === marca &&
+                v.valvula === valvula
 
-        totalCantidad += Number(c.cantidad || 0);
+            );
 
-        totalCosto +=
-            Number(c.cantidad || 0) *
-            Number(c.costoUnitario || 0);
+            //--------------------------------------------------
+            // CANTIDAD COMPRADA
+            //--------------------------------------------------
 
-    });
+            let cantidadComprada = 0;
 
-    if(totalCantidad > 0){
+            //--------------------------------------------------
+            // COSTO TOTAL
+            //--------------------------------------------------
 
-        costoPromedio =
-            totalCosto / totalCantidad;
+            let costoTotal = 0;
 
-    }
+            comprasProducto.forEach(c => {
 
-    //-------------------------------------------
-    // VALOR INVENTARIO
-    //-------------------------------------------
+                const cantidad = Number(c.cantidad || 0);
 
-    const valorInventario =
-        stock * costoPromedio;
+                const costo = Number(c.costoUnitario || 0);
 
-    //-------------------------------------------
-    // ÚLTIMA COMPRA
-    //-------------------------------------------
+                cantidadComprada += cantidad;
 
-    let ultimaCompra = "Sin compras";
+                costoTotal += cantidad * costo;
 
-    if(comprasProducto.length){
+            });
 
-        comprasProducto.sort((a,b)=>
-            b.fecha.localeCompare(a.fecha)
-        );
+            //--------------------------------------------------
+            // CANTIDAD VENDIDA
+            //--------------------------------------------------
 
-        ultimaCompra =
-            comprasProducto[0].fecha;
+            let vendidos = 0;
 
-    }
+            ventasProducto.forEach(v => {
 
-            let color = "#2ecc71";
-            let alerta = "✅ STOCK NORMAL";
+                vendidos += Number(v.cantidad || 0);
 
-            if(stock <= 10){
-                color = "#f1c40f";
-                alerta = "⚠️ STOCK BAJO";
+            });
+
+            //--------------------------------------------------
+            // ROTACIÓN
+            //--------------------------------------------------
+
+            let rotacion = 0;
+
+            if (cantidadComprada > 0) {
+
+                rotacion =
+
+                    (vendidos / cantidadComprada) * 100;
+
             }
 
-            if(stock <= 5){
-                color = "#e74c3c";
-                alerta = "🚨 STOCK CRÍTICO";
+            //--------------------------------------------------
+            // COSTO PROMEDIO
+            //--------------------------------------------------
+
+            let costoPromedio = 0;
+
+            if (cantidadComprada > 0) {
+
+                costoPromedio =
+
+                    costoTotal / cantidadComprada;
+
             }
 
-            if(stock <= 0){
-                color = "#ff0000";
-                alerta = "❌ SIN STOCK";
+            //--------------------------------------------------
+            // VALOR INVENTARIO
+            //--------------------------------------------------
+
+            const valorInventario =
+
+                stock * costoPromedio;
+
+            //--------------------------------------------------
+            // ÚLTIMA COMPRA
+            //--------------------------------------------------
+
+            let ultimaCompra = "Sin compras";
+
+            if (comprasProducto.length > 0) {
+
+                let ultima = comprasProducto[0];
+
+                comprasProducto.forEach(c => {
+
+                    if (c.fecha > ultima.fecha) {
+
+                        ultima = c;
+
+                    }
+
+                });
+
+                if (typeof formatearFechaBonita === "function") {
+
+                    ultimaCompra =
+                        formatearFechaBonita(
+                            ultima.fecha
+                        );
+
+                } else {
+
+                    ultimaCompra = ultima.fecha;
+
+                }
+
             }
-let estado = "Normal";
-let claseEstado = "estadoNormal";
 
-if(stock <= 5){
+            //--------------------------------------------------
+            // ESTADO
+            //--------------------------------------------------
 
-    estado = "Bajo";
-    claseEstado = "estadoBajo";
+            let estado = "Normal";
+            let claseEstado = "estadoNormal";
 
-}
+            if (stock <= 5) {
 
-if(stock <= 2){
+                estado = "Bajo";
+                claseEstado = "estadoBajo";
 
-    estado = "Crítico";
-    claseEstado = "estadoCritico";
+            }
 
-}
+            if (stock <= 2) {
+
+                estado = "Crítico";
+                claseEstado = "estadoCritico";
+
+            }
+
+            //--------------------------------------------------
+            // AQUÍ COMIENZA LA TARJETA
+            //--------------------------------------------------
+
 html += `
 
 <div class="cardStock">
@@ -2167,15 +2476,11 @@ html += `
     <div class="stockHeader">
 
         <div class="stockMarca">
-
             🟧 ${marca}
-
         </div>
 
         <div class="stockValvula">
-
             ${valvula}
-
         </div>
 
     </div>
@@ -2183,66 +2488,100 @@ html += `
     <div class="stockCantidad">
 
         <div class="stockNumero">
-
             ${stock}
-
         </div>
 
         <div class="stockTexto">
-
             BALONES DISPONIBLES
-
         </div>
 
     </div>
 
     <div class="stockGrid">
 
+        <!-- COMPRADOS -->
+
         <div class="stockInfo">
 
             <div class="stockInfoTitulo">
-
-                💲Costo promedio
-
+                📥 Comprados
             </div>
 
             <div class="stockInfoValor">
-
-                ${costoPromedio > 0
-    ? "S/. " + costoPromedio.toFixed(2)
-    : "--"}
-
+                ${cantidadComprada}
             </div>
 
         </div>
 
+        <!-- VENDIDOS -->
+
         <div class="stockInfo">
 
             <div class="stockInfoTitulo">
-
-                💰Valor inventario
-
+                📤 Vendidos
             </div>
 
             <div class="stockInfoValor">
-
-                ${valorInventario > 0
-    ? "S/. " + valorInventario.toFixed(2)
-    : "--"}
-
+                ${vendidos}
             </div>
 
         </div>
 
+        <!-- COSTO PROMEDIO -->
+
         <div class="stockInfo">
 
             <div class="stockInfoTitulo">
-
-                🕒Última compra
-
+                💲Costo Promedio
             </div>
 
             <div class="stockInfoValor">
+                S/. ${costoPromedio.toFixed(2)}
+            </div>
+
+        </div>
+
+        <!-- VALOR INVENTARIO -->
+
+        <div class="stockInfo">
+
+            <div class="stockInfoTitulo">
+                💰Valor Inventario
+            </div>
+
+            <div class="stockInfoValor">
+                S/. ${valorInventario.toFixed(2)}
+            </div>
+
+        </div>
+
+        <!-- ROTACIÓN -->
+
+        <div class="stockInfo">
+
+            <div class="stockInfoTitulo">
+                📈 Rotación
+            </div>
+
+            <div class="stockInfoValor">
+                ${rotacion.toFixed(1)} %
+            </div>
+
+        </div>
+
+        <!-- ÚLTIMA COMPRA -->
+
+        <div class="stockInfo">
+
+            <div class="stockInfoTitulo">
+                🕒 Última compra
+            </div>
+
+            <div class="stockInfoValor"
+                 style="
+                    font-size:12px;
+                    line-height:18px;
+                 ">
 
                 ${ultimaCompra}
 
@@ -2250,18 +2589,16 @@ html += `
 
         </div>
 
+        <!-- ESTADO -->
+
         <div class="stockInfo">
 
             <div class="stockInfoTitulo">
-
-                📦Estado
-
+                📦 Estado
             </div>
 
             <div class="stockEstado ${claseEstado}">
-
                 ${estado}
-
             </div>
 
         </div>
@@ -2295,13 +2632,70 @@ html += `
 
         contenedor.innerHTML = html;
 
-    }catch(error){
+    } catch (e) {
 
-        console.error(error);
+        console.error(e);
 
-        contenedor.innerHTML = "❌ ERROR CARGANDO STOCK";
+        contenedor.innerHTML = "❌ Error cargando stock";
 
     }
+
+}
+async function diagnosticarVentas(){
+
+    const ventasSnap = await getDocs(
+        collection(db,"ventas")
+    );
+
+    const resumen = {};
+
+    let total = 0;
+
+    ventasSnap.forEach(doc=>{
+
+        const v = doc.data();
+
+        total += Number(v.cantidad || 0);
+
+        const clave =
+            (v.marca || "").trim().toUpperCase()
+            +
+            " | "
+            +
+            (v.valvula || "").trim().toUpperCase();
+
+        if(!resumen[clave]){
+
+            resumen[clave] = 0;
+
+        }
+
+        resumen[clave] += Number(v.cantidad || 0);
+
+    });
+
+    console.clear();
+
+    console.log("=========== VENTAS ==========");
+
+    Object.keys(resumen)
+        .sort()
+        .forEach(k=>{
+
+            console.log(
+                k,
+                "→",
+                resumen[k]
+            );
+
+        });
+
+    console.log("-----------------------------");
+
+    console.log(
+        "TOTAL:",
+        total
+    );
 
 }
 window.calcularCompraStock = function(id){
@@ -2361,20 +2755,29 @@ window.agregarStock = async function(id){
         );
 
         await addDoc(
-            collection(db,"comprasStock"),
-            {
-                stockId:id,
-                cantidad:cantidad,
-                costoUnitario:costo,
-                total:cantidad*costo,
-                fecha:new Date().toLocaleString(
-                    "sv-SE",
-                    {timeZone:"America/Lima"}
-                )
-            }
-        );
+    collection(db,"comprasStock"),
+    {
+        stockId: id,
 
-        alert("✅ Compra registrada");
+        marca: marca,
+
+        valvula: valvula,
+
+        cantidad: Number(cantidad),
+
+        costoUnitario: Number(costo),
+
+        total: Number(cantidad) * Number(costo),
+
+        fecha: new Date().toLocaleString(
+            "sv-SE",
+            {
+                timeZone: "America/Lima"
+            }
+        )
+    }
+);
+alert("✅ Compra registrada");
 
         cargarPanelStock();
 
@@ -2498,6 +2901,11 @@ generarDashboard(
         let docs = snap.docs;
 	// 🚀 CACHE RULETAS (CARGA UNA SOLA VEZ)
 	const snapRuleta = await getDocs(collection(db,"ruleta"));
+snapRuleta.forEach(doc=>{
+
+    console.log(doc.id, doc.data());
+
+});
 
 	const ruletasCache = [];
 
@@ -2512,6 +2920,7 @@ snapRuleta.forEach(doc=>{
     });
 
 });
+console.log("RULETAS CACHE:", ruletasCache);
 
         let totalHoy=0,totalMes=0,totalGeneral=0;
         let hoy = new Date().toLocaleString("sv-SE", { timeZone: "America/Lima" }).slice(0,10);
@@ -2554,43 +2963,97 @@ snapRuleta.forEach(doc=>{
         fechaISO = new Date(v.fecha.seconds * 1000).toISOString();
     }
 
-    //---------------------------------------------------
-    // ESTADO DE RULETA PARA ESTA VENTA
-    //---------------------------------------------------
+//---------------------------------------------------
+// ESTADO DE RULETA PARA ESTA VENTA
+//---------------------------------------------------
 
-    let mostrarRuleta = false;
-    let mostrarPendiente = false;
-    let pendiente = 0;
+let mostrarRuleta = false;
+let mostrarPendiente = false;
+let pendiente = 0;
 
-    if(v.ruletaID){
+let cupon = null;
 
-    // ESTA SIEMPRE ES LA VENTA DONDE GIRÓ
+//===========================================
+// 1. VENTAS NUEVAS (con ruletaID real)
+//===========================================
+
+if (
+    v.ruletaID &&
+    v.ruletaID !== "Manual"
+){
+
+    cupon = ruletasCache.find(r =>
+        String(r.id).trim() ===
+        String(v.ruletaID).trim()
+    );
+
+}
+
+//===========================================
+// 2. VENTAS ANTIGUAS (ruletaID = Manual)
+//===========================================
+
+if(
+    !cupon &&
+    v.ruletaID === "Manual"
+){
+
+    cupon = ruletasCache.find(r=>{
+
+        if(
+            String(r.celular).trim() !==
+            String(v.celular).trim()
+        ){
+            return false;
+        }
+
+        const venta =
+            new Date(
+                String(v.fecha)
+                .replace(" ","T")
+            );
+
+        const giro =
+            new Date(
+                String(r.fecha)
+                .replace(" ","T")
+            );
+
+        return Math.abs(giro - venta) <= 300000;
+
+    });
+
+}
+
+//===========================================
+// 3. SI ENCONTRÓ CUPÓN
+//===========================================
+
+if(cupon){
+
     mostrarRuleta = true;
 
-    const cupon = ruletasCache.find(r => r.id === v.ruletaID);
+    const valor =
+        Number(
+            String(
+                cupon.descuento ??
+                cupon.premio ??
+                0
+            )
+            .replace("S/","")
+            .replace("S/.","")
+            .replace(",",".")
+            .trim()
+        ) || 0;
 
-    if(cupon){
+    if(cupon.usado !== true){
 
-        // Sólo mostrar el cupón pendiente si aún no fue usado
-        if(cupon.usado === false){
-
-            mostrarPendiente = true;
-
-            pendiente =
-                Number(
-                    String(
-                        cupon.descuento || cupon.premio || 0
-                    )
-                    .replace("S/","")
-                    .trim()
-                ) || 0;
-
-        }
+        mostrarPendiente = true;
+        pendiente = valor;
 
     }
 
 }
-    //---------------------------------------------------
 
   let fechaMostrar = "SIN FECHA";
 
