@@ -992,7 +992,8 @@ let descuentoActual = 0;
 let DIAS_BLOQUEO_RULETA = 60;
 // 🔥 Producto seleccionado para ingresar stock
 let stockSeleccionado = "";
-
+let historialCompras = [];
+let historialMostradas = 10;
 let clicks=0;
 titulo.onclick=()=>{
     clicks++;
@@ -1034,12 +1035,6 @@ window.mostrarVentas = () => {
 //==================================================
 // FUNCIONES TEMPORALES DEL INVENTARIO
 //==================================================
-
-window.verHistorialStock = function(stockId){
-
-    alert("Historial del producto: " + stockId);
-
-};
 
 window.abrirIngresoRapido = function(stockId){
 
@@ -1235,78 +1230,117 @@ window.verHistorialStock = async function(stockId){
             collection(db,"comprasStock")
         );
 
-        let compras=[];
+        historialCompras=[];
 
         comprasSnap.forEach(doc=>{
 
-            let d=doc.data();
+            const d=doc.data();
 
             if(d.stockId===stockId){
 
-                compras.push(d);
+                historialCompras.push(d);
 
             }
 
         });
 
-        compras.sort((a,b)=>
+        historialCompras.sort((a,b)=>
             b.fecha.localeCompare(a.fecha)
         );
 
-        let totalCantidad=0;
-        let totalCompra=0;
+        historialMostradas=10;
 
-        let html="";
+        renderHistorialCompras(stockId);
 
-        //--------------------------------------------------
-        // CELULAR
-        //--------------------------------------------------
+        document.getElementById(
+            "modalHistorialStock"
+        ).style.display="flex";
 
-        if(window.innerWidth <= 768){
+    }
 
-            compras.forEach(c=>{
+    catch(e){
 
-                totalCantidad += Number(c.cantidad||0);
-                totalCompra += Number(c.total||0);
+        console.error(e);
 
-                html += `
+        alert("Error cargando historial");
+
+    }
+
+};
+function renderHistorialCompras(stockId){
+
+    const proveedorAutomatico =
+
+        stockId.startsWith("SOL_GAS") ? "SOLGAS" :
+
+        stockId.startsWith("Z_GAS") ? "ZETA GAS" :
+
+        stockId.startsWith("MAS_GAS") ? "MASGAS" :
+
+        "GENERAL";
+
+    let html="";
+
+    let totalCantidad=0;
+    let totalCompra=0;
+
+    const comprasMostrar=
+        historialCompras.slice(0,historialMostradas);
+
+    //---------------------------------------------------
+    // CELULAR
+    //---------------------------------------------------
+
+    if(window.innerWidth<=768){
+
+        comprasMostrar.forEach(c=>{
+
+            totalCantidad+=Number(c.cantidad||0);
+            totalCompra+=Number(c.total||0);
+
+            html+=`
 
 <div style="
 background:#fff;
 border-radius:12px;
 padding:12px;
 margin-bottom:12px;
-box-shadow:0 2px 8px rgba(0,0,0,.12);
-text-align:left;
+box-shadow:0 2px 8px rgba(0,0,0,.15);
 ">
 
 <div style="
-font-size:14px;
 font-weight:bold;
 color:#27ae60;
 margin-bottom:10px;
 ">
+
 📅 ${formatearFechaBonita(c.fecha)}
+
 </div>
 
-<div>🏢 <b>Proveedor:</b> ${
-    c.proveedor ||
+<div>
 
-    (
-        c.marca === "SOL GAS" ? "SOLGAS" :
+🏢 <b>Proveedor:</b>
 
-        c.marca === "Z GAS" ? "ZETA GAS" :
+${c.proveedor || proveedorAutomatico}
 
-        c.marca === "MAS GAS" ? "MASGAS" :
+</div>
 
-        "-"
-    )
+<div>
 
-}</div>
+📦 <b>Cantidad:</b>
 
-<div>📦 <b>Cantidad:</b> ${c.cantidad}</div>
+${c.cantidad}
 
-<div>💲 <b>Costo:</b> S/. ${Number(c.costoUnitario).toFixed(2)}</div>
+</div>
+
+<div>
+
+💲 <b>Costo:</b>
+
+S/. ${Number(c.costoUnitario).toFixed(2)}
+
+</div>
 
 <div style="
 margin-top:8px;
@@ -1314,10 +1348,10 @@ padding-top:8px;
 border-top:1px solid #ddd;
 font-size:18px;
 font-weight:bold;
-color:#e67e22;
+color:#ff7a00;
 ">
 
-💰 Total: S/. ${Number(c.total).toFixed(2)}
+💰 S/. ${Number(c.total).toFixed(2)}
 
 </div>
 
@@ -1325,17 +1359,17 @@ color:#e67e22;
 
 `;
 
-            });
+        });
 
-        }
+    }
 
-        //--------------------------------------------------
-        // COMPUTADORA
-        //--------------------------------------------------
+    //---------------------------------------------------
+    // PC
+    //---------------------------------------------------
 
-        else{
+    else{
 
-            html += `
+        html+=`
 
 <table
 style="
@@ -1344,7 +1378,11 @@ border-collapse:collapse;
 font-size:14px;
 ">
 
-<tr style="background:#27ae60;color:white;">
+<tr
+style="
+background:#27ae60;
+color:white;
+">
 
 <th>Proveedor</th>
 <th>Fecha</th>
@@ -1356,43 +1394,40 @@ font-size:14px;
 
 `;
 
-            compras.forEach(c=>{
+        comprasMostrar.forEach(c=>{
 
-                totalCantidad += Number(c.cantidad||0);
-                totalCompra += Number(c.total||0);
+            totalCantidad+=Number(c.cantidad||0);
+            totalCompra+=Number(c.total||0);
 
-                html += `
+            html+=`
 
 <tr>
 
-<td>${
-    c.proveedor ||
+<td>
 
-    (
-        c.marca === "SOL GAS" ? "SOLGAS" :
+${c.proveedor || proveedorAutomatico}
 
-        c.marca === "Z GAS" ? "ZETA GAS" :
-
-        c.marca === "MAS GAS" ? "MASGAS" :
-
-        "-"
-    )
-
-}</td>
-
-<td>${formatearFechaBonita(c.fecha)}</td>
-
-<td style="text-align:center">
-${c.cantidad}
 </td>
 
-<td style="text-align:right">
+<td>
+
+${formatearFechaBonita(c.fecha)}
+
+</td>
+
+<td style="text-align:center;">
+
+${c.cantidad}
+
+</td>
+
+<td style="text-align:right;">
 
 S/. ${Number(c.costoUnitario).toFixed(2)}
 
 </td>
 
-<td style="text-align:right">
+<td style="text-align:right;">
 
 S/. ${Number(c.total).toFixed(2)}
 
@@ -1402,34 +1437,32 @@ S/. ${Number(c.total).toFixed(2)}
 
 `;
 
-            });
+        });
 
-            html += `
+        html+=`
 
 </table>
 
 `;
 
-        }
+    }
 
-        //--------------------------------------------------
-        // RESUMEN
-        //--------------------------------------------------
+    //---------------------------------------------------
+    // RESUMEN
+    //---------------------------------------------------
 
-        html += `
+    html+=`
 
 <hr>
 
 <div
 style="
-margin-top:20px;
-padding-top:15px;
-border-top:1px solid #ddd;
 font-size:18px;
 line-height:32px;
 ">
 
 📦 <b>Total comprado:</b>
+
 ${totalCantidad}
 
 <br>
@@ -1442,25 +1475,49 @@ S/. ${totalCompra.toFixed(2)}
 
 `;
 
-        document.getElementById(
-            "contenidoHistorialStock"
-        ).innerHTML = html;
+    //---------------------------------------------------
+    // BOTÓN VER MÁS
+    //---------------------------------------------------
 
-        document.getElementById(
-            "modalHistorialStock"
-        ).style.display = "flex";
+    if(historialCompras.length>historialMostradas){
+
+        const restantes=
+            historialCompras.length-historialMostradas;
+
+        html+=`
+
+<div
+style="
+margin-top:20px;
+text-align:center;
+">
+
+<button
+class="btn-main"
+onclick="mostrarMasCompras('${stockId}')">
+
+⬇ Ver 10 compras más (${restantes} restantes)
+
+</button>
+
+</div>
+
+`;
 
     }
 
-    catch(e){
-
-        console.error(e);
-
-        alert("Error cargando historial");
-
-    }
+    document.getElementById(
+        "contenidoHistorialStock"
+    ).innerHTML=html;
 
 }
+window.mostrarMasCompras=function(stockId){
+
+    historialMostradas+=10;
+
+    renderHistorialCompras(stockId);
+
+};
 window.cerrarIngresoRapido = function(){
 
     document.getElementById("modalIngresoStock").style.display = "none";
