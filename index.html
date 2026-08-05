@@ -650,6 +650,31 @@ repeat(auto-fit,minmax(360px,1fr));
     width:100%;
 
 }
+.cardClienteCRM{
+
+    background:white;
+
+    border-radius:12px;
+
+    padding:15px;
+
+    margin-bottom:12px;
+
+    cursor:pointer;
+
+    transition:.25s;
+
+    box-shadow:0 2px 8px rgba(0,0,0,.12);
+
+}
+
+.cardClienteCRM:hover{
+
+    transform:scale(1.02);
+
+    background:#fff7ef;
+
+}
 </style>
 </head>
 
@@ -901,6 +926,63 @@ onclick="guardarVenta()">
     </div>
 
 </div>
+<!-- ========================================= -->
+<!-- MODAL CRM CLIENTES -->
+<!-- ========================================= -->
+
+<div
+    id="modalCRMClientes"
+    class="modal"
+    style="display:none;">
+
+    <div
+        class="modal-content"
+        style="
+            width:95%;
+            max-width:700px;
+            max-height:90vh;
+            display:flex;
+            flex-direction:column;
+        ">
+
+        <h2
+            style="
+                text-align:center;
+                color:#ff7a00;
+                margin-bottom:20px;
+            ">
+
+            👤 FICHA DEL CLIENTE
+
+        </h2>
+
+        <input
+            id="buscarClienteCRM"
+            placeholder="Buscar por nombre o celular">
+
+        <div
+            id="resultadoCRM"
+            style="
+                margin-top:20px;
+                flex:1;
+                overflow:auto;
+            ">
+
+            Escriba un nombre para buscar.
+
+        </div>
+
+        <button
+            class="btn-sec"
+            onclick="cerrarCRMClientes()">
+
+            Cerrar
+
+        </button>
+
+    </div>
+
+</div>
 <!-- MODAL -->
 <div class="modal" id="modal">
 <div class="modal-content">
@@ -928,6 +1010,13 @@ margin-bottom:10px;
 </button>
 <button onclick="exportarExcel()" style="background:#27ae60;color:white;margin-bottom:10px;">
 📊 EXPORTAR EXCEL
+</button>
+<button
+    class="btn-main"
+    onclick="abrirCRMClientes()">
+
+    👤 CLIENTES
+
 </button>
 <input id="buscarAdmin" placeholder="BUSCAR NOMBRE / CELULAR / FECHA">
 <div id="contenidoAdmin"></div>
@@ -1031,7 +1120,332 @@ window.mostrarVentas = () => {
     panelStock.style.display = "none";
 
 };
+window.mostrarFichaCliente = async function(celular){
+console.log("ENTRÓ A LA FICHA CRM");
 
+    const snapVentas = await getDocs(
+        collection(db,"ventas")
+    );
+
+    const snapRuletas = await getDocs(
+        collection(db,"ruletas")
+    );
+
+    const ventas = [];
+
+    snapVentas.forEach(doc=>{
+
+        const d = doc.data();
+
+        if(String(d.celular)===String(celular)){
+
+            ventas.push(d);
+
+        }
+
+    });
+
+    if(ventas.length===0){
+
+        return;
+
+    }
+
+    //---------------------------------------
+    // DATOS BÁSICOS
+    //---------------------------------------
+
+    const cliente = ventas[0];
+
+    //---------------------------------------
+    // TOTALES
+    //---------------------------------------
+
+    let totalCompras = ventas.length;
+    let totalBalones = 0;
+    let totalDinero = 0;
+
+    let marcas = {};
+    let valvulas = {};
+    let pagos = {};
+    let delivery = 0;
+
+    ventas.forEach(v=>{
+
+        totalBalones += Number(v.cantidad||0);
+
+        totalDinero += Number(v.total||0);
+
+        marcas[v.marca]=(marcas[v.marca]||0)+Number(v.cantidad||0);
+
+        valvulas[v.valvula]=(valvulas[v.valvula]||0)+Number(v.cantidad||0);
+
+        pagos[v.pago]=(pagos[v.pago]||0)+1;
+
+        if(v.delivery==="SI")
+            delivery++;
+
+    });
+
+    //---------------------------------------
+    // MARCA FAVORITA
+    //---------------------------------------
+
+    let marcaFavorita="-";
+    let mayorMarca=0;
+
+    Object.keys(marcas).forEach(m=>{
+
+        if(marcas[m]>mayorMarca){
+
+            mayorMarca=marcas[m];
+            marcaFavorita=m;
+
+        }
+
+    });
+
+    //---------------------------------------
+
+    let valvulaFavorita="-";
+    let mayorValvula=0;
+
+    Object.keys(valvulas).forEach(v=>{
+
+        if(valvulas[v]>mayorValvula){
+
+            mayorValvula=valvulas[v];
+            valvulaFavorita=v;
+
+        }
+
+    });
+
+    //---------------------------------------
+
+    let pagoFavorito="-";
+    let mayorPago=0;
+
+    Object.keys(pagos).forEach(p=>{
+
+        if(pagos[p]>mayorPago){
+
+            mayorPago=pagos[p];
+            pagoFavorito=p;
+
+        }
+
+    });
+
+    //---------------------------------------
+    // RULETAS
+    //---------------------------------------
+
+    let giros=0;
+    let usados=0;
+    let pendiente=0;
+
+    snapRuletas.forEach(doc=>{
+
+        const r=doc.data();
+console.log(
+    "RULETA:",
+    r.nombre,
+    r.celular,
+    r.usado,
+    r.descuento,
+    r.fecha
+);
+console.log(
+    "CLIENTE:",
+    cliente.nombre,
+    celular
+);
+
+if (String(r.celular).trim() !== String(celular).trim()) {
+    return;
+}
+
+console.log("✅ ENCONTRÓ EL GIRO:", r);
+
+giros++;
+
+if (r.usado === true) {
+
+    usados++;
+
+} else {
+
+    pendiente++;
+
+}
+
+    });
+
+    //---------------------------------------
+    // ÚLTIMAS COMPRAS
+    //---------------------------------------
+
+    ventas.sort((a,b)=>
+        b.fecha.localeCompare(a.fecha)
+    );
+
+    let htmlCompras="";
+
+    ventas.slice(0,5).forEach(v=>{
+
+        htmlCompras+=`
+
+<div style="
+padding:10px;
+border-bottom:1px solid #ddd;
+">
+
+<b>${formatearFechaBonita(v.fecha)}</b>
+
+<br>
+
+${v.marca}
+
+${v.valvula}
+
+-
+
+${v.cantidad} balones
+
+<br>
+
+<b>S/. ${Number(v.total).toFixed(2)}</b>
+
+</div>
+
+`;
+
+    });
+
+    //---------------------------------------
+
+    document.getElementById("resultadoCRM").innerHTML=`
+
+<div class="cardInventario">
+
+<h2 style="color:#ff7a00">
+
+👤 ${cliente.nombre}
+
+</h2>
+
+<div>
+
+📞 ${cliente.celular}
+
+</div>
+
+<div>
+
+📍 ${cliente.direccion||"-"}
+
+</div>
+
+<hr>
+
+<div>
+
+🛒 <b>Compras:</b> ${totalCompras}
+
+</div>
+
+<div>
+
+📦 <b>Balones:</b> ${totalBalones}
+
+</div>
+
+<div>
+
+💰 <b>Total invertido:</b>
+
+S/. ${totalDinero.toFixed(2)}
+
+</div>
+
+<div>
+
+💵 <b>Ticket promedio:</b>
+
+S/. ${(totalDinero/totalCompras).toFixed(2)}
+
+</div>
+
+<hr>
+
+<div>
+
+🔥 <b>Marca favorita:</b>
+
+${marcaFavorita}
+
+</div>
+
+<div>
+
+⚙️ <b>Válvula favorita:</b>
+
+${valvulaFavorita}
+
+</div>
+
+<div>
+
+💳 <b>Pago favorito:</b>
+
+${pagoFavorito}
+
+</div>
+
+<div>
+
+🚚 <b>Delivery:</b>
+
+${delivery}/${totalCompras}
+
+</div>
+
+<hr>
+
+<div>
+
+🎯 Giros: ${giros}
+
+</div>
+
+<div>
+
+🎁 Cupones usados: ${usados}
+
+</div>
+
+<div>
+
+🟢 Cupones pendientes: ${pendiente}
+
+</div>
+
+<hr>
+
+<h3>
+
+Últimas compras
+
+</h3>
+
+${htmlCompras}
+
+</div>
+
+`;
+
+}
 //==================================================
 // FUNCIONES TEMPORALES DEL INVENTARIO
 //==================================================
@@ -1267,6 +1681,173 @@ window.verHistorialStock = async function(stockId){
     }
 
 };
+//=====================================
+// CRM CLIENTES
+//=====================================
+
+window.abrirCRMClientes = function(){
+
+    document.getElementById(
+        "modalCRMClientes"
+    ).style.display = "flex";
+
+    document.getElementById(
+        "buscarClienteCRM"
+    ).value = "";
+
+    document.getElementById(
+        "resultadoCRM"
+    ).innerHTML =
+        "Escriba un nombre para buscar.";
+
+};
+
+window.cerrarCRMClientes = function(){
+
+    document.getElementById(
+        "modalCRMClientes"
+    ).style.display = "none";
+
+};
+//=====================================
+// BUSCADOR DE CLIENTES
+//=====================================
+
+document.getElementById("buscarClienteCRM")
+.addEventListener("input", buscarClienteCRM);
+
+async function buscarClienteCRM(){
+
+    const texto =
+        document.getElementById("buscarClienteCRM")
+        .value
+        .trim()
+        .toUpperCase();
+
+    const contenedor =
+        document.getElementById("resultadoCRM");
+
+    if(texto.length<2){
+
+        contenedor.innerHTML =
+            "Escriba al menos 2 caracteres.";
+
+        return;
+
+    }
+
+    const snap = await getDocs(
+        collection(db,"ventas")
+    );
+
+    //---------------------------------
+    // Clientes únicos
+    //---------------------------------
+
+    const clientes = {};
+
+    snap.forEach(doc=>{
+
+        const v = doc.data();
+
+        const clave =
+            String(v.celular || "");
+
+        if(!clientes[clave]){
+
+            clientes[clave]={
+
+                nombre:v.nombre,
+
+                celular:v.celular,
+
+                direccion:v.direccion || ""
+
+            };
+
+        }
+
+    });
+
+    //---------------------------------
+    // Filtrar
+    //---------------------------------
+
+    const lista =
+        Object.values(clientes).filter(c=>{
+
+            return (
+
+                String(c.nombre)
+                .toUpperCase()
+                .includes(texto)
+
+                ||
+
+                String(c.celular)
+                .includes(texto)
+
+            );
+
+        });
+
+    //---------------------------------
+
+    if(lista.length===0){
+
+        contenedor.innerHTML=
+            "No se encontraron clientes.";
+
+        return;
+
+    }
+
+    //---------------------------------
+
+    let html="";
+
+    lista.forEach(c=>{
+
+        html+=`
+
+<div
+class="cardClienteCRM"
+onclick="console.log('CLICK', '${c.celular}'); mostrarFichaCliente('${c.celular}')"
+
+<div style="
+font-size:18px;
+font-weight:bold;
+color:#ff7a00;
+">
+
+👤 ${c.nombre}
+
+</div>
+
+<div>
+
+📞 ${c.celular}
+
+</div>
+
+<div style="
+font-size:13px;
+color:#777;
+">
+
+${c.direccion}
+
+</div>
+
+</div>
+
+`;
+
+    });
+
+    contenedor.innerHTML=html;
+
+}
 function renderHistorialCompras(stockId){
 
     const proveedorAutomatico =
