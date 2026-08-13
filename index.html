@@ -1008,6 +1008,7 @@ margin-bottom:10px;
 ">
 📊 DASHBOARD EJECUTIVO
 </button>
+
 <button
     class="btn-main"
     onclick="abrirCRMClientes()">
@@ -1120,17 +1121,27 @@ window.mostrarVentas = () => {
 window.mostrarFichaCliente = async function(celular){
 console.log("ENTRÓ A LA FICHA CRM");
 
-    const snapVentas = await getDocs(
-        collection(db,"ventas")
-    );
+   const snapshotVentas = await getDocs(
+    collection(db,"ventas")
+);
 
-    const snapRuletas = await getDocs(
-        collection(db,"ruletas")
-    );
-
+const snapshotRuleta = await getDocs(
+    collection(db,"ruleta")
+);
+console.log(
+    "DB:",
+    db.app.options.projectId
+);
+console.log(
+    "TOTAL RULETAS:",
+    snapshotRuleta.size
+);
+console.log(
+    snapshotRuleta
+);
     const ventas = [];
 
-    snapVentas.forEach(doc=>{
+    snapshotVentas.forEach(doc=>{
 
         const d = doc.data();
 
@@ -1234,50 +1245,55 @@ console.log("ENTRÓ A LA FICHA CRM");
 
     });
 
-    //---------------------------------------
-    // RULETAS
-    //---------------------------------------
+//---------------------------------------
+// RULETAS
+//---------------------------------------
 
-    let giros=0;
-    let usados=0;
-    let pendiente=0;
+let giros = 0;
 
-    snapRuletas.forEach(doc=>{
+// Premios utilizados (se calcularán desde ventas)
+let usados = 0;
 
-        const r=doc.data();
-console.log(
-    "RULETA:",
-    r.nombre,
-    r.celular,
-    r.usado,
-    r.descuento,
-    r.fecha
-);
-console.log(
-    "CLIENTE:",
-    cliente.nombre,
-    celular
-);
+// Premios pendientes
+let pendiente = 0;
 
-if (String(r.celular).trim() !== String(celular).trim()) {
-    return;
-}
+snapshotRuleta.forEach(doc=>{
 
-console.log("✅ ENCONTRÓ EL GIRO:", r);
+    const r = doc.data();
 
-giros++;
+    if(String(r.celular).trim() !==
+       String(cliente.celular).trim()){
 
-if (r.usado === true) {
+        return;
 
-    usados++;
+    }
 
-} else {
+    giros++;
 
-    pendiente++;
+});
 
-}
+//---------------------------------------
+// CUPONES USADOS (DESDE VENTAS)
+//---------------------------------------
 
-    });
+ventas.forEach(v=>{
+
+    if(v.usoRuleta === true){
+
+        usados++;
+
+    }
+
+});
+
+//---------------------------------------
+// CUPONES PENDIENTES
+//---------------------------------------
+
+pendiente = giros - usados;
+
+if(pendiente < 0)
+    pendiente = 0;
 
     //---------------------------------------
     // ÚLTIMAS COMPRAS
