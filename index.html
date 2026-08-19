@@ -1290,16 +1290,21 @@ snapshotRuleta.forEach(doc=>{
 });
 
 //---------------------------------------
-// FRECUENCIA DE COMPRA DEL CLIENTE
+// FRECUENCIA Y ESTADO DEL CLIENTE
 //---------------------------------------
 
 let diasDesdeUltimaCompra = 0;
 let promedioDiasCompra = 0;
+let estadoCliente = "";
+let colorEstado = "";
 
-// Ordenar ventas de más reciente a más antigua
+
+// Ordenar de más reciente a más antigua
+
 ventas.sort((a,b)=>
     b.fecha.localeCompare(a.fecha)
 );
+
 
 if(ventas.length > 0){
 
@@ -1363,6 +1368,50 @@ if(ventas.length > 0){
                     (a,b)=>a+b,
                     0
                 ) / diferencias.length;
+
+        }
+
+    }
+
+
+    //-----------------------------------
+    // ESTADO DEL CLIENTE
+    //-----------------------------------
+
+    if(promedioDiasCompra > 0){
+
+        const limiteProximo =
+            promedioDiasCompra * 1.20;
+
+        if(diasDesdeUltimaCompra <= promedioDiasCompra){
+
+            estadoCliente =
+                "🟢 CLIENTE ACTIVO";
+
+            colorEstado =
+                "#27ae60";
+
+        }
+
+        else if(
+            diasDesdeUltimaCompra <= limiteProximo
+        ){
+
+            estadoCliente =
+                "🟡 PRÓXIMO A COMPRAR";
+
+            colorEstado =
+                "#f39c12";
+
+        }
+
+        else{
+
+            estadoCliente =
+                "🔴 CLIENTE ATRASADO";
+
+            colorEstado =
+                "#e74c3c";
 
         }
 
@@ -1537,6 +1586,32 @@ ${
         ? "Cada " + promedioDiasCompra.toFixed(1) + " días"
         : "No hay suficientes compras"
 }
+
+</div>
+
+${
+    estadoCliente
+    ? `
+
+<div style="
+    margin-top:15px;
+    padding:12px;
+    border-radius:10px;
+    background:${colorEstado}15;
+    border:1px solid ${colorEstado};
+    color:${colorEstado};
+    font-weight:bold;
+    text-align:center;
+">
+
+    ${estadoCliente}
+
+</div>
+
+`
+    : ""
+}
+<div>
 
 </div>
 
