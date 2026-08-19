@@ -1290,6 +1290,86 @@ snapshotRuleta.forEach(doc=>{
 });
 
 //---------------------------------------
+// FRECUENCIA DE COMPRA DEL CLIENTE
+//---------------------------------------
+
+let diasDesdeUltimaCompra = 0;
+let promedioDiasCompra = 0;
+
+// Ordenar ventas de más reciente a más antigua
+ventas.sort((a,b)=>
+    b.fecha.localeCompare(a.fecha)
+);
+
+if(ventas.length > 0){
+
+    //-----------------------------------
+    // ÚLTIMA COMPRA
+    //-----------------------------------
+
+    const ultimaCompra =
+        new Date(
+            ventas[0].fecha.replace(" ", "T")
+        );
+
+    const ahora = new Date();
+
+    diasDesdeUltimaCompra =
+        Math.floor(
+            (ahora - ultimaCompra) /
+            (1000 * 60 * 60 * 24)
+        );
+
+    if(diasDesdeUltimaCompra < 0)
+        diasDesdeUltimaCompra = 0;
+
+
+    //-----------------------------------
+    // PROMEDIO ENTRE COMPRAS
+    //-----------------------------------
+
+    if(ventas.length >= 2){
+
+        let diferencias = [];
+
+        for(let i=0; i<ventas.length-1; i++){
+
+            const fechaNueva =
+                new Date(
+                    ventas[i].fecha.replace(" ", "T")
+                );
+
+            const fechaAnterior =
+                new Date(
+                    ventas[i+1].fecha.replace(" ", "T")
+                );
+
+            const diferencia =
+                (fechaNueva - fechaAnterior) /
+                (1000 * 60 * 60 * 24);
+
+            if(diferencia >= 0){
+
+                diferencias.push(diferencia);
+
+            }
+
+        }
+
+        if(diferencias.length > 0){
+
+            promedioDiasCompra =
+                diferencias.reduce(
+                    (a,b)=>a+b,
+                    0
+                ) / diferencias.length;
+
+        }
+
+    }
+
+}
+//---------------------------------------
 // CUPONES USADOS (DESDE VENTAS)
 //---------------------------------------
 
@@ -1438,6 +1518,25 @@ ${pagoFavorito}
 🚚 <b>Delivery:</b>
 
 ${delivery}/${totalCompras}
+
+</div>
+<div>
+
+⏱️ <b>Última compra:</b>
+
+Hace ${diasDesdeUltimaCompra} días
+
+</div>
+
+<div>
+
+🔄 <b>Frecuencia promedio:</b>
+
+${
+    promedioDiasCompra > 0
+        ? "Cada " + promedioDiasCompra.toFixed(1) + " días"
+        : "No hay suficientes compras"
+}
 
 </div>
 
