@@ -759,7 +759,8 @@ font-size:18px;
 </div>
 
 <input id="cantidad" placeholder="CANTIDAD">
-<input id="precio" placeholder="PRECIO">
+
+<input id="precio" placeholder="COSTO UNITARIO S/">
 
 <select id="pago">
 <option value="">PAGO</option>
@@ -956,10 +957,10 @@ onclick="guardarVenta()">
 
         </h2>
 
+
         <input
             id="buscarClienteCRM"
             placeholder="Buscar por nombre o celular">
-
         <div
             id="resultadoCRM"
             style="
@@ -1079,9 +1080,26 @@ let descuentoActual = 0;
 let DIAS_BLOQUEO_RULETA = 60;
 // 🔥 Producto seleccionado para ingresar stock
 let stockSeleccionado = "";
+//==================================================
+// BUSCADOR DE LA FICHA DEL CLIENTE
+//==================================================
+
+const inputFichaCliente =
+    document.getElementById("buscarClienteCRM");
+
+if(inputFichaCliente){
+
+    inputFichaCliente.addEventListener("input", function(){
+
+        this.value = this.value.toUpperCase();
+
+    });
+
+}
 let historialCompras = [];
 let historialMostradas = 10;
 let clicks=0;
+
 titulo.onclick=()=>{
     clicks++;
     if(clicks===3){ abrirAdmin(); clicks=0; }
@@ -1172,7 +1190,6 @@ console.log(
     let totalCompras = ventas.length;
     let totalBalones = 0;
     let totalDinero = 0;
-
     let marcas = {};
     let valvulas = {};
     let pagos = {};
@@ -1707,7 +1724,11 @@ window.abrirCRMClientes = function(){
     document.getElementById(
         "buscarClienteCRM"
     ).value = "";
+setTimeout(()=>{
 
+    document.getElementById("buscarClienteCRM").focus();
+
+},100);
     document.getElementById(
         "resultadoCRM"
     ).innerHTML =
@@ -2225,6 +2246,64 @@ nDireccion.oninput = ()=>{
 
     total.innerText = "S/. " + totalFinal.toFixed(2);
 }
+//==================================================
+// VALIDACIONES DE CANTIDAD Y PRECIO
+//==================================================
+
+cantidad.addEventListener("input", function(){
+
+    // SOLO NÚMEROS ENTEROS
+    this.value = this.value.replace(/\D/g, "");
+
+    calcularTotal();
+
+});
+
+
+//--------------------------------------------------
+// PRECIO
+//--------------------------------------------------
+
+precio.addEventListener("input", function(){
+
+    // Solo números y punto decimal
+    this.value = this.value
+        .replace(/[^0-9.]/g, "")
+        .replace(/(\..*)\./g, "$1");
+
+    // Máximo 2 decimales
+    if(this.value.includes(".")){
+
+        const partes = this.value.split(".");
+
+        this.value =
+            partes[0] +
+            "." +
+            partes[1].substring(0,2);
+
+    }
+
+    calcularTotal();
+
+});
+
+
+//--------------------------------------------------
+// FORMATO DEL PRECIO AL SALIR DEL CAMPO
+//--------------------------------------------------
+
+precio.addEventListener("blur", function(){
+
+    if(this.value !== ""){
+
+        this.value =
+            Number(this.value).toFixed(2);
+
+    }
+
+    calcularTotal();
+
+});
 function formatearFechaBonita(fechaTexto){
 
     if(!fechaTexto) return "--";
